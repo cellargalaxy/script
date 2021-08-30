@@ -9,6 +9,10 @@ echo "">$logFilename
 log() {
   time=$(date "+%Y-%m-%d %H:%M:%S")
   echo "$time $*"
+  hour=$(date "+%H")
+  if [ "$hour" -ne "06" ]; then
+    echo "">$logFilename
+  fi
   echo "$time $*">>$logFilename
 }
 
