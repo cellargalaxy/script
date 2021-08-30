@@ -2,9 +2,14 @@
 
 #export execHour=17
 
+logFilename="log.log"
+
+echo "">$logFilename
+
 log() {
   time=$(date "+%Y-%m-%d %H:%M:%S")
   echo "$time $*"
+  echo "$time $*">>$logFilename
 }
 
 log "execHour: $execHour"
@@ -54,7 +59,7 @@ while :; do
   log "now hour is: $hour"
   if [ "$hour" -ne "$execHour" ]; then
     log "$hour not is exec hour $execHour"
-    sleep 60
+    sleep 300
     continue
   fi
   log "exec command start"
