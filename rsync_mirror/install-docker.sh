@@ -61,6 +61,13 @@ while :; do
   read -p "please enter timeout(required):" timeout
 done
 
+while :; do
+  if [ ! -z "$localPath" ]; then
+    break
+  fi
+  read -p "please enter localPath(required):" localPath
+done
+
 log "name: $name"
 log "execHour: $execHour"
 log "remoteip: $remoteip"
@@ -68,30 +75,26 @@ log "remoteport: $remoteport"
 log "remoteuser: $remoteuser"
 log "remotepwd: ***"
 log "remotedir: $remotedir"
-log "localfile: $localfile"
 log "timeout: $timeout"
 log "input any key go on, or control+c over"
 read
 
-echo 'create volume'
-docker volume create "$name"'_data'
-
 echo 'stop container'
-docker stop $name
+docker stop "$name"
 
 echo 'remove container'
-docker rm $name
+docker rm "$name"
 
 echo 'remove image'
-docker rmi $name
+docker rmi "$name"
 
 echo 'docker build'
-docker build -t $name .
+docker build -t "$name" .
 
 echo 'docker run'
 docker run -d \
   --restart=always \
-  --name $name \
+  --name "$name" \
   -e execHour="$execHour" \
   -e remoteip="$remoteip" \
   -e remoteport="$remoteport" \
@@ -99,7 +102,7 @@ docker run -d \
   -e remotepwd="$remotepwd" \
   -e remotedir="$remotedir" \
   -e timeout="$timeout" \
-  -v "$name"'_data':/local \
-  $name
+  -v "$localPath":/local \
+  "$name"
 
-echo 'all finish'
+log 'all finish'

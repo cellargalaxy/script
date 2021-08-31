@@ -4,16 +4,13 @@
 
 logFilename="log.log"
 
-echo "">$logFilename
-
 log() {
-  time=$(date "+%Y-%m-%d %H:%M:%S")
-  echo "$time $*"
-  hour=$(date "+%H")
-  if [ "$hour" -eq "06" ]; then
-    echo "">$logFilename
+  text="$(date "+%Y-%m-%d %H:%M:%S") $*"
+  echo "$text"
+  if [ "$(date "+%H%M")" -eq "0000" ]; then
+    echo "" >$logFilename
   fi
-  echo "$time $*">>$logFilename
+  echo "$text" >>$logFilename
 }
 
 log "execHour: $execHour"
@@ -63,7 +60,7 @@ while :; do
   log "now hour is: $hour"
   if [ "$hour" -ne "$execHour" ]; then
     log "$hour not is exec hour $execHour"
-    sleep 300
+    sleep 30
     continue
   fi
   log "exec command start"
