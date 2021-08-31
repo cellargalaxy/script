@@ -76,6 +76,7 @@ log "remoteuser: $remoteuser"
 log "remotepwd: ***"
 log "remotedir: $remotedir"
 log "timeout: $timeout"
+log "localPath: $localPath"
 log "input any key go on, or control+c over"
 read
 
