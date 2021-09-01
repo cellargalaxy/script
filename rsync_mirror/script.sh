@@ -58,6 +58,8 @@ fi
 while :; do
   hour=$(date "+%H")
   log "now hour is: $hour"
+  runNow=$(<runNow.txt)
+  log "runNow is: $runNow"
   if [ "$hour" != "$execHour" ] && [ "$runNow" != "true" ]; then
     log "$hour not is exec hour $execHour"
     sleep 30
