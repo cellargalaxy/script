@@ -7,7 +7,7 @@ logFilename="log.log"
 log() {
   text="$(date "+%Y-%m-%d %H:%M:%S") $*"
   echo "$text"
-  if [ "$(date "+%H%M")" -eq "0000" ]; then
+  if [ "$(date "+%H%M")" == "0000" ]; then
     echo "" >$logFilename
   fi
   echo "$text" >>$logFilename
@@ -58,7 +58,7 @@ fi
 while :; do
   hour=$(date "+%H")
   log "now hour is: $hour"
-  if [ "$hour" -ne "$execHour" ]; then
+  if [ "$hour" != "$execHour" ] && [ "$runNow" != "true" ]; then
     log "$hour not is exec hour $execHour"
     sleep 30
     continue
