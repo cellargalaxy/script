@@ -65,6 +65,8 @@ while :; do
   fi
   log "exec command start"
   ./rsync_mirror.sh "$remoteip" "$remoteport" "$remoteuser" "$remotepwd" "$remotedir" "./local" "$timeout"
+  ./rsync_mirror.sh "$remoteip" "$remoteport" "$remoteuser" "$remotepwd" "$remotedir" "./local" "$timeout"
+  ./rsync_mirror.sh "$remoteip" "$remoteport" "$remoteuser" "$remotepwd" "$remotedir" "./local" "$timeout"
   log "exec command done"
   sleep 3600
 done
