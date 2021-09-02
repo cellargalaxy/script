@@ -13,10 +13,10 @@ while :; do
 done
 
 while :; do
-  if [ ! -z "$execHour" ]; then
+  if [ ! -z "$execTime" ]; then
     break
   fi
-  read -p "please enter execHour(required):" execHour
+  read -p "please enter execTime(required):" execTime
 done
 
 while :; do
@@ -69,7 +69,7 @@ while :; do
 done
 
 log "name: $name"
-log "execHour: $execHour"
+log "execTime: $execTime"
 log "remoteip: $remoteip"
 log "remoteport: $remoteport"
 log "remoteuser: $remoteuser"
@@ -96,7 +96,7 @@ echo 'docker run'
 docker run -d \
   --restart=always \
   --name "$name" \
-  -e execHour="$execHour" \
+  -e execTime="$execTime" \
   -e remoteip="$remoteip" \
   -e remoteport="$remoteport" \
   -e remoteuser="$remoteuser" \

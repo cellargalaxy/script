@@ -13,9 +13,9 @@ log() {
   echo "$text" >>$logFilename
 }
 
-log "execHour: $execHour"
-if [ -z "$execHour" ]; then
-  log "execHour is none"
+log "execTime: $execTime"
+if [ -z "$execTime" ]; then
+  log "execTime is none"
   exit 1
 fi
 
@@ -56,12 +56,12 @@ if [ -z "$timeout" ]; then
 fi
 
 while :; do
-  hour=$(date "+%H")
-  log "now hour is: $hour"
+  time=$(date "+%H%M")
+  log "now time is: $time"
   runNow=$(<runNow.txt)
   log "runNow is: $runNow"
-  if [ "$hour" != "$execHour" ] && [ "$runNow" != "true" ]; then
-    log "$hour not is exec hour $execHour or not run now: $runNow"
+  if [ "$time" != "$execTime" ] && [ "$runNow" != "true" ]; then
+    log "$time not is exec time $execTime or not run now: $runNow"
     sleep 30
     continue
   fi
