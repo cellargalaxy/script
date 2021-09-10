@@ -58,7 +58,7 @@ while :; do
     continue
   fi
   log "exec command start"
-  ./mysqldump.sh "$host" "$port" "$user" "$password" "$dbName" "./local"
+  bash ./mysqldump.sh "$host" "$port" "$user" "$password" "$dbName" "./local"
   log "exec command done"
   sleep 3600
 done
