@@ -1,23 +1,16 @@
 #!/usr/bin/env bash
 
 log() {
-  time=$(date "+%Y-%m-%d %H:%M:%S")
-  echo "$time $*"
+  text="$(date "+%Y-%m-%d %H:%M:%S") $*"
+  echo $text
 }
 
-while :; do
-  if [ ! -z "$name" ]; then
-    break
-  fi
-  read -p "please enter name(required):" name
-done
-
-while :; do
-  if [ ! -z "$execTime" ]; then
-    break
-  fi
-  read -p "please enter execTime(required):" execTime
-done
+if [ -z $server_name ]; then
+  read -p "please enter server_name(default:server_center):" server_name
+fi
+if [ -z $server_name ]; then
+  server_name="mysqldump"
+fi
 
 while :; do
   if [ ! -z "$host" ]; then
@@ -47,54 +40,43 @@ while :; do
   read -p "please enter password(required):" password
 done
 
-while :; do
-  if [ ! -z "$dbName" ]; then
-    break
-  fi
-  read -p "please enter dbName(required):" dbName
-done
+if [ -z $exec_time ]; then
+  read -p "please enter exec_time(default:00:00):" exec_time
+fi
+if [ -z $exec_time ]; then
+  exec_time="00:00"
+fi
 
-while :; do
-  if [ ! -z "$localPath" ]; then
-    break
-  fi
-  read -p "please enter localPath(required):" localPath
-done
-
-log "name: $name"
-log "execTime: $execTime"
+log "server_name: $server_name"
 log "host: $host"
 log "port: $port"
 log "user: $user"
 log "password: ***"
-log "dbName: $dbName"
-log "localPath: $localPath"
+log "exec_time: $exec_time"
 log "input any key go on, or control+c over"
 read
 
+echo 'create volume'
+docker volume create $server_name'_backup'
 echo 'stop container'
-docker stop "$name"
-
+docker stop $server_name
 echo 'remove container'
-docker rm "$name"
-
+docker rm $server_name
 echo 'remove image'
-docker rmi "$name"
-
+docker rmi $server_name
 echo 'docker build'
-docker build -t "$name" .
-
+docker build -t $server_name .
 echo 'docker run'
 docker run -d \
   --restart=always \
-  --name "$name" \
-  -e execTime="$execTime" \
-  -e host="$host" \
-  -e port="$port" \
-  -e user="$user" \
-  -e password="$password" \
-  -e dbName="$dbName" \
-  -v "$localPath":/local \
-  "$name"
+  --name $server_name \
+  -v $server_name'_backup':/backup \
+  -e server_name=$server_name \
+  -e host=$host \
+  -e port=$port \
+  -e user=$user \
+  -e password=$password \
+  -e exec_time=$exec_time \
+  $server_name
 
 log 'all finish'

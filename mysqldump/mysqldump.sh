@@ -1,50 +1,76 @@
-#!/usr/bin/env bash
-
-logFilePath="log.log"
+#!/bin/shv
 
 log() {
   text="$(date "+%Y-%m-%d %H:%M:%S") $*"
-  echo "$text"
-  if [ "$(date "+%H%M")" == "0000" ]; then
-    echo "" >$logFilePath
-  fi
-  echo "$text" >>$logFilePath
+  echo $text
 }
 
-if [ "$#" != 6 ]; then
-  log "error param count: $#, Usage: mysqldump.sh host port user password dbName localPath\n"
-  exit 1
+folder="backup"
+
+if [ ! -f "$folder/backup.txt" ]; then
+  log "illegal space"
+  exit 0
 fi
 
-host="$1"
-port="$2"
-user="$3"
-password="$4"
-dbName="$5"
-localPath="$6"
-
-log "host: ""$host"
-log "port: ""$port"
-log "user: ""$user"
-log "password: ***"
-log "dbName: ""$dbName"
-log "localPath: ""$localPath"
-
-sqlFilePath="$localPath""/""$dbName"".sql"
-sqlBackFilePath="$localPath""/""$dbName"".sql.back"
-
-log "sqlFilePath: ""$sqlFilePath"
-log "sqlBackFilePath: ""$sqlBackFilePath"
-
-if [ -f "$sqlFilePath" ];then
-  rm -rf "$sqlBackFilePath"
-  mv "$sqlFilePath" "$sqlBackFilePath"
+if [ -z "$host" ]; then
+  host="$1"
+fi
+if [ -z "$host" ]; then
+  log "must host"
+  exit 0
 fi
 
-mysqldump --lock-all-tables --compress --host "$host" --port "$port" -u"$user" -p"$password" "$dbName" > "$sqlFilePath"
-result="$?"
-
-if [ "$result" != 0 ];then
-  log "mysqldump fail: ""$result"
-  rm -rf "$sqlFilePath"
+if [ -z "$port" ]; then
+  port="$2"
 fi
+if [ -z "$port" ]; then
+  log "must port"
+  exit 0
+fi
+
+if [ -z "$user" ]; then
+  user="$3"
+fi
+if [ -z "$user" ]; then
+  log "must user"
+  exit 0
+fi
+
+if [ -z "$password" ]; then
+  password="$4"
+fi
+if [ -z "$password" ]; then
+  log "must password"
+  exit 0
+fi
+
+mkdir -p "$folder/"$host"-"$port
+cd "$folder/"$host"-"$port
+
+database_names=$(mysql --host $host --port $port -u$user -p$password -e "show databases;" | grep -vE "Database|information_schema|mysql|performance_schema|sys" | xargs)
+log "backup: "$host":"$port":"$database_names
+
+new_count=0
+for database_name in $database_names; do
+  filename=$(date "+%Y%m%d_%H%M%S")"_"$database_name".sql"
+  log "backup: "$database_name" -> "$filename
+  mysqldump --lock-all-tables --compress --host $host --port $port -u$user -p$password $database_name >$filename
+#  touch $filename
+  new_count=`expr $new_count + 1`
+done
+
+if [ -z "$save_count" ]; then
+  save_count=`expr $new_count \* 2`
+fi
+log "save_count: "$save_count
+
+file_count=$(ls -l | grep ".sql" | wc -l)
+log "file_count: "$file_count
+
+while [ 0 -lt $save_count ] && [ $save_count -lt $file_count ]
+do
+  filename=$(ls -rt | head -n1)
+  log "remove: "$filename
+  rm -f $filename
+  file_count=`expr $file_count - 1`
+done

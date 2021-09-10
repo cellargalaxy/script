@@ -1,13 +1,9 @@
-FROM ubuntu:18.04
-ENV TZ=Asia/Shanghai
-RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list \
-          && apt-get update \
-          && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
-          && apt-get install mysql-client -y \
-          && apt-get clean \
-          && apt-get autoclean \
-          && rm -rf /var/lib/apt/lists/
+FROM alpine
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
+RUN apk update
+RUN apk --no-cache add ca-certificates
+RUN apk add tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Asia/Shanghai" > /etc/timezone && apk del tzdata
+RUN apk add mariadb-client
 WORKDIR /
 COPY . .
-VOLUME /local
-CMD ["bash" , "/run.sh"]
+CMD ["/run.sh"]
