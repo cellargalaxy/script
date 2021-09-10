@@ -10,4 +10,4 @@ RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list \
 WORKDIR /
 COPY . .
 VOLUME /local
-CMD ["/run.sh"]
+CMD ["bash" , "/run.sh"]
