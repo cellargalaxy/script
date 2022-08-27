@@ -56,7 +56,7 @@ log "cron: $cron"
 log "input any key go on, or control+c over"
 read
 
-echo "$cron /mysqldump.sh" >"crontab.txt"
+echo "$cron cd / && /mysqldump.sh" >"crontab.txt"
 
 echo 'create volume'
 docker volume create $server_name'_backup'
@@ -78,7 +78,6 @@ docker run -d \
   -e port=$port \
   -e user=$user \
   -e password=$password \
-  -e exec_time=$exec_time \
   $server_name
 
 log 'all finish'

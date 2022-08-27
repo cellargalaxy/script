@@ -5,6 +5,8 @@ log() {
   echo "$text"
 }
 
+log "pwd: $(pwd)"
+
 folder="backup"
 
 if [ ! -f "$folder/backup.txt" ]; then
