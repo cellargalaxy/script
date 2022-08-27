@@ -40,6 +40,13 @@ while :; do
   read -p "please enter password(required):" password
 done
 
+if [ -z "$save_batch" ]; then
+  read -p "please enter save_batch(default:2):" save_batch
+fi
+if [ -z "$save_batch" ]; then
+  save_batch="2"
+fi
+
 if [ -z "$cron" ]; then
   read -p "please enter cron(default:0 0 * * *):" cron
 fi
@@ -78,6 +85,7 @@ docker run -d \
   -e port=$port \
   -e user=$user \
   -e password=$password \
+  -e save_batch=$save_batch \
   $server_name
 
 log 'all finish'
