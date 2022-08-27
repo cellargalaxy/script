@@ -2,13 +2,13 @@
 
 log() {
   text="$(date "+%Y-%m-%d %H:%M:%S") $*"
-  echo $text
+  echo "$text"
 }
 
-if [ -z $server_name ]; then
+if [ -z "$server_name" ]; then
   read -p "please enter server_name(default:server_center):" server_name
 fi
-if [ -z $server_name ]; then
+if [ -z "$server_name" ]; then
   server_name="mysqldump"
 fi
 
@@ -40,11 +40,11 @@ while :; do
   read -p "please enter password(required):" password
 done
 
-if [ -z $exec_time ]; then
-  read -p "please enter exec_time(default:00:00):" exec_time
+if [ -z "$cron" ]; then
+  read -p "please enter cron(default:0 0 * * *):" cron
 fi
-if [ -z $exec_time ]; then
-  exec_time="00:00"
+if [ -z "$cron" ]; then
+  cron="0 0 * * *"
 fi
 
 log "server_name: $server_name"
@@ -52,9 +52,11 @@ log "host: $host"
 log "port: $port"
 log "user: $user"
 log "password: ***"
-log "exec_time: $exec_time"
+log "cron: $cron"
 log "input any key go on, or control+c over"
 read
+
+echo "$cron /mysqldump.sh" >"crontab.txt"
 
 echo 'create volume'
 docker volume create $server_name'_backup'

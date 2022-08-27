@@ -6,4 +6,5 @@ RUN apk add tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && ech
 RUN apk add mariadb-client
 WORKDIR /
 COPY . .
-CMD ["/run.sh"]
+RUN /usr/bin/crontab /crontab.txt
+CMD ["/crontab.sh"]
