@@ -6,7 +6,7 @@ log() {
 }
 
 if [ -z "$server_name" ]; then
-  read -p "please enter server_name(default:server_center):" server_name
+  read -p "please enter server_name(default:mysqldump):" server_name
 fi
 if [ -z "$server_name" ]; then
   server_name="mysqldump"
