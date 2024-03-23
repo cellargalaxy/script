@@ -19,3 +19,5 @@ local
 *.log
 backup
 crontab.txt
+venv
+*.pdf
