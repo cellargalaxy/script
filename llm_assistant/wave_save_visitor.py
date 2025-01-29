@@ -5,14 +5,16 @@ from datetime import datetime
 
 
 class WaveSaveVisitor(visitor.Visitor):
-    file_path = ''
+    file_name = ''
     file = None
 
-    def __init__(self, file_path='wav.wav'):
-        self.file_path = file_path
+    def __init__(self, file_name=''):
+        self.file_name = file_name
+        if not self.file_name:
+            self.file_name = '{}.wav'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     def start(self, data):
-        self.file = wave.open(self.file_path, 'wb')
+        self.file = wave.open(self.file_name, 'wb')
         self.file.setnchannels(visitor.CHANNELS)
         self.file.setsampwidth(pyaudio.get_sample_size(visitor.FORMAT))
         self.file.setframerate(visitor.SAMPLE_RATE)
