@@ -4,64 +4,64 @@ import torch
 import pyaudio
 import matplotlib.pyplot as plt
 
-is_speaking = True
 
-
-class SileroVadStreamVisitor(visitor.Visitor):
+class SileroVadStreamFilterMuteVisitor(visitor.Visitor):
     model = None
-    buffer = None
-    tmp = []
+    data_window = None
+    is_plot = False
+    confidences = None
 
-    def __init__(self):
+    def __init__(self, is_plot=False):
         self.model, utils = torch.hub.load(repo_or_dir='./model/silero-vad/master', model='silero_vad', source='local')
         (get_speech_timestamps, save_audio, read_audio, VADIterator, collect_chunks) = utils
+        self.is_plot = is_plot
+        self.confidences = []
 
     def start(self, data):
         self.start_next(data)
 
     def exec(self, data):
-        if self.buffer is None:
-            self.buffer = data
+        if not data:
+            return
+        if self.data_window is None:
+            self.data_window = data
         else:
-            self.buffer += data
+            self.data_window += data
 
-        chunk_size = visitor.CHUNK_SIZE
         match visitor.FORMAT:
+            case pyaudio.paInt8:
+                chunk_size = visitor.CHUNK_SIZE
             case pyaudio.paInt16:
-                chunk_size *= 2
+                chunk_size = visitor.CHUNK_SIZE * 2
+            case pyaudio.paInt24:
+                chunk_size = visitor.CHUNK_SIZE * 3
+            case pyaudio.paInt32:
+                chunk_size = visitor.CHUNK_SIZE * 4
             case _:
-                raise ValueError("该音频流格式未实现")
+                raise TypeError("未支持的音频流格式")
 
-        datas = [self.buffer[i:i + chunk_size] for i in range(0, len(self.buffer), chunk_size)]
-        self.buffer = None
+        datas = [self.data_window[i:i + chunk_size] for i in range(0, len(self.data_window), chunk_size)]
+        self.data_window = None
         for data in datas:
             if len(data) < chunk_size:
-                self.buffer = data
+                self.data_window = data
                 return
             data_int16 = np.frombuffer(data, np.int16)
             data_float32 = self.int2float(data_int16)
             confidence = self.model(torch.from_numpy(data_float32), visitor.SAMPLE_RATE).item()
-            # print('confidence', confidence)
-            global is_speaking
-            if confidence >= 0.5 and not is_speaking:
-                is_speaking = True
-                print('is_speaking', is_speaking, 'confidence', confidence)
-            if confidence < 0.5 and is_speaking:
-                is_speaking = False
-                print('is_speaking', is_speaking, 'confidence', confidence)
-
-            self.tmp.append(confidence)
-
-            self.exec_next(data)
+            if self.is_plot:
+                self.confidences.append(confidence)
+            if confidence>=0.2:
+                self.exec_next(data)
 
     def stop(self, data):
-        time = list(range(len(self.tmp)))
-        plt.plot(time, self.tmp)
-        plt.title('按时间顺序排列的值')
-        plt.xlabel('时间')
-        plt.ylabel('值')
-        plt.show()
-
+        if self.is_plot:
+            time = list(range(len(self.confidences)))
+            plt.plot(time, self.confidences)
+            plt.title('confidences')
+            plt.xlabel('index')
+            plt.ylabel('value')
+            plt.show()
         self.stop_next(data)
 
     def int2float(self, data):
