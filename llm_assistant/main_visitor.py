@@ -1,4 +1,5 @@
 import pyaudio_visitor
+import louder_visitor
 import noisereduce_visitor
 import silero_vad_visitor
 import vosk_visitor
@@ -10,8 +11,9 @@ visitors = []
 
 visitors.append(pyaudio_visitor.PyAudioVisitor())
 visitors.append(noisereduce_visitor.NoiseReduceStreamVisitor())
+visitors.append(louder_visitor.LouderStreamVisitor(10))
 visitors.append(silero_vad_visitor.SileroVadStreamFilterMuteVisitor())
-# visitors.append(vosk_visitor.VoskStreamVisitor())
+visitors.append(vosk_visitor.VoskStreamVisitor())
 visitors.append(wave_save_visitor.WaveSaveVisitor())
 
 if not visitors:
@@ -30,7 +32,7 @@ def exec():
 thread = threading.Thread(target=exec)
 thread.start()
 
-time.sleep(300)
+time.sleep(250)
 
 visitors[0].stop(None)
 thread.join()

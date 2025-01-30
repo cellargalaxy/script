@@ -42,6 +42,8 @@ class VoskStreamVisitor(visitor.Visitor):
         self.stop_next(data)
 
     def accept(self, data):
+        if not data:
+            return
         with self.lock:
             if self.data_window is None:
                 self.data_window = data
