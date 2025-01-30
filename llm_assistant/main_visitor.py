@@ -11,7 +11,7 @@ visitors = []
 visitors.append(pyaudio_visitor.PyAudioVisitor())
 visitors.append(noisereduce_visitor.NoiseReduceStreamVisitor())
 visitors.append(silero_vad_visitor.SileroVadStreamFilterMuteVisitor())
-visitors.append(vosk_visitor.VoskStreamVisitor())
+# visitors.append(vosk_visitor.VoskStreamVisitor())
 visitors.append(wave_save_visitor.WaveSaveVisitor())
 
 if not visitors:

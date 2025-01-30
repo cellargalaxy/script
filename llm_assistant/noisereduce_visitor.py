@@ -1,8 +1,13 @@
 import visitor
-import math
 import numpy as np
 import noisereduce as nr
-import pyaudio
+
+
+def reduce_noise(data):
+    data_int16 = np.frombuffer(data, dtype=np.int16)
+    reduced_noise = nr.reduce_noise(y=data_int16, sr=visitor.SAMPLE_RATE)
+    reduced_noise = reduced_noise.astype(np.int16).tobytes()
+    return reduced_noise
 
 
 class NoiseReduceStreamVisitor(visitor.Visitor):
@@ -12,19 +17,8 @@ class NoiseReduceStreamVisitor(visitor.Visitor):
     first = True
 
     def __init__(self):
-        match visitor.FORMAT:
-            case pyaudio.paInt8:
-                chunk_size = visitor.CHUNK_SIZE
-            case pyaudio.paInt16:
-                chunk_size = visitor.CHUNK_SIZE * 2
-            case pyaudio.paInt24:
-                chunk_size = visitor.CHUNK_SIZE * 3
-            case pyaudio.paInt32:
-                chunk_size = visitor.CHUNK_SIZE * 4
-            case _:
-                raise TypeError("未支持的音频流格式")
-        self.trim_left_len = chunk_size * math.ceil(2 / (visitor.CHUNK_SIZE / visitor.SAMPLE_RATE))
-        self.trim_right_len = chunk_size * math.ceil(0.2 / (visitor.CHUNK_SIZE / visitor.SAMPLE_RATE))
+        self.trim_left_len = visitor.get_second_byte_size(2)
+        self.trim_right_len = visitor.get_second_byte_size(0.2)
 
     def start(self, data):
         self.first = True
@@ -37,9 +31,7 @@ class NoiseReduceStreamVisitor(visitor.Visitor):
             self.window_data += data
 
         if len(self.window_data) > self.trim_left_len + self.trim_right_len:
-            data_int16 = np.frombuffer(self.window_data, dtype=np.int16)
-            reduced_noise = nr.reduce_noise(y=data_int16, sr=visitor.SAMPLE_RATE)
-            reduced_noise = reduced_noise.astype(np.int16).tobytes()
+            reduced_noise = reduce_noise(self.window_data)
             if self.first:
                 self.exec_next(reduced_noise[:self.trim_left_len])
                 self.first = False
@@ -50,9 +42,7 @@ class NoiseReduceStreamVisitor(visitor.Visitor):
 
     def stop(self, data):
         if len(self.window_data) > 0:
-            data_int16 = np.frombuffer(self.window_data, dtype=np.int16)
-            reduced_noise = nr.reduce_noise(y=data_int16, sr=visitor.SAMPLE_RATE)
-            reduced_noise = reduced_noise.astype(np.int16).tobytes()
+            reduced_noise = reduce_noise(self.window_data)
             if self.first:
                 self.exec_next(reduced_noise[:self.trim_left_len])
                 self.first = False

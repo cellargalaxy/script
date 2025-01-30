@@ -12,12 +12,12 @@ class WaveSaveVisitor(visitor.Visitor):
         self.file_name = file_name
         if not self.file_name:
             self.file_name = '{}.wav'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-    def start(self, data):
         self.file = wave.open(self.file_name, 'wb')
         self.file.setnchannels(visitor.CHANNELS)
         self.file.setsampwidth(pyaudio.get_sample_size(visitor.FORMAT))
         self.file.setframerate(visitor.SAMPLE_RATE)
+
+    def start(self, data):
         self.writeframes(data)
         self.start_next(data)
 
