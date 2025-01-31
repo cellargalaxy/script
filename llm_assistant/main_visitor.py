@@ -13,9 +13,9 @@ import time
 visitors = []
 
 visitors.append(pyaudio_visitor.PyAudioVisitor())
-# visitors.append(silero_vad_visitor.SileroVadStreamFilterMuteVisitor())
-# visitors.append(noisereduce_visitor.NoiseReduceStreamVisitor())
-# visitors.append(louder_visitor.LouderStreamVisitor(10))
+visitors.append(silero_vad_visitor.SileroVadStreamFilterMuteVisitor())
+visitors.append(noisereduce_visitor.NoiseReduceStreamVisitor())
+visitors.append(louder_visitor.LouderStreamVisitor(10))
 # visitors.append(vosk_visitor.VoskStreamVisitor())
 # visitors.append(realtime_stt_visitor.RealtimeSttStreamVisitor("model/faster-whisper/base"))
 visitors.append(faster_whisper_visitor.FasterWhisperStreamVisitor("model/faster-whisper/base"))

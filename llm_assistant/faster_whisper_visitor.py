@@ -6,7 +6,6 @@ import io
 from pydub import AudioSegment
 import threading
 import time
-import wave_save_visitor
 
 
 class FasterWhisperStreamVisitor(visitor.Visitor):
@@ -15,16 +14,19 @@ class FasterWhisperStreamVisitor(visitor.Visitor):
     thread = None
     consuming = True
     data_list = []
+    sentence_window_len = 0
+    sentences = []
 
-    def __init__(self, model):
+    def __init__(self, model, sentence_window_len=3):
         self.model = WhisperModel(model, device="cpu", compute_type="int8")
         self.lock = threading.Lock()
         self.thread = threading.Thread(target=self.consumer)
         self.thread.start()
+        self.sentence_window_len = sentence_window_len
 
     def consumer(self):
         while self.consuming:
-            time.sleep(3)
+            time.sleep(0.2)
             self.stt()
 
     def stt(self):
@@ -39,32 +41,35 @@ class FasterWhisperStreamVisitor(visitor.Visitor):
         if not data:
             return
 
-        texts = self.transcribe(data)
+        sentences = self.transcribe(data)
 
-        if len(texts) <= 2:
-            for text in texts:
-                print(text.text)
-            return
+        if len(sentences) > self.sentence_window_len:
+            print(f"\r", end="")
+            for i in range(len(sentences) - self.sentence_window_len):
+                print(f'done {sentences[i].text}')
+        print(f"\rding {'；'.join([sentence.text for sentence in sentences[-self.sentence_window_len:]])}", end="")
 
-        # binary_io = self.wave(self.text_data)
-        # audio = AudioSegment.from_file(binary_io, format="wav")
-        # for text in texts:
-        #     start_ms = text.start * 1000
-        #     audio = audio[start_ms:]
-        #     self.text_data = audio.raw_data
-        #     break
+        end_ms = -1
+        for i in range(len(sentences) - self.sentence_window_len):
+            end_ms = sentences[i].end * 1000
+        if end_ms > 0:
+            binary_io = self.gen_wave_binary_io(data)
+            audio = AudioSegment.from_file(binary_io, format="wav")
+            audio = audio[end_ms:]
+            data = audio.raw_data
+            with self.lock:
+                data_list = [data]
+                for i in range(data_list_len, len(self.data_list)):
+                    data_list.append(self.data_list[i])
+                self.data_list = data_list
 
     def transcribe(self, data):
-        print('---')
-        print(len(data))
-        wave_save_visitor.writeframes(data)
-
         binary_io = self.gen_wave_binary_io(data)
-        segments, _ = self.model.transcribe(binary_io)
-        texts = []
+        segments, info = self.model.transcribe(binary_io)
+        sentences = []
         for segment in segments:
-            texts.append(segment)
-        return texts
+            sentences.append(segment)
+        return sentences
 
     def gen_wave_binary_io(self, data):
         binary_io = io.BytesIO()

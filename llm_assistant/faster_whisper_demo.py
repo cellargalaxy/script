@@ -13,7 +13,7 @@ model = WhisperModel("model/faster-whisper/base", device="cpu", compute_type="in
 print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 # segments, info = model.transcribe(os.path.join(os.path.expanduser("~"), "download/27792247860-1-192.mp4"))
-segments, info = model.transcribe("2025-01-31 20:57:33-wav.wav")
+segments, info = model.transcribe("2025-01-31 21:02:43-wav.wav")
 
 print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
 
