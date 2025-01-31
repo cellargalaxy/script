@@ -42,10 +42,10 @@ class SileroVadStreamFilterMuteVisitor(visitor.Visitor):
             speaking, confidences = self.is_speaks(self.data_window)
             if not self.is_mute() and not speaking:
                 self.mute += len(confidences)
-                if self.is_mute():
-                    print(f"\n没说话")
+                # if self.is_mute():
+                #     print(f"\n没说话")
             if self.is_mute() and speaking:
-                print(f"\n有说话")
+                # print(f"\n有说话")
                 self.mute = 0
                 self.exec_next_mute(self.data_window[:-len(data)])
             self.data_window = None
@@ -71,7 +71,7 @@ class SileroVadStreamFilterMuteVisitor(visitor.Visitor):
         for data in data_list:
             confidence = self.confidence(data)
             confidences.append(confidence)
-        print(f"\rconfidences: {confidences}", end="")
+        # print(f"\rconfidences: {confidences}", end="")
         for confidence in confidences:
             if confidence >= 0.2:
                 return True, confidences
