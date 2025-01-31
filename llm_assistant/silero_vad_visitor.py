@@ -1,23 +1,28 @@
 import visitor
 import numpy as np
 import torch
+import math
 
 
 class SileroVadStreamFilterMuteVisitor(visitor.Visitor):
     model = None
     chunk_size = 0
+    window_count = 0
     window_len = 0
-    mute = True
+    mute_threshold = 0
+    mute = 0
     data_window = None
 
     def __init__(self):
         self.model, _ = torch.hub.load(repo_or_dir='model/silero-vad/master', model='silero_vad', source='local')
         self.chunk_size = visitor.get_chunk_byte_size()
-        self.window_len = visitor.get_second_byte_size(0.2)
-        self.confidences = []
+        self.window_count = visitor.get_second_chunk_count(0.2)
+        self.window_len = self.chunk_size * self.window_count
+        self.mute_threshold = math.ceil(2 / 0.2)
+        self.mute = self.mute_threshold
 
     def start(self, data):
-        if not self.mute:
+        if not self.is_mute():
             self.start_next(data)
 
     def exec(self, data):
@@ -29,34 +34,35 @@ class SileroVadStreamFilterMuteVisitor(visitor.Visitor):
             self.data_window += data
 
         # 有说话->有说话：不用处理
-        # 有说话->没说话：mute=True即可
-        # 没说话->有说话：mute=False，将前几个data补上，最后exec_next_mute里写入
+        # 有说话->没说话：mute+=1
+        # 没说话->有说话：mute=0，将前几个data补上，最后exec_next_mute里写入
         # 没说话->没说话：不用处理
 
         if len(self.data_window) >= self.window_len:
-            speaking = self.is_speaks(self.data_window)
-            if not self.mute and not speaking:
-                # print(f"\n没说话")
-                self.mute = True
-            if self.mute and speaking:
-                # print(f"\n有说话")
-                self.mute = False
+            speaking, confidences = self.is_speaks(self.data_window)
+            if not self.is_mute() and not speaking:
+                self.mute += len(confidences)
+                if self.is_mute():
+                    print(f"\n没说话")
+            if self.is_mute() and speaking:
+                print(f"\n有说话")
+                self.mute = 0
                 self.exec_next_mute(self.data_window[:-len(data)])
             self.data_window = None
         self.exec_next_mute(data)
 
     def is_speaks(self, data_window):
         datas = [data_window[i:i + self.chunk_size] for i in range(0, len(data_window), self.chunk_size)]
-        step = visitor.get_second_chunk_count(0.5)
+        step = self.window_count
         if step <= 0:
             step = 1
         indexs = []
         for i in range(0, len(datas), step):
             indexs.append(i)
         indexs.append(len(datas) - 1)
+        indexs = list(set(indexs))
         if len(indexs) <= 2:
             indexs = [len(datas) - 1]
-        indexs = list(set(indexs))
         data_list = []
         for index in indexs:
             data_list.append(datas[index])
@@ -65,11 +71,11 @@ class SileroVadStreamFilterMuteVisitor(visitor.Visitor):
         for data in data_list:
             confidence = self.confidence(data)
             confidences.append(confidence)
-        # print(f"\rconfidences: {confidences}", end="")
+        print(f"\rconfidences: {confidences}", end="")
         for confidence in confidences:
             if confidence >= 0.2:
-                return True
-        return False
+                return True, confidences
+        return False, confidences
 
     def confidence(self, data):
         data_int16 = np.frombuffer(data, np.int16)
@@ -78,12 +84,15 @@ class SileroVadStreamFilterMuteVisitor(visitor.Visitor):
         return confidence
 
     def exec_next_mute(self, data):
-        if not self.mute:
+        if not self.is_mute():
             self.exec_next(data)
 
     def stop(self, data):
-        if not self.mute:
+        if not self.is_mute():
             self.stop_next(data)
+
+    def is_mute(self):
+        return self.mute >= self.mute_threshold
 
     def int2float(self, data):
         abs_max = np.abs(data).max()

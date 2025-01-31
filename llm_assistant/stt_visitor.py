@@ -16,10 +16,12 @@ class SttStreamVisitor(visitor.Visitor):
 
     def consumer(self):
         while self.consuming:
-            time.sleep(0.1)
+            time.sleep(0.5)
             with self.lock:
                 data = self.data_window
                 self.data_window = None
+            if not data:
+                continue
             self.stt(data)
 
     def start(self, data):
