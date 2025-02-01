@@ -18,7 +18,7 @@ class SileroVadStreamFilterMuteVisitor(visitor.Visitor):
         self.chunk_size = visitor.get_chunk_byte_size()
         self.window_count = visitor.get_second_chunk_count(0.2)
         self.window_len = self.chunk_size * self.window_count
-        self.mute_threshold = math.ceil(2 / 0.2)
+        self.mute_threshold = math.ceil(visitor.MUTE_SECOND / 0.2)
         self.mute = self.mute_threshold
 
     def start(self, data):

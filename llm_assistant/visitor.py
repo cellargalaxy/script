@@ -5,6 +5,7 @@ CHUNK_SIZE = 512  # 设置音频流的数据块大小
 FORMAT = pyaudio.paInt16  # 设置音频流的格式为16位整型，也就是2字节
 CHANNELS = 1  # 设置音频流的通道数为1
 SAMPLE_RATE = 16000  # 设置音频流的采样率为16KHz
+MUTE_SECOND = 2  # 沉默2秒静音
 
 
 class Visitor:

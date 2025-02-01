@@ -14,6 +14,7 @@ class FasterWhisperStreamVisitor(visitor.Visitor):
     thread = None
     consuming = True
     data_list = []
+    last_data_time = 0
     sentence_window_len = 0
     sentences = []
 
@@ -63,6 +64,13 @@ class FasterWhisperStreamVisitor(visitor.Visitor):
                     data_list.append(self.data_list[i])
                 self.data_list = data_list
 
+        if self.is_mute():
+            self.data_list = []
+
+            print(f"\r", end="")
+            for sentence in sentences[-self.sentence_window_len:]:
+                print(f'done {sentence.text}')
+
     def transcribe(self, data):
         binary_io = self.gen_wave_binary_io(data)
         segments, info = self.model.transcribe(binary_io)
@@ -98,5 +106,10 @@ class FasterWhisperStreamVisitor(visitor.Visitor):
     def accept(self, data):
         if not data:
             return
+        self.last_data_time = time.time()
         with self.lock:
             self.data_list.append(data)
+
+    def is_mute(self):
+        mute = time.time() - self.last_data_time >= visitor.MUTE_SECOND
+        return mute

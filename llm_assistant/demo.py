@@ -10,3 +10,6 @@ for i in range(0, 4):
     print(data[i])
 
 print(data[-4:])
+
+import time
+print(time.time()  )
