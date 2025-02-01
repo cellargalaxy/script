@@ -21,6 +21,17 @@ class SherpaNcnnStreamVisitor(stt_visitor.SttStreamVisitor):
             num_threads=4,
             enable_endpoint_detection=True,
         )
+        # self.recognizer = sherpa_ncnn.Recognizer(
+        #     tokens="model/sherpa-ncnn/sherpa-ncnn-streaming-zipformer-small-bilingual-zh-en-2023-02-16/tokens.txt",
+        #     encoder_param="model/sherpa-ncnn/sherpa-ncnn-streaming-zipformer-small-bilingual-zh-en-2023-02-16/encoder_jit_trace-pnnx.ncnn.param",
+        #     encoder_bin="model/sherpa-ncnn/sherpa-ncnn-streaming-zipformer-small-bilingual-zh-en-2023-02-16/encoder_jit_trace-pnnx.ncnn.bin",
+        #     decoder_param="model/sherpa-ncnn/sherpa-ncnn-streaming-zipformer-small-bilingual-zh-en-2023-02-16/decoder_jit_trace-pnnx.ncnn.param",
+        #     decoder_bin="model/sherpa-ncnn/sherpa-ncnn-streaming-zipformer-small-bilingual-zh-en-2023-02-16/decoder_jit_trace-pnnx.ncnn.bin",
+        #     joiner_param="model/sherpa-ncnn/sherpa-ncnn-streaming-zipformer-small-bilingual-zh-en-2023-02-16/joiner_jit_trace-pnnx.ncnn.param",
+        #     joiner_bin="model/sherpa-ncnn/sherpa-ncnn-streaming-zipformer-small-bilingual-zh-en-2023-02-16/joiner_jit_trace-pnnx.ncnn.bin",
+        #     num_threads=4,
+        #     enable_endpoint_detection=True,
+        # )
 
     def stt(self, data):
         data_int16 = np.frombuffer(data, dtype=np.int16)
