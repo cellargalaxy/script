@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 mkdir -p snapshots
 mkdir -p recordings
 
