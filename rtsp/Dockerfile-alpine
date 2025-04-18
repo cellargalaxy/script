@@ -1,0 +1,38 @@
+FROM python:3.9-alpine
+
+WORKDIR /
+COPY snapshot.sh .
+COPY recording.sh .
+COPY clean.sh .
+COPY requirements.txt .
+COPY download_model.sh .
+COPY main.py .
+
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
+RUN apk update
+RUN apk --no-cache add ca-certificates
+RUN apk add tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Asia/Shanghai" > /etc/timezone && apk del tzdata
+RUN apk add --no-cache \
+    build-base \
+    gcc \
+    g++ \
+    musl-dev \
+    python3-dev \
+    libffi-dev \
+    openblas-dev \
+    freetype-dev \
+    libpng-dev \
+    jpeg-dev \
+    tiff-dev \
+    linux-headers \
+    bash \
+    curl \
+    ffmpeg
+
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir --extra-index-url https://google-coral.github.io/py-repo/ "ultralytics" "opencv-python-headless" "tflite_runtime"
+RUN #pip install --no-cache-dir --extra-index-url https://google-coral.github.io/py-repo/ "tflite_runtime" "opencv-python-headless" "ultralytics==8.3.111"
+RUN #pip install --no-cache-dir "tflite_runtime" "opencv-python" "ultralytics" "tf_keras" "sng4onnx>=1.0.1" "onnx_graphsurgeon>=0.3.26" "ai-edge-litert>=1.2.0" "onnx>=1.12.0" "onnx2tf" "onnxslim>=0.1.31" "tflite_support" "onnxruntime" --extra-index-url https://pypi.ngc.nvidia.com
+RUN #pip install --no-cache-dir -r requirements.txt --extra-index-url https://google-coral.github.io/py-repo/
+RUN bash download_model.sh
+CMD ["python", "main.py"]

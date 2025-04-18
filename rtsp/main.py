@@ -44,4 +44,5 @@ def run_command(cmd):
 
 
 while True:
-    time.sleep(10)
+    print(f"执行main")
+    time.sleep(100000)
