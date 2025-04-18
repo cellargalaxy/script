@@ -2,7 +2,9 @@ import traceback
 import threading
 import subprocess
 import time
+import logging
 
+logging.basicConfig(level=logging.INFO)
 
 def task_actuator(task_func):
     while True:
@@ -45,4 +47,5 @@ def run_command(cmd):
 
 while True:
     print(f"执行main")
+    logging.info("执行main")
     time.sleep(100000)

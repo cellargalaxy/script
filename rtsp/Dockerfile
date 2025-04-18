@@ -29,11 +29,8 @@ RUN apt update && apt install -y --no-install-recommends \
     apt clean && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip
-RUN pip install --extra-index-url https://download.pytorch.org/whl/cpu \
-    tflite_runtime \
-    opencv-python-headless \
-    torch torchvision torchaudio \
-    ultralytics \
+RUN #pip install --extra-index-url https://download.pytorch.org/whl/cpu "tflite_runtime" "opencv-python-headless" "torch" "torchvision" "torchaudio" "ultralytics"
+RUN pip install --extra-index-url https://download.pytorch.org/whl/cpu "tflite_runtime" "opencv-python-headless" "ultralytics" "tf_keras" "sng4onnx>=1.0.1" "onnx_graphsurgeon>=0.3.26" "ai-edge-litert>=1.2.0" "onnx>=1.12.0" "onnx2tf" "onnxslim>=0.1.31" "tflite_support" "onnxruntime"
 
 RUN bash download_model.sh
 CMD ["python", "main.py"]
