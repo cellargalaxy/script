@@ -3,49 +3,267 @@ import threading
 import subprocess
 import time
 import logging
+import cv2
+import os
+import queue
+from datetime import datetime
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
+
 
 def task_actuator(task_func):
     while True:
         try:
             task_func()
         except Exception as e:
-            print(f"任务执行器，执行任务异常，任务名称：{threading.current_thread().name}，异常：{e}")
+            logging.error("任务执行器，执行任务异常，任务名称：%s，异常：%s", threading.current_thread().name, e)
             traceback.print_exc()
         time.sleep(1)
 
 
 def task_guardian(task_name, task_func):
-    def actuator():
+    def func():
         task_actuator(task_func)
 
     while True:
         try:
-            thread = threading.Thread(target=actuator, name=task_name)
+            thread = threading.Thread(target=func, name=task_name)
             thread.start()
             thread.join()
-            print(f"任务守护者，任务执行器{task_name}退出，重新启动")
+            logging.info("任务守护者，任务执行器[%s]退出，重新启动", task_name)
         except BaseException as e:
-            print(f"任务守护者，捕获严重错误: {e}")
+            logging.error("任务守护者，捕获严重错误: %s", e)
             traceback.print_exc()
         time.sleep(1)
 
 
 def thread_guardian(task_name, task_func):
-    def actuator():
+    def func():
         task_guardian(task_name, task_func)
 
-    thread = threading.Thread(target=actuator, daemon=True)
+    thread = threading.Thread(target=func, daemon=True)
     thread.start()
 
 
 def run_command(cmd):
     result = subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    print(f"执行命令，输出: {result}")
+    logging.info("执行命令，输出：", result)
 
+
+class SnapshotTask:
+    duration_second = None
+    output_dir = None
+    lock = None
+    fps = None
+    width = None
+    height = None
+    frame = None
+
+    def __init__(self, duration_second, output_dir):
+        self.duration_second = duration_second
+        self.output_dir = output_dir
+        self.lock = threading.Lock()
+
+    def get_frame(self):
+        self.lock.acquire()
+        try:
+            fps = self.fps
+            width = self.width
+            height = self.height
+            frame = self.frame
+            self.frame = None
+        finally:
+            self.lock.release()
+        return fps, width, height, frame
+
+    def set_frame(self, fps, width, height, frame):
+        self.lock.acquire()
+        try:
+            self.fps = fps
+            self.width = width
+            self.height = height
+            self.frame = frame
+        finally:
+            self.lock.release()
+
+    def exec(self):
+        os.makedirs(self.output_dir, exist_ok=True)
+        while True:
+            fps, width, height, frame = self.get_frame()
+            if frame is None:
+                continue
+            now = datetime.now()
+            timestamp = now.strftime("%Y%m%d_%H%M%S") + f"_{now.microsecond // 1000:03d}"
+            filename = os.path.join(self.output_dir, f"{timestamp}.jpg")
+            result = cv2.imwrite(filename, frame)
+            logging.info("保存截图：%s，结果：%s", filename, result)
+            time.sleep(self.duration_second)
+
+
+class RecordTask:
+    duration_second = None
+    output_dir = None
+    lock = None
+    fps = None
+    width = None
+    height = None
+    frame_queue = None
+
+    def __init__(self, duration_second, output_dir):
+        self.duration_second = duration_second
+        self.output_dir = output_dir
+        self.lock = threading.Lock()
+        self.frame_queue = queue.Queue(maxsize=1024)
+
+    def get_frame(self):
+        frame = self.frame_queue.get()
+        self.lock.acquire()
+        try:
+            fps = self.fps
+            width = self.width
+            height = self.height
+        finally:
+            self.lock.release()
+        return fps, width, height, frame
+
+    def set_frame(self, fps, width, height, frame):
+        self.lock.acquire()
+        try:
+            self.fps = fps
+            self.width = width
+            self.height = height
+            self.frame_queue.put_nowait(frame)
+        finally:
+            self.lock.release()
+
+    def create_writer(self, fps, width, height):
+        now = datetime.now()
+        timestamp = now.strftime("%Y%m%d_%H%M%S") + f"_{now.microsecond // 1000:03d}"
+        filename = os.path.join(self.output_dir, f"{timestamp}.mp4")
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        writer = cv2.VideoWriter(filename, fourcc, fps, (width, height))
+        logging.info("保存视频：%s", filename)
+        return writer
+
+    def exec(self):
+        os.makedirs(self.output_dir, exist_ok=True)
+        start_time = None
+        writer = None
+        try:
+            while True:
+                fps, width, height, frame = self.get_frame()
+                if frame is None:
+                    continue
+                if not writer:
+                    writer = self.create_writer(fps, width, height)
+                    start_time = time.time()
+                if not start_time:
+                    start_time = time.time()
+                now = time.time()
+                if self.duration_second <= now - start_time:
+                    writer.release()
+                    writer = self.create_writer(fps, width, height)
+                    start_time = time.time()
+                writer.write(frame)
+        finally:
+            if writer:
+                writer.release()
+
+
+class RtspTask:
+    lock = None
+    handler_func = None
+    rtsp_url = None
+
+    def __init__(self, rtsp_url):
+        self.lock = threading.Lock()
+        self.rtsp_url = rtsp_url
+
+    def get_handler_func(self):
+        self.lock.acquire()
+        try:
+            handler_func = self.handler_func
+        finally:
+            self.lock.release()
+        return handler_func
+
+    def set_handler_func(self, handler_func):
+        self.lock.acquire()
+        try:
+            self.handler_func = handler_func
+        finally:
+            self.lock.release()
+
+    def open_rtsp(self):
+        cap = cv2.VideoCapture(self.rtsp_url)
+        if not cap.isOpened():
+            logging.error("无法打开RTSP流: %s", self.rtsp_url)
+            return None, None, None, None
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        if fps <= 0 or fps > 60:
+            fps = 10
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        logging.error("打开RTSP流，url: %s，fps: %s，width: %s，height: %s", self.rtsp_url, fps, width, height)
+        return fps, width, height, cap
+
+    def exec(self):
+        cap = None
+        try:
+            fps, width, height, cap = self.open_rtsp()
+            if not cap:
+                return
+            while True:
+                handler_func = self.get_handler_func()
+                if not handler_func:
+                    logging.error("处理器为空，重试")
+                    time.sleep(1)
+                    continue
+                ret, frame = cap.read()
+                if not ret:
+                    logging.error("断流或读取失败，重试")
+                    time.sleep(1)
+                    continue
+                handler_func(fps, width, height, frame)
+                time.sleep(1 / fps)
+        finally:
+            if cap:
+                cap.release()
+
+
+snapshot_task = SnapshotTask(1, "output/snapshot")
+record_task = RecordTask(60 * 5, "output/record")
+
+
+def handler_func(fps, width, height, frame):
+    snapshot_task.set_frame(fps, width, height, frame)
+    record_task.set_frame(fps, width, height, frame)
+
+
+rtsp_url = os.environ.get("rtsp_url")
+rtsp_task = RtspTask(rtsp_url)
+rtsp_task.set_handler_func(handler_func)
+
+
+def snapshot_task_func():
+    snapshot_task.exec()
+
+
+def record_task_func():
+    record_task.exec()
+
+
+def rtsp_task_func():
+    rtsp_task.exec()
+
+
+thread_guardian("snapshot", snapshot_task_func)
+thread_guardian("record", record_task_func)
+thread_guardian("rtsp", rtsp_task_func)
 
 while True:
-    print(f"执行main")
-    logging.info("执行main")
     time.sleep(100000)
