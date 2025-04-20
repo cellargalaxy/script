@@ -54,6 +54,14 @@ def run_command(cmd):
     logging.info("执行命令，输出：", result)
 
 
+def run_snapshot_and_recording():
+    run_command("bash snapshot_and_recording.sh")
+
+
+def run_clean():
+    run_command("bash clean.sh")
+
+
 class SnapshotTask:
     duration_second = None
     output_dir = None
@@ -261,9 +269,11 @@ def rtsp_task_func():
     rtsp_task.exec()
 
 
-thread_guardian("snapshot", snapshot_task_func)
-thread_guardian("record", record_task_func)
-thread_guardian("rtsp", rtsp_task_func)
+# thread_guardian("snapshot", snapshot_task_func)
+# thread_guardian("record", record_task_func)
+# thread_guardian("rtsp", rtsp_task_func)
+thread_guardian("snapshot_and_recording", run_snapshot_and_recording)
+thread_guardian("clean", run_clean)
 
 while True:
-    time.sleep(100000)
+    time.sleep(100)

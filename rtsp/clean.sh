@@ -1,14 +1,23 @@
 #!/usr/bin/env bash
 
-mkdir -p output/snapshot
-mkdir -p output/record
+if [ -z $snapshot_save ]; then
+  snapshot_save=500
+fi
+if [ -z $record_save ]; then
+  record_save=300
+fi
+
+snapshot_dir="output/snapshot"
+record_dir="output/record"
+mkdir -p $snapshot_dir
+mkdir -p $record_dir
 
 while true; do
-    sleep 60
-    echo 'clean start'
-    ls -t output/snapshot/*.webp | tail -n +$((500+1)) | xargs rm -f
-    ls -t output/record/*.mp4 | tail -n +$((50+1)) | xargs rm -f
+    echo 'clean start,snapshot_save:'$snapshot_save',record_save:'$record_save
+    ls -t output/snapshot/*.webp | tail -n +$(($snapshot_save+1)) | xargs rm -f
+    ls -t output/record/*.mp4 | tail -n +$(($record_save+1)) | xargs rm -f
     echo 'clean done'
+    sleep 60
 done
 
 

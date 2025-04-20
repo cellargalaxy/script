@@ -7,8 +7,32 @@ if [ -z $server_name ]; then
   server_name="rtsp"
 fi
 
+while :; do
+  if [ ! -z $rtsp_url ]; then
+    break
+  fi
+  read -p "please enter rtsp_url(required):" rtsp_url
+done
+
+if [ -z $snapshot_save ]; then
+  read -p "please enter snapshot_save(default:500):" snapshot_save
+fi
+if [ -z $snapshot_save ]; then
+  snapshot_save=500
+fi
+
+if [ -z $record_save ]; then
+  read -p "please enter record_save(default:300):" record_save
+fi
+if [ -z $record_save ]; then
+  record_save=300
+fi
+
 echo
 echo "server_name: $server_name"
+echo "rtsp_url: $rtsp_url"
+echo "snapshot_save: $snapshot_save"
+echo "record_save: $record_save"
 echo "input any key go on, or control+c over"
 read
 
