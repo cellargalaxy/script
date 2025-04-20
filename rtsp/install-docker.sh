@@ -48,7 +48,13 @@ echo 'docker run'
 docker run -d \
   --restart=always \
   --name $server_name \
+  -v $server_name'_resource':/output \
+  -e PUID=$UID \
+  -e PGID=$GID \
   -e server_name=$server_name \
+  -e rtsp_url=$rtsp_url \
+  -e snapshot_save=$snapshot_save \
+  -e record_save=$record_save \
   $server_name
 
 echo 'all finish'

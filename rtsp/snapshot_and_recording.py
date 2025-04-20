@@ -51,15 +51,16 @@ def run_command(cmd):
 
 
 def run_snapshot_and_recording():
-    run_command("bash snapshot_and_recording.sh")
+    run_command("sh snapshot_and_recording.sh")
 
 
 def run_clean():
-    run_command("bash clean.sh")
+    run_command("sh clean.sh")
 
 
 thread_guardian("snapshot_and_recording", run_snapshot_and_recording)
 thread_guardian("clean", run_clean)
 
 while True:
-    time.sleep(100)
+    logging.info("运行中")
+    time.sleep(10)

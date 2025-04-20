@@ -11,7 +11,7 @@ if [ -z $rtsp_url ]; then
   exit 1
 fi
 
-./ffmpeg -rtsp_transport tcp -i "$rtsp_url" \
+ffmpeg -rtsp_transport tcp -i "$rtsp_url" \
   -vf "fps=1" -vsync vfr -c:v libwebp -q:v 80 -an -f image2 -strftime 1 "output/snapshot/%Y%m%d_%H%M%S.webp" \
   -c:v copy -an -f segment -segment_time 300 -strftime 1 "output/record/%Y%m%d_%H%M%S.mp4"
 
