@@ -12,6 +12,8 @@ if [ -z $rtsp_url ]; then
 fi
 
 ffmpeg -rtsp_transport tcp -i "$rtsp_url" \
+  -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 10 \
   -vf "fps=1" -vsync vfr -c:v libwebp -q:v 80 -an -f image2 -strftime 1 "output/snapshot/%Y%m%d_%H%M%S.webp" \
+  -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 10 \
   -c:v copy -an -f segment -segment_time 300 -strftime 1 "output/record/%Y%m%d_%H%M%S.mp4"
 
