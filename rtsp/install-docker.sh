@@ -14,6 +14,13 @@ while :; do
   read -p "please enter rtsp_url(required):" rtsp_url
 done
 
+if [ -z $output_dir ]; then
+  read -p "please enter output_dir(default:volume):" output_dir
+fi
+if [ -z $output_dir ]; then
+  output_dir=$server_name'_resource'
+fi
+
 if [ -z $snapshot_save ]; then
   read -p "please enter snapshot_save(default:500):" snapshot_save
 fi
@@ -48,9 +55,7 @@ echo 'docker run'
 docker run -d \
   --restart=always \
   --name $server_name \
-  -v $server_name'_resource':/output \
-  -e PUID=$UID \
-  -e PGID=$GID \
+  -v $output_dir:/output \
   -e server_name=$server_name \
   -e rtsp_url=$rtsp_url \
   -e snapshot_save=$snapshot_save \
