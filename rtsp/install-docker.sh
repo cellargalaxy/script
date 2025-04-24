@@ -7,6 +7,13 @@ if [ -z $server_name ]; then
   server_name="rtsp"
 fi
 
+if [ -z "$listen_port" ]; then
+  read -p "please enter listen port(default:4747):" listen_port
+fi
+if [ -z "$listen_port" ]; then
+  listen_port="4747"
+fi
+
 while :; do
   if [ ! -z $rtsp_url ]; then
     break
@@ -37,6 +44,7 @@ fi
 
 echo
 echo "server_name: $server_name"
+echo "listen_port: $listen_port"
 echo "rtsp_url: $rtsp_url"
 echo "snapshot_save: $snapshot_save"
 echo "record_save: $record_save"
@@ -56,6 +64,7 @@ docker run -d \
   --restart=always \
   --name $server_name \
   -v $output_dir:/output \
+  -p $listen_port:4747 \
   -e server_name=$server_name \
   -e rtsp_url=$rtsp_url \
   -e snapshot_save=$snapshot_save \
