@@ -6,7 +6,7 @@ RUN apk --no-cache add ca-certificates
 RUN apk add tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Asia/Shanghai" > /etc/timezone && apk del tzdata
 RUN apk add openssh zsh bash curl git wget vim && rm -rf /var/cache/apk/*
 
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+RUN sh -c "$(curl -fsSL https://install.ohmyz.sh)" "" --unattended
 RUN ln -sf /bin/zsh /bin/sh
 WORKDIR /root
 CMD ["sleep", "infinity"]
