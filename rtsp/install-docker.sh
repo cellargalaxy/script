@@ -7,13 +7,6 @@ if [ -z $server_name ]; then
   server_name="rtsp"
 fi
 
-if [ -z "$listen_port" ]; then
-  read -p "please enter listen port(default:'127.0.0.1:4747'):" listen_port
-fi
-if [ -z "$listen_port" ]; then
-  listen_port="127.0.0.1:4747"
-fi
-
 while :; do
   if [ ! -z $rtsp_url ]; then
     break
@@ -28,6 +21,13 @@ if [ -z $output_dir ]; then
   output_dir=$server_name'_resource'
 fi
 
+if [ -z $cpu_use ]; then
+  read -p "please enter cpu_use(default:0.8):" cpu_use
+fi
+if [ -z $cpu_use ]; then
+  cpu_use="0.8"
+fi
+
 if [ -z $snapshot_save ]; then
   read -p "please enter snapshot_save(default:500):" snapshot_save
 fi
@@ -36,16 +36,17 @@ if [ -z $snapshot_save ]; then
 fi
 
 if [ -z $record_save ]; then
-  read -p "please enter record_save(default:300):" record_save
+  read -p "please enter record_save(default:100):" record_save
 fi
 if [ -z $record_save ]; then
-  record_save=300
+  record_save=100
 fi
 
 echo
 echo "server_name: $server_name"
-echo "listen_port: $listen_port"
 echo "rtsp_url: $rtsp_url"
+echo "output_dir: $output_dir"
+echo "cpu_use: $cpu_use"
 echo "snapshot_save: $snapshot_save"
 echo "record_save: $record_save"
 echo "input any key go on, or control+c over"
@@ -64,7 +65,8 @@ docker run -d \
   --restart=always \
   --name $server_name \
   -v $output_dir:/output \
-  -p $listen_port:4747 \
+  --net=host \
+  --cpus=$cpu_use \
   -e server_name=$server_name \
   -e rtsp_url=$rtsp_url \
   -e snapshot_save=$snapshot_save \
