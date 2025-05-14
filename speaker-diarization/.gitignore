@@ -1,0 +1,10 @@
+output/
+log/*
+/conf/kitex_remote_config.json
+/.idea
+/.ftt/
+*.mp3
+*.mp4
+*.wav
+PaddleSpeech
+speaker_segments
