@@ -8,3 +8,7 @@ log/*
 *.wav
 PaddleSpeech
 speaker_segments
+pyannote
+*.vtt
+ffmpeg
+ffmpeg-release-amd64-static.tar.xz
