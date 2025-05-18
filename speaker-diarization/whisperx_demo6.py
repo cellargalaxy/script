@@ -7,11 +7,11 @@ import gc
 import torch
 
 API_TOKEN = ""
-audio_file = "[Judas] Ookami to Koushinryou (2024) - S01E01.mkv"
+audio_file = "input.wav"
 device = "cpu"  # cuda/cpu
 batch_size = 16
 compute_type = "float32"
-whisper_size = "large-v2"
+whisper_size = "large-v3"
 
 model = whisperx.load_model(whisper_size, device, compute_type=compute_type)
 audio = whisperx.load_audio(audio_file)

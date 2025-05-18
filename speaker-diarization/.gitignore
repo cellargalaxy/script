@@ -12,3 +12,5 @@ pyannote
 *.vtt
 ffmpeg
 ffmpeg-release-amd64-static.tar.xz
+*.srt
+*.mkv
