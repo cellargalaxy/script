@@ -1,7 +1,7 @@
 from faster_whisper import WhisperModel
 import pysubs2
 
-audio_file = "long.mkv"
+audio_file = "short.mkv"
 device = "cpu"  # cuda/cpu
 batch_size = 16
 compute_type = "int8"
@@ -16,4 +16,4 @@ for s in segments:
     results.append(segment_dict)
 
 subs = pysubs2.load_from_whisper(results)
-subs.save('long.srt')
+subs.save('short.srt')
