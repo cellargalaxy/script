@@ -3,7 +3,7 @@ import pysubs2
 from pydub import AudioSegment
 import os
 
-audio_file = "short.mkv"
+audio_file = "short.wav"
 output_dir = "faster_whisper_split_demo"
 device = "cpu"  # cuda/cpu
 batch_size = 16
