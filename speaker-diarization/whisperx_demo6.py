@@ -7,10 +7,10 @@ import gc
 import torch
 
 API_TOKEN = ""
-audio_file = "input.wav"
+audio_file = "short.wav"
 device = "cpu"  # cuda/cpu
 batch_size = 16
-compute_type = "float32"
+compute_type = "int8"
 whisper_size = "large-v3"
 
 model = whisperx.load_model(whisper_size, device, compute_type=compute_type)
