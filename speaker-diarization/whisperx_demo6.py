@@ -23,7 +23,7 @@ del model
 
 model_a, metadata = whisperx.load_align_model(language_code=result["language"], device=device)
 aligned_result = whisperx.align(result["segments"], model_a, metadata, audio, device, return_char_alignments=False)
-print('aligned_result', json.dumps(aligned_result))
+print('aligned_result',len(aligned_result['segments']), json.dumps(aligned_result))
 gc.collect()
 torch.cuda.empty_cache()
 del model_a
