@@ -1,4 +1,4 @@
-from speechbrain.inference.speaker import SpeakerRecognition
+from speechbrain.processing.diarization import SpeakerRecognition
 import  json
 
 diarization = SpeakerRecognition.from_hparams(source="speechbrain/spkrec-ecapa-voxceleb", savedir="tmpdir")
