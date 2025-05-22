@@ -1,3 +1,5 @@
+# 可用
+
 import whisper_timestamped as whisper
 import pysubs2
 from whisperx.utils import get_writer
