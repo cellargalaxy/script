@@ -1,0 +1,78 @@
+[
+  {
+    "id": 0,
+    "seek": 0,
+    "start": 0.0,
+    "end": 7.44,
+    "text": " Come on, I want to hear a story.",
+    "tokens": [
+      50365,
+      2492,
+      322,
+      11,
+      286,
+      528,
+      281,
+      1568,
+      257,
+      1657,
+      13,
+      50747
+    ],
+    "temperature": 0.0,
+    "avg_logprob": -0.20938345763060423,
+    "compression_ratio": 1.5466666666666666,
+    "no_speech_prob": 0.293070524930954,
+    "confidence": 0.864,
+    "words": [
+      {
+        "text": "Come",
+        "start": 0.0,
+        "end": 4.8,
+        "confidence": 0.413
+      },
+      {
+        "text": "on,",
+        "start": 4.8,
+        "end": 5.82,
+        "confidence": 0.994
+      },
+      {
+        "text": "I",
+        "start": 6.08,
+        "end": 6.48,
+        "confidence": 0.988
+      },
+      {
+        "text": "want",
+        "start": 6.48,
+        "end": 6.68,
+        "confidence": 0.774
+      },
+      {
+        "text": "to",
+        "start": 6.68,
+        "end": 6.78,
+        "confidence": 0.998
+      },
+      {
+        "text": "hear",
+        "start": 6.78,
+        "end": 6.92,
+        "confidence": 0.999
+      },
+      {
+        "text": "a",
+        "start": 6.92,
+        "end": 7.02,
+        "confidence": 0.997
+      },
+      {
+        "text": "story.",
+        "start": 7.02,
+        "end": 7.44,
+        "confidence": 0.999
+      }
+    ]
+  }
+]

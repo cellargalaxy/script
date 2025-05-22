@@ -31,9 +31,9 @@ del model_a
 diarize_model = whisperx.diarize.DiarizationPipeline(use_auth_token=API_TOKEN, device=device)
 diarize_segments = diarize_model(audio)
 diarize_result = whisperx.assign_word_speakers(diarize_segments, aligned_result)
+diarize_result["language"] = result["language"]
 print('diarize_result', json.dumps(diarize_result))
 
-diarize_result["language"] = result["language"]
 vtt_writer = get_writer("vtt", ".")
 vtt_writer(
     diarize_result,

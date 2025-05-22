@@ -1,0 +1,36 @@
+{
+  "segments": [
+    {
+      "start": 0.571,
+      "end": 6.661,
+      "text": " Come on.",
+      "words": [
+        {
+          "word": "Come",
+          "start": 0.571,
+          "end": 6.3,
+          "score": 0.845,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "on.",
+          "start": 6.601,
+          "end": 6.661,
+          "score": 0.081,
+          "speaker": "SPEAKER_01"
+        }
+      ],
+      "speaker": "SPEAKER_01"
+    }
+  ],
+  "word_segments": [
+    {
+      "word": "Come",
+      "start": 0.571,
+      "end": 6.3,
+      "score": 0.845,
+      "speaker": "SPEAKER_01"
+    }
+  ],
+  "language": "en"
+}
