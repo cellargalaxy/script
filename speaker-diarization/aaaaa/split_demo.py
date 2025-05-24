@@ -17,6 +17,7 @@ def split_video(input_file, output_dir, window, overlap):
         output_path = os.path.join(output_dir, f'{index:03d}.{ext}')
         ffmpeg_util.cut_video(input_file, start, end, output_path)
         start = start + step
+        index = index + 1
 
 
 def split_video_by_manager(manager):

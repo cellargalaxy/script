@@ -52,7 +52,7 @@ def popen_cmd(cmd):
     )
     with process.stdout:
         for line in iter(process.stdout.readline, ''):
-            cmd_logger.info("%s", line)
+            cmd_logger.debug("%s", line)
     return_code = process.wait()
     logging.info("执行命令，退出：%s", return_code)
     return return_code
