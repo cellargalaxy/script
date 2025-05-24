@@ -26,3 +26,4 @@ def split_video_by_manager(manager):
     window = manager.get('split_video_window')
     overlap = manager.get('split_video_overlap')
     split_video(input_file, output_dir, window, overlap)
+    manager['split_video_dir'] = output_dir

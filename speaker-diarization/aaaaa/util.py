@@ -102,3 +102,8 @@ def set_device_type_to_manager(manager):
 def get_file_ext(file_path):
     ext = Path(file_path).suffix[1:]
     return ext
+
+
+def get_file_dir(file_path):
+    file_dir = os.path.dirname(file_path)
+    return file_dir
