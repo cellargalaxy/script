@@ -28,7 +28,11 @@ def detect_video_split_point(audio_path, auth_token='', min_speech_duration=60, 
             continue
         end = segment.end
     end = ffprobe_util.get_video_duration(audio_path)
-    if start < end:
+    if end - start >= min_speech_duration:
+        segments.append({"start": start, "end": end})
+    elif start < end and len(segments) > 0:
+        segments[len(segments) - 1]['end'] = end
+    elif start < end:
         segments.append({"start": start, "end": end})
     del pipeline
     del result
