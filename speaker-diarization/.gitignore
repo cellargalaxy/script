@@ -16,3 +16,7 @@ ffmpeg-release-amd64-static.tar.xz
 *.mkv
 whisperx_model
 *.ass
+bin
+ffmpeg-7.0.2-amd64-static
+tmpdir
+wav2vec2_checkpoint
