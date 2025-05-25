@@ -43,7 +43,7 @@ def demucs_and_join(video_path, audio_path, device, output_dir):
 def demucs_and_join_by_manager(manager):
     audio_path = manager.get('audio_path')
     device = manager.get('device')
-    output_dir = 'output/demo/demucs'
+    output_dir = os.path.join(manager.get('output_dir'), "demucs")
     demucs_audio_path = demucs(audio_path, device, output_dir)
     manager['demucs_audio_path'] = demucs_audio_path
 
