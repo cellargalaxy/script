@@ -31,21 +31,22 @@ def join_sub_json(input_dir):
         content = util.read_file(json_path)
         sub = json.loads(content)
 
+        offset = 0.998  # 由于视频剪辑，字幕合并后会有偏移，进行校正
         segments = sub.get('segments', [])
         for i, segment in enumerate(segments):
-            segments[i]['start'] = segments[i]['start'] + start
-            segments[i]['end'] = segments[i]['end'] + start
+            segments[i]['start'] = segments[i]['start'] + (start * offset)
+            segments[i]['end'] = segments[i]['end'] + (start * offset)
             words = segments[i].get('words', [])
             for j, word in enumerate(words):
-                words[j]['start'] = words[j]['start'] + start
-                words[j]['end'] = words[j]['end'] + start
+                words[j]['start'] = words[j]['start'] + (start * offset)
+                words[j]['end'] = words[j]['end'] + (start * offset)
             segments[i]['words'] = words
         sub['segments'] = segments
 
         word_segments = sub.get('word_segments', [])
         for i, word_segment in enumerate(word_segments):
-            word_segments[i]['start'] = word_segments[i]['start'] + start
-            word_segments[i]['end'] = word_segments[i]['end'] + start
+            word_segments[i]['start'] = word_segments[i]['start'] + (start * offset)
+            word_segments[i]['end'] = word_segments[i]['end'] + (start * offset)
         sub['word_segments'] = word_segments
 
         subtitle['segments'].extend(sub['segments'])
