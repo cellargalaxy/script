@@ -14,12 +14,12 @@ manager = {
     # "audio_track_index": 1,
     # "audio_path": 'output/demo/extract_audio_track/wav.wav',
     # "device": 'cpu',
-    # "demucs_audio_path": 'output/demo/demucs/htdemucs/wav/vocals.wav',
-    # "demucs_video_path": 'output/demo/demucs/mkv.mkv',
+    "demucs_audio_path": 'output/demo/demucs/htdemucs/wav/vocals.wav',
+    "demucs_video_path": 'output/demo/demucs/mkv.mkv',
     # "auth_token": '',
     "min_silene_duration": 2,
     "edge_duration": 1,
-    "split_video_dir": 'output/demo/split_video',
+    # "split_video_dir": 'output/demo/split_video',
 }
 
 util.print_device_info()
