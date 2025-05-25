@@ -6,6 +6,7 @@ import ffprobe_util
 import util
 import os
 import ffmpeg_util
+import copy
 
 logger = util.get_logger()
 
@@ -34,8 +35,16 @@ def detect_audio_activity_point(audio_path, auth_token=''):
     return segments
 
 
-def detect_audio_split_point(audio_path, auth_token='', min_silene_duration=2, edge_duration=1):
+def detect_audio_split_point(audio_path, auth_token='', min_silene_duration=2, edge_duration=1,
+                             speech_duration=30):  # todo
     segments = detect_audio_activity_point(audio_path, auth_token=auth_token)
+
+    silene_points = []
+    for i, segment in enumerate(segments):
+        if segment['type'] != 'silene':
+            continue
+        point = (segment['start'] + segment['end']) / 2
+        silene_points.append(point)
 
     ss = []
     for i, segment in enumerate(segments):
@@ -96,6 +105,30 @@ def detect_audio_split_point(audio_path, auth_token='', min_silene_duration=2, e
             ss.append(segments[i])
             continue
         ss[len(ss) - 1]['end'] = segments[i]['end']
+    segments = ss
+
+    ss = []
+    for i, segment in enumerate(segments):
+        if segment['type'] != 'speech':
+            ss.append(segment)
+            continue
+        if segment['end'] - segment['start'] < speech_duration * 2:
+            ss.append(segment)
+            continue
+        start = segment['start']
+        ends = copy.deepcopy(silene_points)
+        ends.append(segment['end'])
+        for j, end in enumerate(ends):
+            if segment['end'] < end:
+                break
+            if end - start < speech_duration:
+                continue
+            ss.append({"start": start, "end": end, "type": "speech"})
+            start = end
+        if start < segment['end'] and len(ss) == 0:
+            ss.append({"start": start, "end": segment['end'], "type": "speech"})
+        elif start < segment['end']:
+            ss[len(ss) - 1]['end'] = segment['end']
     segments = ss
 
     logger.info("检测语音剪切点,segments: %s", json.dumps(segments))
