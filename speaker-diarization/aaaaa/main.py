@@ -19,17 +19,17 @@ manager = {
     # "auth_token": '',
     "min_silene_duration": 2,
     "edge_duration": 1,
-    # "split_video_dir": 'output/demo/split_video',
+    "split_video_dir": 'output/demo/split_video',
 }
 
 util.print_device_info()
 util.set_device_type_to_manager(manager)
 
-ffprobe_util.choice_audio_track_info_in_terminal_by_manager(manager)
-ffmpeg_util.extract_audio_track_by_manager(manager)
+# ffprobe_util.choice_audio_track_info_in_terminal_by_manager(manager)
+# ffmpeg_util.extract_audio_track_by_manager(manager)
 # 可以考虑加个降噪
-demucs_demo.demucs_and_join_by_manager(manager)
+# demucs_demo.demucs_and_join_by_manager(manager)
 pyannote_audio_split_demo.split_video_by_manager(manager)
-# whisper_timestamped_demo.whisper_timestamped_by_manager(manager)
+whisper_timestamped_demo.whisper_timestamped_by_manager(manager)
 
 logger.info("manager: %s", json.dumps(manager))

@@ -104,6 +104,17 @@ def get_file_ext(file_path):
     return ext
 
 
+def get_file_name(file_path):
+    name = os.path.splitext(os.path.basename(file_path))[0]
+    return name
+
+
 def get_file_dir(file_path):
     file_dir = os.path.dirname(file_path)
     return file_dir
+
+
+def save_file(content, file_path):
+    mkdir(file_path)
+    with open(file_path, 'w', encoding='utf-8') as file:
+        file.write(content)

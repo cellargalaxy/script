@@ -1,3 +1,4 @@
+import json
 import whisper_timestamped as whisper
 from whisperx.utils import get_writer
 import util
@@ -47,6 +48,8 @@ def whisper_timestamped(audio_path, device, model_name="large-v3"):
         audio_path,
         {"max_line_width": None, "max_line_count": None, "highlight_words": True},
     )
+    json_path = os.path.join(file_dir, util.get_file_name(audio_path) + '.json')
+    util.save_file(json.dumps(whisper_result), json_path)
 
 
 def whisper_timestamped_by_manager(manager):
@@ -55,5 +58,7 @@ def whisper_timestamped_by_manager(manager):
     for file in os.listdir(audio_dir):
         file_path = os.path.join(audio_dir, file)
         if not os.path.isfile(file_path):
+            continue
+        if '_speech.' not in file_path:
             continue
         whisper_timestamped(file_path, device)
