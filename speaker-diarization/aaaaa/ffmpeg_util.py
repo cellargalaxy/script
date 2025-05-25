@@ -63,9 +63,8 @@ def cut_video(video_path, start, end, output_path):
         '-preset', 'veryfast',
         '-crf', '28',
         '-vf', 'scale=640:-1',
-        '-c:a', 'copy',
-        # '-c:a', 'aac',
-        # '-b:a', '128k',
+        '-c:a', 'aac',
+        '-b:a', '128k',
         '-y',
         output_path
     ]

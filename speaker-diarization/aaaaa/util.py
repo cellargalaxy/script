@@ -118,3 +118,20 @@ def save_file(content, file_path):
     mkdir(file_path)
     with open(file_path, 'w', encoding='utf-8') as file:
         file.write(content)
+
+
+def read_file(file_path, default_value=''):
+    if not path_isfile(file_path):
+        return default_value
+    with open(file_path, 'r') as file:
+        return file.read()
+
+
+def path_exist(path):
+    return os.path.exists(path)
+
+
+def path_isfile(path):
+    if not path_exist(path):
+        return False
+    return os.path.isfile(path)

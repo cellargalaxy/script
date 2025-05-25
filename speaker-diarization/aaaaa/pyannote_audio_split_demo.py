@@ -136,10 +136,9 @@ def detect_audio_split_point(audio_path, auth_token='', min_silene_duration=2, e
 
 def split_video(video_path, audio_path, output_dir, auth_token='', min_silene_duration=2, edge_duration=1,
                 speech_duration=30):
-    ext = util.get_file_ext(video_path)
     segments = detect_audio_split_point(audio_path, auth_token, min_silene_duration, edge_duration, speech_duration)
     for index, segment in enumerate(segments):
-        output_path = os.path.join(output_dir, f'{index:05d}_{segment["type"]}.{ext}')
+        output_path = os.path.join(output_dir, f'{index:05d}_{segment["type"]}.mkv')
         ffmpeg_util.cut_video(video_path, segment['start'], segment['end'], output_path)
 
 

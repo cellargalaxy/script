@@ -57,7 +57,7 @@ def whisper_timestamped_by_manager(manager):
     audio_dir = manager.get('split_video_dir')
     for file in os.listdir(audio_dir):
         file_path = os.path.join(audio_dir, file)
-        if not os.path.isfile(file_path):
+        if not util.path_isfile(file_path):
             continue
         if '_speech.' not in file_path:
             continue
