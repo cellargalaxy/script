@@ -35,8 +35,7 @@ def detect_audio_activity_point(audio_path, auth_token=''):
     return segments
 
 
-def detect_audio_split_point(audio_path, auth_token='', min_silene_duration=2, edge_duration=1,
-                             speech_duration=30):  # todo
+def detect_audio_split_point(audio_path, auth_token='', min_silene_duration=2, edge_duration=1, speech_duration=30):
     segments = detect_audio_activity_point(audio_path, auth_token=auth_token)
 
     silene_points = []
@@ -135,9 +134,10 @@ def detect_audio_split_point(audio_path, auth_token='', min_silene_duration=2, e
     return segments
 
 
-def split_video(video_path, audio_path, output_dir, auth_token='', min_silene_duration=2, edge_duration=1):
+def split_video(video_path, audio_path, output_dir, auth_token='', min_silene_duration=2, edge_duration=1,
+                speech_duration=30):
     ext = util.get_file_ext(video_path)
-    segments = detect_audio_split_point(audio_path, auth_token, min_silene_duration, edge_duration)
+    segments = detect_audio_split_point(audio_path, auth_token, min_silene_duration, edge_duration, speech_duration)
     for index, segment in enumerate(segments):
         output_path = os.path.join(output_dir, f'{index:05d}_{segment["type"]}.{ext}')
         ffmpeg_util.cut_video(video_path, segment['start'], segment['end'], output_path)
@@ -150,5 +150,6 @@ def split_video_by_manager(manager):
     auth_token = manager.get('auth_token', '')
     min_silene_duration = manager.get('min_silene_duration', 2)
     edge_duration = manager.get('edge_duration', 1)
-    split_video(video_path, audio_path, output_dir, auth_token, min_silene_duration, edge_duration)
+    speech_duration = manager.get('speech_duration', 30)
+    split_video(video_path, audio_path, output_dir, auth_token, min_silene_duration, edge_duration, speech_duration)
     manager['split_video_dir'] = output_dir
