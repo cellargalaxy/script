@@ -20,3 +20,4 @@ bin
 ffmpeg-7.0.2-amd64-static
 tmpdir
 wav2vec2_checkpoint
+ffmpeg-n7.1-latest-linux64-gpl-7.1

@@ -56,10 +56,16 @@ def cut_video(video_path, start, end, output_path):
     util.mkdir(output_path)
     cmd = [
         'bin/ffmpeg',
-        '-i', video_path,
         '-ss', str(start),
         '-to', str(end),
-        '-c', 'copy',
+        '-i', video_path,
+        '-c:v', 'libx264',
+        '-preset', 'veryfast',
+        '-crf', '28',
+        '-vf', 'scale=640:-1',
+        '-c:a', 'copy',
+        # '-c:a', 'aac',
+        # '-b:a', '128k',
         '-y',
         output_path
     ]

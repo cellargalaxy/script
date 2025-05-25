@@ -32,9 +32,15 @@ def get_audio_track_info(video_path):
 
 def choice_audio_track_info_in_terminal_by_manager(manager):
     audio_streams = get_audio_track_info(manager.get('video_path', ''))
-    logger.info("音轨列表: %s", json.dumps(audio_streams))
+    logger.info("选择音轨，列表: %s", json.dumps(audio_streams))
+    if len(audio_streams) == 0:
+        logger.error("选择音轨，异常")
+        raise ValueError("选择音轨，异常")
+    if len(audio_streams) == 1:
+        manager['audio_track_index'] = 0
+        return
     for stream in audio_streams:
-        logger.info("音轨列表,%s:%s", stream.get('index', 0) - 1, stream.get('tags', {}).get('language', '未知'))
+        logger.info("选择音轨，列表, %s:%s", stream.get('index', 0) - 1, stream.get('tags', {}).get('language', '未知'))
     time.sleep(0.5)
     index = int(input("输入音轨编号: "))
     manager['audio_track_index'] = index
