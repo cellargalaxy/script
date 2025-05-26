@@ -12,7 +12,7 @@ def transcribe_sub(audio_path):
     result = whisper.transcribe(model, audio)
     del model
     del audio
-    util.gc()
+    util.exec_gc()
     sub_result = {
         "segments": [],
         "word_segments": [],
@@ -44,7 +44,7 @@ def transcribe_sub(audio_path):
 
 def transcribe_and_save_sub(audio_path):
     sub_result = transcribe_sub(audio_path)
-    sub_util.save_sub(audio_path, sub_result)
+    sub_util.save_sub(sub_result, audio_path)
 
 
 def transcribe_and_save_sub_by_manager(manager):

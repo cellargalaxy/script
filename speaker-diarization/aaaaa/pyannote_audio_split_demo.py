@@ -29,7 +29,7 @@ def detect_audio_activity_point(audio_path, auth_token=''):
         segments.append({"start": pre_end, "end": all_end, "type": "silene"})
     del pipeline
     del result
-    util.gc()
+    util.exec_gc()
     logger.info("检测语音活动点,segments: %s", json.dumps(segments))
     return segments
 

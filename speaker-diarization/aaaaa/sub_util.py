@@ -2,6 +2,7 @@ import json
 from whisperx.utils import get_writer
 import util
 import os
+import pysubs2
 
 logger = util.get_logger()
 
@@ -27,12 +28,12 @@ def check_segments(segments):
             raise ValueError("检查segments，start与end非法")
         if i != 0:
             pre_end = segments[i - 1]['end']
-            if start <= pre_end:
+            if pre_end != start:
                 logger.error("检查segments，pre_end与start非法: %s, %s", i, json.dumps(segments))
                 raise ValueError("检查segments，pre_end与start非法")
 
 
-def save_sub(file_path, sub_result):
+def save_sub(sub_result, file_path):
     file_dir = util.get_file_dir(file_path)
     vtt_writer = get_writer("vtt", file_dir)
     vtt_writer(
@@ -42,3 +43,18 @@ def save_sub(file_path, sub_result):
     )
     json_path = os.path.join(file_dir, util.get_file_name(file_path) + '.json')
     util.save_file(json.dumps(sub_result), json_path)
+
+
+def save_segments_as_srt(segments, file_path):
+    results = []
+    for i, segment in enumerate(segments):
+        start = segment['start'] / 1000.0
+        end = segment['end'] / 1000.0
+        text = segment.get('text', '')
+        if not text:
+            text = f"[{segment.get('type', '')}] {segment['start']}->{segment['end']}"
+        obj = {'start': start, 'end': end, 'text': text}
+        results.append(obj)
+    util.mkdir(file_path)
+    subs = pysubs2.load_from_whisper(results)
+    subs.save(file_path)

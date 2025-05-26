@@ -26,9 +26,13 @@ def get_logger(name='main', fmt='%(asctime)s %(levelname)-8s %(message)s'):
 logger = get_logger()
 
 
-def mkdir(file_path):
-    file_path = Path(file_path)
-    file_path.parent.mkdir(parents=True, exist_ok=True)
+def mkdir(path):
+    obj = Path(path)
+    _, ext = os.path.splitext(path)
+    if ext:
+        obj.parent.mkdir(parents=True, exist_ok=True)
+    else:
+        obj.mkdir(parents=True, exist_ok=True)
 
 
 cmd_logger = logging.getLogger("simple_logger")
@@ -141,6 +145,6 @@ def path_isfile(path):
     return os.path.isfile(path)
 
 
-def gc():
+def exec_gc():
     torch.cuda.empty_cache()
     gc.collect()

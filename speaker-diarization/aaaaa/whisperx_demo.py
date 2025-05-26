@@ -14,12 +14,12 @@ def transcribe_sub(audio_path, auth_token=''):
     audio = whisperx.load_audio(audio_path)
     result = model.transcribe(audio, batch_size=16)
     del model
-    util.gc()
+    util.exec_gc()
 
     model_a, metadata = whisperx.load_align_model(language_code=result["language"], device=device)
     aligned_result = whisperx.align(result["segments"], model_a, metadata, audio, device, return_char_alignments=False)
     del model_a
-    util.gc()
+    util.exec_gc()
 
     diarize_model = whisperx.diarize.DiarizationPipeline(use_auth_token=auth_token, device=device)
     diarize_segments = diarize_model(audio)
@@ -31,7 +31,7 @@ def transcribe_sub(audio_path, auth_token=''):
 
 def transcribe_and_save_sub(audio_path, auth_token=''):
     sub_result = transcribe_sub(audio_path, auth_token=auth_token)
-    sub_util.save_sub(audio_path, sub_result)
+    sub_util.save_sub(sub_result, audio_path)
 
 
 def transcribe_and_save_sub_by_manager(manager):
