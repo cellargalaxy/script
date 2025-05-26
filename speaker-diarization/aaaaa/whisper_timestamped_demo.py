@@ -12,8 +12,7 @@ def transcribe_sub(audio_path):
     result = whisper.transcribe(model, audio)
     del model
     del audio
-    torch.cuda.empty_cache()
-    gc.collect()
+    util.gc()
     sub_result = {
         "segments": [],
         "word_segments": [],

@@ -6,6 +6,7 @@ import os
 import platform
 import torch
 import GPUtil
+import gc
 
 
 def get_logger(name='main', fmt='%(asctime)s %(levelname)-8s %(message)s'):
@@ -138,3 +139,8 @@ def path_isfile(path):
     if not path_exist(path):
         return False
     return os.path.isfile(path)
+
+
+def gc():
+    torch.cuda.empty_cache()
+    gc.collect()

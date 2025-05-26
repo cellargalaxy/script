@@ -14,14 +14,12 @@ def transcribe_sub(audio_path, auth_token=''):
     audio = whisperx.load_audio(audio_path)
     result = model.transcribe(audio, batch_size=16)
     del model
-    torch.cuda.empty_cache()
-    gc.collect()
+    util.gc()
 
     model_a, metadata = whisperx.load_align_model(language_code=result["language"], device=device)
     aligned_result = whisperx.align(result["segments"], model_a, metadata, audio, device, return_char_alignments=False)
     del model_a
-    gc.collect()
-    torch.cuda.empty_cache()
+    util.gc()
 
     diarize_model = whisperx.diarize.DiarizationPipeline(use_auth_token=auth_token, device=device)
     diarize_segments = diarize_model(audio)
