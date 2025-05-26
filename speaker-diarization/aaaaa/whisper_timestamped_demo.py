@@ -1,21 +1,20 @@
-import json
 import whisper_timestamped as whisper
-from whisperx.utils import get_writer
 import util
 import os
 import gc
 import torch
+import sub_util
 
 
-def whisper_timestamped(audio_path, device, model_name="large-v3"):
+def transcribe_sub(audio_path):
+    model = whisper.load_model("large-v3", device=util.get_device_type())
     audio = whisper.load_audio(audio_path)
-    model = whisper.load_model(model_name, device=device)
     result = whisper.transcribe(model, audio)
-    del audio
     del model
+    del audio
     torch.cuda.empty_cache()
     gc.collect()
-    whisper_result = {
+    sub_result = {
         "segments": [],
         "word_segments": [],
         "language": result["language"],
@@ -32,7 +31,7 @@ def whisper_timestamped(audio_path, device, model_name="large-v3"):
                 "speaker": '',
             }
             words.append(obj)
-            whisper_result['word_segments'].append(obj)
+            sub_result['word_segments'].append(obj)
         obj = {
             "start": segment['start'],
             "end": segment['end'],
@@ -40,20 +39,16 @@ def whisper_timestamped(audio_path, device, model_name="large-v3"):
             "words": words,
             "speaker": '',
         }
-        whisper_result['segments'].append(obj)
-    file_dir = util.get_file_dir(audio_path)
-    vtt_writer = get_writer("vtt", file_dir)
-    vtt_writer(
-        whisper_result,
-        audio_path,
-        {"max_line_width": None, "max_line_count": None, "highlight_words": True},
-    )
-    json_path = os.path.join(file_dir, util.get_file_name(audio_path) + '.json')
-    util.save_file(json.dumps(whisper_result), json_path)
+        sub_result['segments'].append(obj)
+    return sub_result
 
 
-def whisper_timestamped_by_manager(manager):
-    device = manager.get('device')
+def transcribe_and_save_sub(audio_path):
+    sub_result = transcribe_sub(audio_path)
+    sub_util.save_sub(audio_path, sub_result)
+
+
+def transcribe_and_save_sub_by_manager(manager):
     audio_dir = manager.get('split_video_dir')
     for file in os.listdir(audio_dir):
         file_path = os.path.join(audio_dir, file)
@@ -61,4 +56,4 @@ def whisper_timestamped_by_manager(manager):
             continue
         if '_speech.' not in file_path:
             continue
-        whisper_timestamped(file_path, device)
+        transcribe_and_save_sub(file_path)

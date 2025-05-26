@@ -94,9 +94,12 @@ def get_device_type():
     return device
 
 
-def set_device_type_to_manager(manager):
+def get_compute_type():
     device = get_device_type()
-    manager['device'] = device
+    if device == 'cuda':
+        return 'float16'
+    else:
+        return 'int8'
 
 
 def get_file_ext(file_path):

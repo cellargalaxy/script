@@ -26,7 +26,6 @@ manager = {
 }
 
 util.print_device_info()
-util.set_device_type_to_manager(manager)
 
 # ffprobe_util.choice_audio_track_info_in_terminal_by_manager(manager)
 # ffmpeg_util.extract_audio_track_by_manager(manager)
