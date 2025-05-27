@@ -6,15 +6,14 @@ import util
 import whisper_timestamped_demo
 import pyannote_audio_split_demo
 import join_sub
+import pretreatment
 
 logger = util.get_logger()
 
 manager = {
     "video_path": "demo.mkv",
     "output_dir": "output/demo",
-    "audio_track_index": 1,
-    "audio_path": 'output/demo/extract_audio_track/wav.wav',
-    "device": 'cpu',
+    "audio_path": 'output/demo/extract_audio/wav.wav',
     "demucs_audio_path": 'output/demo/demucs/htdemucs/wav/vocals.wav',
     "demucs_video_path": 'output/demo/demucs/mkv.mkv',
     "auth_token": '',
@@ -27,8 +26,8 @@ manager = {
 
 util.print_device_info()
 
-# ffprobe_util.choice_audio_track_info_in_terminal_by_manager(manager)
-# ffmpeg_util.extract_audio_track_by_manager(manager)
+pretreatment.init_param_by_manager(manager)
+pretreatment.extract_audio_by_manager(manager)
 # 可以考虑加个降噪
 # demucs_demo.demucs_and_join_by_manager(manager)
 # pyannote_audio_split_demo.split_video_by_manager(manager)

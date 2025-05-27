@@ -10,9 +10,9 @@ def extract_audio_track(video_path, index, audio_path):
     cmd = [
         'bin/ffmpeg',
         '-i', video_path,
-        '-map', "0:a:{}".format(index),  # 从第一个输入文件（0）中选择第 index 个音轨（音频流）
+        '-map', "0:a:{}".format(index),  # 在第0个输入文件中选择第index个音轨
         '-ac', '1',  # 将音频转换为单声道
-        '-y',  # 强制覆盖输出文件
+        '-y',
         audio_path
     ]
     logger.info("提取视频文件音轨,cmd: %s", json.dumps(cmd))
@@ -20,14 +20,6 @@ def extract_audio_track(video_path, index, audio_path):
     if return_code != 0:
         logger.error("提取视频文件音轨，异常")
         raise ValueError("提取视频文件音轨，异常")
-
-
-def extract_audio_track_by_manager(manager):
-    video_path = manager.get('video_path')
-    index = manager.get('audio_track_index')
-    audio_path = os.path.join(manager.get('output_dir'), "extract_audio_track", "wav.wav")
-    manager['audio_path'] = audio_path
-    extract_audio_track(video_path, index, audio_path)
 
 
 def join_video_and_audio(video_path, audio_path, output_path):

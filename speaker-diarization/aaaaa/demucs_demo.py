@@ -46,9 +46,3 @@ def demucs_and_join_by_manager(manager):
     output_dir = os.path.join(manager.get('output_dir'), "demucs")
     demucs_audio_path = demucs(audio_path, device, output_dir)
     manager['demucs_audio_path'] = demucs_audio_path
-
-    video_path = manager.get('video_path')
-    ext = util.get_file_ext(video_path)
-    demucs_video_path = os.path.join(output_dir, "{}.{}".format(ext, ext))
-    ffmpeg_util.join_video_and_audio(video_path, demucs_audio_path, demucs_video_path)
-    manager['demucs_video_path'] = demucs_video_path
