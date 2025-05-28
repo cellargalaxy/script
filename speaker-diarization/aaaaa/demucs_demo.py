@@ -6,7 +6,7 @@ import ffmpeg_util
 logger = util.get_logger()
 
 
-def demucs(audio_path, device, output_dir):
+def demucs(audio_path, device, output_dir): #noise_reduction_demucs
     util.mkdir(audio_path)
     cmd = [
         'demucs',
