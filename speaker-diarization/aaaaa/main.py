@@ -3,7 +3,7 @@ import time
 import util
 import pre_treatment
 import noise_reduction_demucs
-import audio_split_pyannote
+import audio_split_batch_pyannote
 import transcribe_sub_whisper_timestamped
 import transcribe_sub_whisperx
 import transcribe_sub_faster_whisper
@@ -33,7 +33,7 @@ pre_treatment.init_param_by_manager(manager)
 
 # pre_treatment.extract_audio_by_manager(manager)
 # noise_reduction_demucs.noise_reduction_by_manager(manager)
-# audio_split_pyannote.split_video_by_manager(manager)
+# audio_split_batch_pyannote.split_video_by_manager(manager)
 
 # faster_whisper与whisperx与whisper_timestamped对比
 # faster_whisper会将不同人说的话，混合在一个句子里，先出局
