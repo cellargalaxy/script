@@ -9,6 +9,10 @@ from pydub import AudioSegment
 
 logger = util.get_logger()
 
+min_silene_duration_default = 1 * 1000
+edge_duration_default = 500
+speech_duration_default = 30 * 1000
+
 
 def detect_audio_activity_point(audio_path, auth_token=''):
     audio = AudioSegment.from_wav(audio_path)
@@ -41,11 +45,6 @@ def detect_audio_activity_point(audio_path, auth_token=''):
     sub_util.check_segments(segments)
     logger.info("检测语音活动点,segments: %s", json.dumps(segments))
     return segments
-
-
-min_silene_duration_default = 2 * 1000
-edge_duration_default = 1 * 1000
-speech_duration_default = 30 * 1000
 
 
 def detect_audio_split_point(segments,

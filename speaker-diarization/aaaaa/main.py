@@ -17,8 +17,8 @@ manager = {
     # "noise_reduction_audio_path": 'output/demo/noise_reduction/htdemucs/wav/vocals.wav',
 
     "auth_token": "",
-    "min_silene_duration": 2 * 1000,
-    "edge_duration": 1 * 1000,
+    "min_silene_duration": 1 * 1000,
+    "edge_duration": 500,
     "speech_duration": 30 * 1000,
 
     # "split_video_dir": 'output/demo/split_video',
