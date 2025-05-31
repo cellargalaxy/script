@@ -1,8 +1,7 @@
 import json
 import time
-
 import util
-import pretreatment
+import pre_treatment
 import noise_reduction_demucs
 import audio_split_pyannote
 import transcribe_sub_whisper_timestamped
@@ -27,9 +26,9 @@ manager = {
 }
 
 util.print_device_info()
-pretreatment.init_param_by_manager(manager)
+pre_treatment.init_param_by_manager(manager)
 
-pretreatment.extract_audio_by_manager(manager)
+pre_treatment.extract_audio_by_manager(manager)
 noise_reduction_demucs.noise_reduction_by_manager(manager)
 audio_split_pyannote.split_video_by_manager(manager)
 transcribe_sub_whisperx.transcribe_and_save_sub_by_manager(manager)

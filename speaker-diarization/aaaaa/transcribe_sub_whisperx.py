@@ -1,6 +1,4 @@
 import whisperx
-import gc
-import torch
 import util
 import sub_util
 import os

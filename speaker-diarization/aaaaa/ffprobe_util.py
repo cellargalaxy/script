@@ -1,6 +1,4 @@
 import json
-import time
-
 import util
 
 logger = util.get_logger()
