@@ -2,10 +2,6 @@ import demucs.separate
 import os
 import util
 
-import ssl
-
-ssl._create_default_https_context = ssl._create_unverified_context
-
 
 def noise_reduction(audio_path, output_dir):
     cmd = [

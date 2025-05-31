@@ -33,16 +33,23 @@ def check_segments(segments):
                 raise ValueError("检查segments，pre_end与start非法")
 
 
-def save_sub(sub_result, file_path):
-    file_dir = util.get_file_dir(file_path)
-    vtt_writer = get_writer("vtt", file_dir)
+def save_sub_as_vtt(audio_path, sub, sub_dir=''):
+    if not sub_dir:
+        sub_dir = util.get_file_dir(audio_path)
+    util.mkdir(sub_dir)
+    vtt_writer = get_writer("vtt", sub_dir)
     vtt_writer(
-        sub_result,
-        file_path,
+        sub,
+        audio_path,
         {"max_line_width": None, "max_line_count": None, "highlight_words": True},
     )
-    json_path = os.path.join(file_dir, util.get_file_name(file_path) + '.json')
-    util.save_file(json.dumps(sub_result), json_path)
+
+
+def save_sub_as_json(audio_path, sub, sub_dir=''):
+    if not sub_dir:
+        sub_dir = util.get_file_dir(audio_path)
+    json_path = os.path.join(sub_dir, util.get_file_name(audio_path) + '.json')
+    util.save_file(json.dumps(sub), json_path)
 
 
 def save_segments_as_srt(segments, file_path):

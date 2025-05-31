@@ -162,7 +162,7 @@ def split_audio(audio_path, output_dir, **kwargs):
         cut.export(output_path, format="wav")
 
 
-split_audio('output/demo/demucs/htdemucs/wav/vocals.wav', 'output/demo/split_video')
+split_audio('output/demo/demucs/htdemucs/wav/vocals.wav', '../aaaaa/output/demo/split_video')
 
 
 def split_video_by_manager(manager):
