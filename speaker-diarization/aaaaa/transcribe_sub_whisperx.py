@@ -36,7 +36,7 @@ def transcribe_and_save_sub(audio_path, output_dir, auth_token=''):
 
 
 def transcribe_and_save_sub_by_manager(manager):
-    audio_dir = manager.get('split_video_dir')
+    audio_dir = manager.get('audio_split_batch_dir')
     output_dir = os.path.join(manager.get('output_dir'), "transcribe_sub")
     for file in os.listdir(audio_dir):
         file_path = os.path.join(audio_dir, file)

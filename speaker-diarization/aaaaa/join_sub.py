@@ -74,7 +74,7 @@ def join_sub_and_save(audio_path, audio_dir, sub_dir, save_dir):
 
 def join_sub_and_save_by_manager(manager):
     audio_path = manager.get('audio_path')
-    audio_dir = manager.get('split_video_dir')
+    audio_dir = manager.get('audio_split_batch_dir')
     sub_dir = manager.get('transcribe_sub_dir')
     save_dir = os.path.join(manager.get('output_dir'), "join_sub")
     join_sub_and_save(audio_path, audio_dir, sub_dir, save_dir)
