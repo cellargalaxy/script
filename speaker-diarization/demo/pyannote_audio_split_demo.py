@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-audio_file = "short.wav"
+audio_file = "../short.wav"
 device = "cpu"
 
 pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1")

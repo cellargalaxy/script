@@ -136,7 +136,7 @@ print(diarize_result)  # segments are now assigned speaker IDs
 
 # Save as a VTT file
 diarize_result["language"] = result["language"]
-vtt_writer = get_writer("vtt", ".")
+vtt_writer = get_writer("vtt", "..")
 vtt_writer(
     diarize_result,
     audio_file,

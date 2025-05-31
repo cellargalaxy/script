@@ -3,7 +3,7 @@ import subprocess
 import math
 
 # 输入文件路径
-input_file = 'long.mkv'
+input_file = '../long.mkv'
 output_dir = 'split_demo'
 os.makedirs(output_dir, exist_ok=True)
 

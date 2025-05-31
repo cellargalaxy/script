@@ -6,7 +6,7 @@ import torchaudio
 asr_model = nemo_asr.models.EncDecCTCModel.from_pretrained("stt_en_conformer_ctc_large")
 
 # 输入你的音频路径（支持 .wav/.mp3）
-audio_path = "short.wav"
+audio_path = "../short.wav"
 
 # 进行转录（字幕识别）
 transcript = asr_model.transcribe([audio_path])

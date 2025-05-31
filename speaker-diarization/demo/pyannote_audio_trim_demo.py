@@ -24,4 +24,4 @@ def trim_silence_pyannote(input_path, output_path):
     print(f"输出文件已保存: {output_path}")
 
 # 示例用法
-trim_silence_pyannote("short.wav", "trim.wav")
+trim_silence_pyannote("../short.wav", "trim.wav")

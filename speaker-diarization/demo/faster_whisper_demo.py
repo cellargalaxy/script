@@ -3,7 +3,7 @@ import json
 from faster_whisper import WhisperModel
 import pysubs2
 
-audio_file = "short.wav"
+audio_file = "../short.wav"
 device = "cpu"  # cuda/cpu
 batch_size = 16
 compute_type = "int8"

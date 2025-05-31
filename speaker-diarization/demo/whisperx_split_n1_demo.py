@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 
 API_TOKEN = ""
-audio_file = "short.wav"
+audio_file = "../short.wav"
 device = "cpu"
 batch_size = 16
 compute_type = "int8"
@@ -30,7 +30,7 @@ diarize_result = whisperx.assign_word_speakers(diarize_segments, aligned_result)
 print('diarize_result', json.dumps(diarize_result))
 
 diarize_result["language"] = result["language"]
-vtt_writer = get_writer("vtt", ".")
+vtt_writer = get_writer("vtt", "..")
 vtt_writer(
     diarize_result,
     audio_file,

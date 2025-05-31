@@ -6,7 +6,7 @@ from pydub import AudioSegment
 import os
 from datetime import datetime
 
-audio_file = "short.wav"
+audio_file = "../short.wav"
 output_dir = "faster_whisper_split_demo"
 device = "cpu"  # cuda/cpu
 batch_size = 16

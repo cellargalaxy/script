@@ -5,7 +5,7 @@ import pysubs2
 from whisperx.utils import get_writer
 import json
 
-audio = whisper.load_audio("short.wav")
+audio = whisper.load_audio("../short.wav")
 
 model = whisper.load_model("large-v3", device="cpu")
 
@@ -59,7 +59,7 @@ for s in segments:
     whisper_result['segments'].append(segment)
 
 print('whisper_result', json.dumps(whisper_result))
-vtt_writer = get_writer("vtt", ".")
+vtt_writer = get_writer("vtt", "..")
 vtt_writer(
     whisper_result,
     "short.wav",

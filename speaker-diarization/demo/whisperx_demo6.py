@@ -7,7 +7,7 @@ import gc
 import torch
 
 API_TOKEN = ""
-audio_file = "short.wav"
+audio_file = "../short.wav"
 device = "cpu"  # cuda/cpu
 batch_size = 16
 compute_type = "int8"
@@ -34,7 +34,7 @@ diarize_result = whisperx.assign_word_speakers(diarize_segments, aligned_result)
 diarize_result["language"] = result["language"]
 print('diarize_result', json.dumps(diarize_result))
 
-vtt_writer = get_writer("vtt", ".")
+vtt_writer = get_writer("vtt", "..")
 vtt_writer(
     diarize_result,
     audio_file,

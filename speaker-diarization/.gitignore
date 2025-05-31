@@ -1,4 +1,4 @@
-output/
+../aaaaa/output/
 log/*
 /conf/kitex_remote_config.json
 /.idea
