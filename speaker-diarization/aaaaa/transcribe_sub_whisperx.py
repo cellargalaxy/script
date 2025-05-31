@@ -19,15 +19,14 @@ def transcribe_sub(audio_path, auth_token=''):
     aligned_result["language"] = result["language"]
     del model_a
     util.exec_gc()
+    # return aligned_result
 
-    return aligned_result
+    diarize_model = whisperx.diarize.DiarizationPipeline(use_auth_token=auth_token, device=device)
+    diarize_segments = diarize_model(audio)
+    diarize_result = whisperx.assign_word_speakers(diarize_segments, aligned_result)
+    diarize_result["language"] = result["language"]
 
-    # diarize_model = whisperx.diarize.DiarizationPipeline(use_auth_token=auth_token, device=device)
-    # diarize_segments = diarize_model(audio)
-    # diarize_result = whisperx.assign_word_speakers(diarize_segments, aligned_result)
-    # diarize_result["language"] = result["language"]
-    #
-    # return diarize_result
+    return diarize_result
 
 
 def transcribe_and_save_sub(audio_path, output_dir, auth_token=''):

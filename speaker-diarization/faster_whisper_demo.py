@@ -1,3 +1,5 @@
+import json
+
 from faster_whisper import WhisperModel
 import pysubs2
 
@@ -17,3 +19,6 @@ for s in segments:
 
 subs = pysubs2.load_from_whisper(results)
 subs.save('short.srt')
+
+print('segments',segments)
+print('info',info)
