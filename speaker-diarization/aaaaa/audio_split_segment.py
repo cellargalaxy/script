@@ -44,9 +44,9 @@ def detect_audio_activity_point(audio_path, json_path):
         segments[i]['start'] = mean
         segments[i - 1]['end'] = mean
 
-        sub_util.check_segments(segments)
-        logger.info("检测语音活动点,segments: %s", json.dumps(segments))
-        return segments
+    sub_util.check_segments(segments)
+    logger.info("检测语音活动点,segments: %s", json.dumps(segments))
+    return segments
 
 def detect_audio_split_point(segments,
                              min_silene_duration=min_silene_duration_default,
