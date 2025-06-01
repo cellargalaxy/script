@@ -6,7 +6,7 @@ from denoiser.enhance import enhance
 args = SimpleNamespace(
     out_dir="output",         # 输出目录
     device="cpu",             # 或 "cuda"
-    noisy_dir="aaaaa/output/demo/extract_audio_track/wav.wav",        # 输入音频路径
+    noisy_dir="gen_sub/output/demo/extract_audio_track/wav.wav",        # 输入音频路径
 )
 
 # 加载模型

@@ -8,7 +8,7 @@ from speechbrain.inference.speaker import SpeakerRecognition
 # embeddings = classifier.encode_batch(signal)
 # print('embeddings', embeddings)
 
-audio_dir = '../aaaaa/output/demo/audio_split_segment_test'
+audio_dir = '../gen_sub/output/demo/audio_split_segment_test'
 for file in os.listdir(audio_dir):
     audio_path = os.path.join(audio_dir, file)
     verification = SpeakerRecognition.from_hparams(source="speechbrain/spkrec-ecapa-voxceleb",

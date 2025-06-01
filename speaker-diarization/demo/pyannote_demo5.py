@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # 设置音频路径和 Hugging Face Token
-AUDIO_FILE = "../aaaaa/output/demo/noise_reduction/htdemucs/wav/vocals.wav"  # 替换为你的音频路径
+AUDIO_FILE = "../gen_sub/output/demo/noise_reduction/htdemucs/wav/vocals.wav"  # 替换为你的音频路径
 HUGGINGFACE_TOKEN = ""  # 替换为你的 Hugging Face token
 
 # 加载 Voice Activity Detection pipeline

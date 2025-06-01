@@ -1,4 +1,0 @@
-segmentation:
-  min_duration_on: 0.1
-  min_duration_off: 0.1
-  collar: 0.0

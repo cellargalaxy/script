@@ -4,7 +4,7 @@ import torch
 
 # 替换为你自己的 Hugging Face Token
 HUGGINGFACE_TOKEN = ""
-AUDIO_FILE = "../aaaaa/output/demo/noise_reduction/htdemucs/wav/vocals.wav"
+AUDIO_FILE = "../gen_sub/output/demo/noise_reduction/htdemucs/wav/vocals.wav"
 
 # 加载 VAD pipeline
 pipeline = Pipeline.from_pretrained("pyannote/voice-activity-detection",
