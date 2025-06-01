@@ -7,6 +7,7 @@ import platform
 import torch
 import GPUtil
 import gc
+import shutil
 
 
 def get_logger(name='main', fmt='%(asctime)s %(levelname)-8s %(message)s'):
@@ -148,3 +149,8 @@ def path_isfile(path):
 def exec_gc():
     torch.cuda.empty_cache()
     gc.collect()
+
+
+def copy_file(from_path, to_path):
+    mkdir(to_path)
+    shutil.copy(from_path, to_path)
