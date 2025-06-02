@@ -8,7 +8,7 @@ import torch
 import GPUtil
 import gc
 import shutil
-from inputimeout import inputimeout, TimeoutOccurred
+from inputimeout import inputimeout
 
 
 def get_logger(name='main', fmt='%(asctime)s %(levelname)-8s %(message)s'):
@@ -211,7 +211,7 @@ def delete_path(path):
 def input_timeout(prompt, timeout, default):
     try:
         text = inputimeout(prompt=prompt, timeout=timeout)
-    except Exception:
+    except Exception as e:
         return default
     else:
         return text

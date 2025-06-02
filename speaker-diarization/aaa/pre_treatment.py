@@ -35,17 +35,18 @@ def extract_audio(video_path, audio_path, audio_track_index=0):
     if len(audio_tracks) == 0:
         logger.error("提取音轨，音轨为空")
         raise ValueError("提取音轨，音轨为空")
+    track_index = 0
     while len(audio_tracks) > 1:
         for track in audio_tracks:
             logger.info("提取音轨，音轨, %s:%s", track.get('index', 0) - 1,
                         track.get('tags', {}).get('language', '未知'))
         time.sleep(0.5)
-        audio_track_index = int(util.input_timeout("输入音轨编号: ", 60, audio_track_index))
-        if audio_track_index < 0 or len(audio_tracks) <= audio_track_index:
+        track_index = int(util.input_timeout("输入音轨编号: ", 60, audio_track_index))
+        if track_index < 0 or len(audio_tracks) <= track_index:
             logger.info("提取音轨，音轨选择错误")
             continue
         break
-    ffmpeg_util.extract_audio_track(video_path, audio_track_index, audio_path)
+    ffmpeg_util.extract_audio_track(video_path, track_index, audio_path)
 
 
 def extract_audio_by_manager(manager):
