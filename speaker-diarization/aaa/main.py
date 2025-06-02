@@ -3,7 +3,8 @@ import util
 import pre_treatment
 import noise_reduction_demucs
 import audio_split_silero_vad
-import speaker_diarization_pyannote
+import audio_class_pyannote
+import purification_speechbrain
 
 logger = util.get_logger()
 
@@ -19,6 +20,7 @@ manager = {
     # "audio_combine_json_path": "output/demo/audio_split/combine.json",
     # "audio_segment_dir": "output/demo/audio_split/segment",
     # "audio_class_dir": "output/demo/audio_class",
+    # "audio_purification_dir": "output/demo/audio_purification",
 }
 
 util.print_device_info()
@@ -27,6 +29,7 @@ pre_treatment.init_by_manager(manager)
 pre_treatment.extract_audio_by_manager(manager)
 noise_reduction_demucs.noise_reduction_by_manager(manager)
 audio_split_silero_vad.split_video_by_manager(manager)
-speaker_diarization_pyannote.audio_class_by_manager(manager)
+audio_class_pyannote.audio_class_by_manager(manager)
+purification_speechbrain.audio_purification_by_manager(manager)
 
 logger.info("manager: %s", json.dumps(manager))

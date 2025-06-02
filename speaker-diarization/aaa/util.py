@@ -112,16 +112,57 @@ def get_compute_type():
 
 
 def get_file_ext(file_path):
+    """
+    '/aaa/bbb/ccc' -> ''
+    '/aaa/bbb/ccc.txt' -> 'txt'
+    :param file_path:
+    :return:
+    """
     ext = Path(file_path).suffix[1:]
     return ext
 
 
 def get_file_name(file_path):
+    """
+    '/aaa/bbb/ccc' -> 'ccc'
+    '/aaa/bbb/ccc.txt' -> 'ccc'
+    :param file_path:
+    :return:
+    """
     name = os.path.splitext(os.path.basename(file_path))[0]
     return name
 
 
-def get_file_dir(file_path):
+def get_file_basename(file_path):
+    """
+    '/aaa/bbb/ccc' -> 'ccc'
+    '/aaa/bbb/ccc.txt' -> 'ccc.txt'
+    :param file_path:
+    :return:
+    """
+    name = os.path.basename(file_path)
+    return name
+
+
+def get_parent_dir(file_path):
+    """
+    '/aaa/bbb/ccc' -> 'bbb'
+    '/aaa/bbb/ccc.txt' -> 'bbb'
+    :param file_path:
+    :return:
+    """
+    parent = os.path.dirname(file_path)
+    parent_dir = os.path.basename(parent)
+    return parent_dir
+
+
+def get_ancestor_dir(file_path):
+    """
+    '/aaa/bbb/ccc' -> '/aaa/bbb'
+    '/aaa/bbb/ccc.txt' -> '/aaa/bbb'
+    :param file_path:
+    :return:
+    """
     file_dir = os.path.dirname(file_path)
     return file_dir
 

@@ -45,8 +45,7 @@ def audio_class(audio_path, json_path, output_dir, auth_token=""):
         if not speaker:
             continue
         segment_path = segment['segment_path']
-        output_path = os.path.join(output_dir, speaker,
-                                   util.get_file_name(segment_path) + '.' + util.get_file_ext(segment_path))
+        output_path = os.path.join(output_dir, speaker, util.get_file_basename(segment_path))
         util.copy_file(segment_path, output_path)
 
 

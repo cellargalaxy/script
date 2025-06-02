@@ -35,7 +35,7 @@ def check_segments(segments):
 
 def save_sub_as_vtt(audio_path, sub, save_dir=''):
     if not save_dir:
-        sub_dir = util.get_file_dir(audio_path)
+        save_dir = util.get_ancestor_dir(audio_path)
     util.mkdir(save_dir)
     vtt_writer = get_writer("vtt", save_dir)
     vtt_writer(
@@ -47,7 +47,7 @@ def save_sub_as_vtt(audio_path, sub, save_dir=''):
 
 def save_sub_as_json(audio_path, sub, save_dir=''):
     if not save_dir:
-        save_dir = util.get_file_dir(audio_path)
+        save_dir = util.get_ancestor_dir(audio_path)
     json_path = os.path.join(save_dir, util.get_file_name(audio_path) + '.json')
     util.save_file(json.dumps(sub), json_path)
 
