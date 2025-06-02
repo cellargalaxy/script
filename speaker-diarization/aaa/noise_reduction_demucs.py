@@ -11,6 +11,7 @@ def noise_reduction(audio_path, output_dir):
         '-o', output_dir,
     ]
     demucs.separate.main(cmd)
+    util.exec_gc()
     output_path = os.path.join(output_dir, "htdemucs/wav/vocals.wav")
     return output_path
 

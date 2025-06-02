@@ -8,6 +8,7 @@ import torch
 import GPUtil
 import gc
 import shutil
+from inputimeout import inputimeout, TimeoutOccurred
 
 
 def get_logger(name='main', fmt='%(asctime)s %(levelname)-8s %(message)s'):
@@ -89,15 +90,17 @@ def get_device_info():
     return info
 
 
-def print_device_info():
-    device_info = get_device_info()
-    for key, value in device_info.items():
-        logger.info(f"{key}: {value}")
-
-
 def get_device_type():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     return device
+
+
+def print_device_info():
+    device_type = get_device_type()
+    logger.info(f"device_type: {device_type}")
+    device_info = get_device_info()
+    for key, value in device_info.items():
+        logger.info(f"{key}: {value}")
 
 
 def get_compute_type():
@@ -154,3 +157,12 @@ def exec_gc():
 def copy_file(from_path, to_path):
     mkdir(to_path)
     shutil.copy(from_path, to_path)
+
+
+def input_timeout(prompt, timeout, default):
+    try:
+        text = inputimeout(prompt=prompt, timeout=timeout)
+    except TimeoutOccurred:
+        return default
+    else:
+        return text

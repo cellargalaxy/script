@@ -9,6 +9,7 @@ logger = util.get_logger()
 
 manager = {
     "video_path": "../demo.mkv",
+    "audio_track_index": 0,
     "auth_token": "",
 
     # "output_dir": "output/demo",
@@ -21,7 +22,7 @@ manager = {
 }
 
 util.print_device_info()
-pre_treatment.init_param_by_manager(manager)
+pre_treatment.init_by_manager(manager)
 
 pre_treatment.extract_audio_by_manager(manager)
 noise_reduction_demucs.noise_reduction_by_manager(manager)

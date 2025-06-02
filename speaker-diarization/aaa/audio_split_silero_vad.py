@@ -15,7 +15,7 @@ def detect_audio_activity_point(audio_path, sampling_rate=16000):
     del audio
     util.exec_gc()
 
-    model, utils = torch.hub.load(repo_or_dir='../model/silero-vad/master', model='silero_vad', source='local')
+    model, utils = torch.hub.load(repo_or_dir='model/silero-vad', model='silero_vad', source='local')
     (get_speech_timestamps, save_audio, read_audio, VADIterator, collect_chunks) = utils
     wave = read_audio(audio_path, sampling_rate=sampling_rate)
     speech_timestamps = get_speech_timestamps(

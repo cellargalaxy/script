@@ -1,29 +1,34 @@
-import torch
-import torchaudio
 from tortoise.api import TextToSpeech
 from tortoise.utils.audio import load_voice
+import torch
+import torchaudio
 
-# 设置 CPU 模式
-device = torch.device('cpu')
+# 指向包含音频样本的文件夹路径
+print('指向包含音频样本的文件夹路径')
+voice_sample_folder = "../aaa/output/demo/audio_class"  # 替换为你的文件夹路径
 
-# 初始化 TTS 模型（不使用 DeepSpeed，兼容 CPU）
-tts = TextToSpeech(use_deepspeed=False, device=device)
+# 加载音色
+print('加载音色')
+voice_samples, conditioning_latents = load_voice('SPEAKER_02', extra_voice_dirs=[voice_sample_folder])
 
-# 加载自定义语音样本文件夹 voices/my_voice/
-voice_samples, conditioning_latents = load_voice("my_voice")
-
-# 要合成的文字（可以换成你自己的句子）
+# 需要合成的文本
+print('需要合成的文本')
 text = "The wolf was trustworthy and struck a promise with the village youth."
 
-# 使用 fast 模式合成（标准、high_quality 会非常慢）
-generated_audio = tts.tts_with_preset(
-    text=text,
-    voice_samples=voice_samples,
-    conditioning_latents=conditioning_latents,
-    preset='fast'  # 可选: ultra_fast / fast / standard / high_quality
-)
+# 初始化TTS
+print('初始化TTS')
+device = torch.device('cpu')
+tts = TextToSpeech(use_deepspeed=False, device=device)
 
-# 保存音频
-torchaudio.save("output.wav", generated_audio.squeeze(0).cpu(), sample_rate=24000)
+# 合成语音
+print('合成语音')
+gen = tts.tts_with_preset(text, voice_samples=voice_samples, conditioning_latents=conditioning_latents,
+              preset='fast',# 可选: ultra_fast / fast / standard / high_quality
+              # num_autoregressive_samples=1,
+              # diffusion_iterations=10,
+              # cond_free=True
+              )
 
-print("✅ 合成完成，语音保存为 output.wav")
+# 保存生成的音频
+print('保存生成的音频')
+torchaudio.save("output.wav", gen.squeeze(0).cpu(), sample_rate=24000)
