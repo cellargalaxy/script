@@ -17,6 +17,9 @@ def speaker_diarization(audio_path, auth_token=""):
         start = math.ceil(turn.start * 1000)
         end = math.floor(turn.end * 1000)
         segments.append({"start": start, "end": end, "speaker": speaker})
+    del pipeline
+    del diarization
+    util.exec_gc()
     logger.info("说话人检测,segments: %s", json.dumps(segments))
     return segments
 
@@ -50,9 +53,12 @@ def audio_class(audio_path, json_path, output_dir, auth_token=""):
 
 
 def audio_class_by_manager(manager):
+    logger.info("audio_class,enter,manager: %s", json.dumps(manager))
     audio_path = manager.get('audio_combine_wav_path')
     json_path = manager.get('audio_combine_json_path')
     auth_token = manager.get('auth_token')
     output_dir = os.path.join(manager.get('output_dir'), "audio_class")
+    util.delete_path(output_dir)
     audio_class(audio_path, json_path, output_dir, auth_token=auth_token)
     manager['audio_class_dir'] = output_dir
+    logger.info("audio_class,leave,manager: %s", json.dumps(manager))

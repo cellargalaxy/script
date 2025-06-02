@@ -32,4 +32,3 @@ audio_split_silero_vad.split_video_by_manager(manager)
 audio_class_pyannote.audio_class_by_manager(manager)
 purification_speechbrain.audio_purification_by_manager(manager)
 
-logger.info("manager: %s", json.dumps(manager))

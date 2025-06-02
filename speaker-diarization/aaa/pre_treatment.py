@@ -20,11 +20,13 @@ def init_shell():
 
 
 def init_by_manager(manager):
+    logger.info("init,enter,manager: %s", json.dumps(manager))
     init_shell()
     video_path = manager.get('video_path')
     file_name = util.get_file_name(video_path)
     output_dir = os.path.join('output', file_name)
     manager['output_dir'] = output_dir
+    logger.info("init,leave,manager: %s", json.dumps(manager))
 
 
 def extract_audio(video_path, audio_path, audio_track_index=0):
@@ -47,8 +49,11 @@ def extract_audio(video_path, audio_path, audio_track_index=0):
 
 
 def extract_audio_by_manager(manager):
+    logger.info("extract_audio,enter,manager: %s", json.dumps(manager))
     video_path = manager.get('video_path')
     audio_track_index = manager.get('audio_track_index', 0)
     audio_path = os.path.join(manager.get('output_dir'), "extract_audio/wav.wav")
+    util.delete_path(audio_path)
     extract_audio(video_path, audio_path, audio_track_index=audio_track_index)
     manager['audio_path'] = audio_path
+    logger.info("extract_audio,leave,manager: %s", json.dumps(manager))

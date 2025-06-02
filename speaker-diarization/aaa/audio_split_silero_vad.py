@@ -104,9 +104,12 @@ def split_audio(audio_path, output_dir):
 
 
 def split_video_by_manager(manager):
+    logger.info("split_video,enter,manager: %s", json.dumps(manager))
     audio_path = manager.get('noise_reduction_audio_path')
     output_dir = os.path.join(manager.get('output_dir'), "audio_split")
+    util.delete_path(output_dir)
     combine_wav_path, combine_json_path, segment_dir = split_audio(audio_path, output_dir)
     manager['audio_combine_wav_path'] = combine_wav_path
     manager['audio_combine_json_path'] = combine_json_path
     manager['audio_segment_dir'] = segment_dir
+    logger.info("split_video,leave,manager: %s", json.dumps(manager))

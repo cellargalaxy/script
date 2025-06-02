@@ -200,10 +200,18 @@ def copy_file(from_path, to_path):
     shutil.copy(from_path, to_path)
 
 
+def delete_path(path):
+    path = Path(path)
+    if path.is_file():
+        path.unlink()
+    elif path.is_dir():
+        shutil.rmtree(path)
+
+
 def input_timeout(prompt, timeout, default):
     try:
         text = inputimeout(prompt=prompt, timeout=timeout)
-    except TimeoutOccurred:
+    except Exception:
         return default
     else:
         return text
