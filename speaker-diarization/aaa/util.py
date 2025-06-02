@@ -209,11 +209,17 @@ def delete_path(path):
 
 def in_notebook() -> bool:
     try:
+        import google.colab
+        return True
+    except ImportError:
+      pass
+    try:
         from IPython import get_ipython
         shell = get_ipython().__class__.__name__
         return shell == 'ZMQInteractiveShell'
     except (NameError, ImportError):
-        return False
+      pass
+    return False
 
 def input_timeout(prompt, timeout, default):
     if in_notebook():
