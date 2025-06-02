@@ -23,7 +23,7 @@ def sample_inspection(audio_path, audio_paths):
         if simple_path == audio_path:
             simple_paths.pop(i)
             break
-    simple_num = min(10, len(simple_paths))
+    simple_num = min(5, len(simple_paths))
     simples = []
     for i in range(simple_num):
         simple = simple_paths.pop(random.randrange(len(simple_paths)))

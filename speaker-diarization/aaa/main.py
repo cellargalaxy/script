@@ -4,6 +4,7 @@ import noise_reduction_demucs
 import audio_split_silero_vad
 import audio_class_pyannote
 import purification_speechbrain
+import sound_clone_tortoise
 
 logger = util.get_logger()
 
@@ -11,6 +12,7 @@ manager = {
     "video_path": "../demo.mkv",
     "audio_track_index": 0,
     "auth_token": "",
+    "sound_clone_text": "The wolf was trustworthy and struck a promise with the village youth.",
 
     # "output_dir": "output/demo",
     # "audio_path": 'output/demo/extract_audio/wav.wav',
@@ -30,4 +32,4 @@ noise_reduction_demucs.noise_reduction_by_manager(manager)
 audio_split_silero_vad.split_video_by_manager(manager)
 audio_class_pyannote.audio_class_by_manager(manager)
 purification_speechbrain.audio_purification_by_manager(manager)
-
+sound_clone_tortoise.sound_clone_by_manager(manager)
