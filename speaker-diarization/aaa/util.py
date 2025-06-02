@@ -207,11 +207,20 @@ def delete_path(path):
     elif path.is_dir():
         shutil.rmtree(path)
 
+def in_notebook() -> bool:
+    try:
+        from IPython import get_ipython
+        shell = get_ipython().__class__.__name__
+        return shell == 'ZMQInteractiveShell'
+    except (NameError, ImportError):
+        return False
 
 def input_timeout(prompt, timeout, default):
+    if in_notebook():
+        return default
     try:
         text = inputimeout(prompt=prompt, timeout=timeout)
-    except Exception as e:
+    except Exception:
         return default
     else:
         return text
