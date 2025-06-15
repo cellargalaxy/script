@@ -1,5 +1,4 @@
 import json
-from whisperx.utils import get_writer
 import util
 import os
 import sub_util

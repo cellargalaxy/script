@@ -39,7 +39,7 @@ audio_split_batch_pyannote.split_video_by_manager(manager)
 # faster_whisper与whisperx与whisper_timestamped对比
 # faster_whisper会将不同人说的话，混合在一个句子里，先出局
 # 耗时：whisperx比whisper_timestamped快一倍；如果加上说话人识别，whisperx几乎慢一倍，但依然比whisper_timestamped快
-# 字符时间识别准确度：whisper_timestamped比whisperx明显好，whisperx是不是有些字会卡住不动；如果加上说话人识别，准确度与whisper_timestamped相差无几
+# 字符时间识别准确度：whisper_timestamped比whisperx明显好，whisperx时不时有些字会卡住不动；如果加上说话人识别，准确度与whisper_timestamped相差无几
 # 句子时间识别准确度：差不多，whisper_timestamped比whisperx一些些，但并不多；如果加上说话人识别，感觉并没什么差别
 # 句子内容识别准确度：whisper_timestamped比whisperx好一些，但whisperx也勉强够用；如果加上说话人识别，感觉并没什么差别
 # 句子断句：whisper_timestamped会把同一个人的短句连在一起，而whisperx会将句子切割的更碎；如果加上说话人识别，更加准确

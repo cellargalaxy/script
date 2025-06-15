@@ -1,5 +1,11 @@
 # https://github.com/m-bain/whisperX/issues/692#issuecomment-1992646967
 
+import os
+os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+os.environ['http_proxy'] = 'http://192.168.123.7:10808'
+os.environ['https_proxy'] = 'http://192.168.123.7:10808'
+os.environ['no_proxy'] = 'localhost,127.0.0.1,::1,192.168.123.7,mirrors.ustc.edu.cn'
+
 import whisperx
 from whisperx.utils import get_writer
 import json
@@ -7,10 +13,10 @@ import gc
 import torch
 
 API_TOKEN = ""
-audio_file = "../short.wav"
-device = "cpu"  # cuda/cpu
+audio_file = "../long_jpn.wav"
+device = "cuda"  # cuda/cpu
 batch_size = 16
-compute_type = "int8"
+compute_type = "float16"
 whisper_size = "large-v3"
 
 model = whisperx.load_model(whisper_size, device, compute_type=compute_type)
