@@ -9,6 +9,12 @@ import transcribe_sub_whisperx
 import join_sub
 import audio_split_segment
 
+import os
+os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+os.environ['http_proxy'] = 'http://192.168.123.7:10808'
+os.environ['https_proxy'] = 'http://192.168.123.7:10808'
+os.environ['no_proxy'] = 'localhost,127.0.0.1,::1,192.168.123.7,mirrors.ustc.edu.cn'
+
 logger = util.get_logger()
 
 manager = {
