@@ -18,7 +18,7 @@ os.environ['no_proxy'] = 'localhost,127.0.0.1,::1,192.168.123.7,mirrors.ustc.edu
 logger = util.get_logger()
 
 manager = {
-    "video_path": "../demo.mkv",
+    "video_path": "../long_eng.mkv",
 
     # "output_dir": "output/demo",
     # "audio_path": 'output/demo/extract_audio/wav.wav',
