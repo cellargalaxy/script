@@ -17,11 +17,11 @@ def save_segments_as_srt(segments, file_path):
 
 
 # 加载模型（CPU/GPU 均可）
-model, utils = torch.hub.load(repo_or_dir='../model/silero-vad/master', model='silero_vad', source='local')
+model, utils = torch.hub.load(repo_or_dir='model/silero-vad', model='silero_vad', source='local')
 (get_speech_timestamps, save_audio, read_audio, VADIterator, collect_chunks) = utils
 
 # 读取音频文件（必须是 WAV 格式，16kHz 单声道）
-wav_path = '../demo_eng.wav'  # 替换为你的音频路径
+wav_path = '../demo_eng_single.wav'  # 替换为你的音频路径
 wave = read_audio(wav_path, sampling_rate=16000)
 
 # 获取语音片段（语音活动检测结果）
@@ -40,4 +40,4 @@ for i, segment in enumerate(speech_timestamps):
     end_sec = segment['end'] / 16000
     print(f"Speech {i + 1}: {start_sec:.2f}s - {end_sec:.2f}s")
     segments.append({"start": start_sec, "end": end_sec, })
-save_segments_as_srt(segments, 'silero_vad_demo.srt')
+save_segments_as_srt(segments, '../demo_eng_single.srt')
