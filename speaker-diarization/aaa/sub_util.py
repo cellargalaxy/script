@@ -3,8 +3,34 @@ from whisperx.utils import get_writer
 import util
 import os
 import pysubs2
+import math
 
 logger = util.get_logger()
+
+
+def fix_overlap_segments(segments):
+    for i, segment in enumerate(segments):
+        if i == 0:
+            continue
+        if segments[i - 1]['end'] <= segments[i]['start']:
+            continue
+        mean = math.floor((segments[i - 1]['end'] + segments[i]['start']) / 2.0)
+        segments[i]['start'] = mean
+        segments[i - 1]['end'] = mean
+    return segments
+
+
+def unit_segments(segments):
+    list = []
+    for i, segment in enumerate(segments):
+        vad_type = ''
+        if len(list) > 0:
+            vad_type = list[len(list) - 1]['vad_type']
+        if segment['vad_type'] == vad_type:
+            list[len(list) - 1]['end'] = segment['end']
+        else:
+            list.append(segment)
+    return list
 
 
 def check_segments(segments):
