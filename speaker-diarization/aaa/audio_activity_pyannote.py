@@ -1,12 +1,8 @@
-import torch
-import util
-import math
 import json
-import sub_util
+import util_sub
 from pydub import AudioSegment
 from pyannote.audio import Pipeline
 import math
-import sub_util
 import util
 import torch
 
@@ -51,8 +47,8 @@ def audio_activity(audio_path, auth_token=''):
     if pre_end < last_end:
         segments.append({"start": pre_end, "end": last_end, "vad_type": 'silene'})
 
-    segments = sub_util.fix_overlap_segments(segments)
-    segments = sub_util.unit_segments(segments)
-    sub_util.check_segments(segments)
+    segments = util_sub.fix_overlap_segments(segments)
+    segments = util_sub.unit_segments(segments)
+    util_sub.check_segments(segments)
     logger.info("检测语音活动点,segments: %s", json.dumps(segments))
     return segments

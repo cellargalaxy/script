@@ -1,6 +1,6 @@
 import util
 import json
-import sub_util
+import util_sub
 import os
 import audio_activity_silero_vad
 import audio_activity_ten_vad
@@ -12,15 +12,15 @@ logger = util.get_logger()
 def audio_activity(audio_path, output_dir, auth_token):
     segments = audio_activity_pyannote.audio_activity(audio_path, auth_token=auth_token)
     util.save_file(json.dumps(segments), os.path.join(output_dir, 'pyannote.json'))
-    sub_util.save_segments_as_srt(segments, os.path.join(output_dir, 'pyannote.srt'))
+    util_sub.save_segments_as_srt(segments, os.path.join(output_dir, 'pyannote.srt'))
 
     segments = audio_activity_silero_vad.audio_activity(audio_path)
     util.save_file(json.dumps(segments), os.path.join(output_dir, 'silero_vad.json'))
-    sub_util.save_segments_as_srt(segments, os.path.join(output_dir, 'silero_vad.srt'))
+    util_sub.save_segments_as_srt(segments, os.path.join(output_dir, 'silero_vad.srt'))
 
     segments = audio_activity_ten_vad.audio_activity(audio_path)
     util.save_file(json.dumps(segments), os.path.join(output_dir, 'ten_vad.json'))
-    sub_util.save_segments_as_srt(segments, os.path.join(output_dir, 'ten_vad.srt'))
+    util_sub.save_segments_as_srt(segments, os.path.join(output_dir, 'ten_vad.srt'))
 
 
 def audio_activity_by_manager(manager):
