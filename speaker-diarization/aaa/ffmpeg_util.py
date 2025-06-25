@@ -27,6 +27,7 @@ def merge_audio_channel(input_path, output_path):
         'bin/ffmpeg',
         '-i', input_path,
         '-ac', '1',
+        '-ar', '16000',
         '-y',
         output_path
     ]

@@ -23,7 +23,7 @@ def audio_activity(audio_path, sample_rate=16000):
         sampling_rate=sample_rate,
         min_silence_duration_ms=10,
         min_speech_duration_ms=1000,
-        threshold=0.6,
+        threshold=0.4,
     )
 
     segments = []
