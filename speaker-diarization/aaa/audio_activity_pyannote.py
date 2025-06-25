@@ -16,7 +16,6 @@ def audio_activity(audio_path, auth_token=''):
     util.exec_gc()
 
     pipeline = Pipeline.from_pretrained("pyannote/voice-activity-detection",
-                                        cache_dir='model/pyannote/voice-activity-detection',
                                         use_auth_token=auth_token)
     pipeline = pipeline.to(torch.device(util.get_device_type()))
     results = pipeline(audio_path)

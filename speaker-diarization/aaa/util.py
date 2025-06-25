@@ -11,7 +11,7 @@ import shutil
 from inputimeout import inputimeout
 
 
-def get_logger(name='main', fmt='%(asctime)s %(levelname)-8s %(message)s'):
+def get_logger(name='main', fmt='%(asctime)s %(levelname)-5s %(filename)s:%(lineno)d - %(message)s'):
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
     if not logger.handlers:
@@ -37,15 +37,6 @@ def mkdir(path):
         obj.mkdir(parents=True, exist_ok=True)
 
 
-cmd_logger = logging.getLogger("simple_logger")
-handler_exec = logging.StreamHandler()
-formatter_exec = logging.Formatter('%(message)s')
-handler_exec.setFormatter(formatter_exec)
-cmd_logger.addHandler(handler_exec)
-cmd_logger.setLevel(logging.INFO)
-cmd_logger.propagate = False
-
-
 def popen_cmd(cmd):
     exec_cmd = "cd {} && {}".format(os.getcwd(), shlex.join(cmd))
     logger.info("执行命令: %s", exec_cmd)
@@ -59,7 +50,7 @@ def popen_cmd(cmd):
     )
     with process.stdout:
         for line in iter(process.stdout.readline, ''):
-            cmd_logger.debug("%s", line)
+            logger.debug("%s", line)
     return_code = process.wait()
     logging.info("执行命令，退出：%s", return_code)
     return return_code
@@ -207,19 +198,26 @@ def delete_path(path):
     elif path.is_dir():
         shutil.rmtree(path)
 
+
+def get_script_path():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    return script_dir
+
+
 def in_notebook() -> bool:
     try:
         import google.colab
         return True
     except ImportError:
-      pass
+        pass
     try:
         from IPython import get_ipython
         shell = get_ipython().__class__.__name__
         return shell == 'ZMQInteractiveShell'
     except (NameError, ImportError):
-      pass
+        pass
     return False
+
 
 def input_timeout(prompt, timeout, default):
     if in_notebook():

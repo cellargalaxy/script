@@ -85,7 +85,7 @@ def save_segments_as_srt(segments, file_path):
         end = segment['end'] / 1000.0
         text = segment.get('text', '')
         if not text:
-            text = f"[{segment.get('type', '')}|{segment.get('speaker', '')}] {segment['start']}->{segment['end']}"
+            text = f"[{segment.get('vad_type', '')}|{segment.get('speaker', '')}] {segment['start']}->{segment['end']}"
         obj = {'start': start, 'end': end, 'text': text}
         results.append(obj)
     util.mkdir(file_path)
