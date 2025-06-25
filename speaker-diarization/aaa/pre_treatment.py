@@ -59,3 +59,17 @@ def extract_audio_by_manager(manager):
     extract_audio(video_path, audio_path, audio_track_index=audio_track_index)
     manager['audio_path'] = audio_path
     logger.info("extract_audio,leave,manager: %s", json.dumps(manager))
+
+
+def merge_audio_channel(input_path, output_path):
+    if util.path_exist(output_path):
+        return
+    ffmpeg_util.merge_audio_channel(input_path, output_path)
+
+def merge_audio_channel_by_manager(manager):
+    logger.info("merge_audio_channel,enter,manager: %s", json.dumps(manager))
+    input_path = manager.get('noise_reduction_audio_path')
+    output_path = os.path.join(manager.get('output_dir'), "merge_audio_channel/wav.wav")
+    merge_audio_channel(input_path, output_path)
+    manager['merge_audio_channel_path'] = output_path
+    logger.info("merge_audio_channel,leave,manager: %s", json.dumps(manager))

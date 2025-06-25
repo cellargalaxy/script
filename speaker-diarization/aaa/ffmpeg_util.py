@@ -10,8 +10,7 @@ def extract_audio_track(video_path, index, audio_path):
         'bin/ffmpeg',
         '-i', video_path,
         '-map', "0:a:{}".format(index),  # 在第0个输入文件中选择第index个音轨
-        '-ac', '1',  # 将音频转换为单声道
-        '-ar', '16000',  # 16kHz
+        '-ar', '44100',
         '-y',
         audio_path
     ]
@@ -20,3 +19,19 @@ def extract_audio_track(video_path, index, audio_path):
     if return_code != 0:
         logger.error("提取视频文件音轨，异常")
         raise ValueError("提取视频文件音轨，异常")
+
+
+def merge_audio_channel(input_path, output_path):
+    util.mkdir(output_path)
+    cmd = [
+        'bin/ffmpeg',
+        '-i', input_path,
+        '-ac', '1',
+        '-y',
+        output_path
+    ]
+    logger.info("合并音频声道,cmd: %s", json.dumps(cmd))
+    return_code = util.popen_cmd(cmd)
+    if return_code != 0:
+        logger.error("合并音频声道，异常")
+        raise ValueError("合并音频声道，异常")
