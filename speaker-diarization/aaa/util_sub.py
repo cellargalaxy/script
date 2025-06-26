@@ -4,6 +4,7 @@ import util
 import os
 import pysubs2
 import math
+import copy
 
 logger = util.get_logger()
 
@@ -57,6 +58,49 @@ def check_segments(segments):
             if pre_end != start:
                 logger.error("检查segments，pre_end与start非法: %s, %s", i, json.dumps(segments))
                 raise ValueError("检查segments，pre_end与start非法")
+
+
+def gradual_segments(segments, gradual_duration_ms=500):
+    if len(segments) <= 1:
+        return segments
+    segments = copy.deepcopy(segments)
+    for i, segment in enumerate(segments):
+        if segments[i]['vad_type'] != 'silene':
+            continue
+        duration = segments[i]['end'] - segments[i]['start']
+        if i == 0:
+            if duration < gradual_duration_ms * 2:
+                segments[i]['end'] = 0
+                segments[i + 1]['start'] = segments[i]['start']
+            else:
+                segments[i]['end'] = segments[i]['end'] - gradual_duration_ms
+                segments[i + 1]['start'] = segments[i + 1]['start'] - gradual_duration_ms
+            continue
+        if i == len(segments) - 1:
+            if duration < gradual_duration_ms * 2:
+                segments[i - 1]['end'] = segments[i]['end']
+                segments[i]['end'] = 0
+            else:
+                segments[i - 1]['end'] = segments[i - 1]['end'] + gradual_duration_ms
+                segments[i]['start'] = segments[i]['start'] + gradual_duration_ms
+            continue
+        if duration < gradual_duration_ms * 4:
+            mean = math.floor((segments[i]['end'] + segments[i]['start']) / 2.0)
+            segments[i - 1]['end'] = mean
+            segments[i + 1]['start'] = mean
+            segments[i]['end'] = 0
+        else:
+            segments[i - 1]['end'] = segments[i - 1]['end'] + gradual_duration_ms
+            segments[i]['start'] = segments[i]['start'] + gradual_duration_ms
+            segments[i]['end'] = segments[i]['end'] - gradual_duration_ms
+            segments[i + 1]['start'] = segments[i + 1]['start'] - gradual_duration_ms
+    gradual = []
+    for i, segment in enumerate(segments):
+        if segment['end'] == 0:
+            continue
+        gradual.append(segment)
+    check_segments(gradual)
+    return gradual
 
 
 def save_sub_as_vtt(audio_path, sub, save_dir=''):
