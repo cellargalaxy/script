@@ -8,6 +8,10 @@ logger = util.get_logger()
 
 
 def audio_batch(audio_activity_path, output_dir, min_silene_duration_ms=500, min_speech_duration_ms=1000 * 5):
+    audio_batch_path = os.path.join(output_dir, 'audio_batch.json')
+    if util.path_exist(audio_batch_path):
+        return audio_batch_path
+
     content = util.read_file(audio_activity_path)
     segments = json.loads(content)
     batches = []
@@ -29,7 +33,6 @@ def audio_batch(audio_activity_path, output_dir, min_silene_duration_ms=500, min
     util_sub.check_segments(batches)
     segments = batches
 
-    audio_batch_path = os.path.join(output_dir, 'audio_batch.json')
     util.save_file(json.dumps(segments), audio_batch_path)
     util_sub.save_segments_as_srt(segments, os.path.join(output_dir, 'audio_batch.srt'), skip_silene=True)
     return audio_batch_path
