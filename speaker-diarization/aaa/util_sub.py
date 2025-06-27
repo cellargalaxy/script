@@ -122,7 +122,7 @@ def save_sub_as_json(audio_path, sub, save_dir=''):
     util.save_file(json.dumps(sub), json_path)
 
 
-def save_segments_as_srt(segments, file_path):
+def save_segments_as_srt(segments, file_path, skip_silene=False):
     results = []
     for i, segment in enumerate(segments):
         start = segment['start'] / 1000.0
@@ -130,6 +130,8 @@ def save_segments_as_srt(segments, file_path):
         text = segment.get('text', '')
         if not text:
             text = f"[{segment.get('vad_type', '')}|{segment.get('speaker', '')}] {segment['start']}->{segment['end']}"
+        if skip_silene and segment.get('vad_type', '') == 'silene':
+            continue
         obj = {'start': start, 'end': end, 'text': text}
         results.append(obj)
     util.mkdir(file_path)
