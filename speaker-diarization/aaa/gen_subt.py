@@ -28,23 +28,23 @@ def gen_subt(audio_path):
 
 def gen_and_save_subt(audio_path, output_dir):
     sub = gen_subt(audio_path)
-    util_subt.save_subt_as_vtt(audio_path, sub, output_dir)
     util_subt.save_subt_as_json(audio_path, sub, output_dir)
+    util_subt.save_subt_as_vtt(audio_path, sub, output_dir)
     return sub
 
 
 def gen_and_join_subt(audio_path, audio_batch_path, audio_split_dir, output_dir):
     split_subt_dir = os.path.join(output_dir, 'split_subt')
-    if util.path_exist(split_subt_dir):
-        return
-
-    for file in os.listdir(audio_split_dir):
-        file_path = os.path.join(audio_split_dir, file)
-        if not util.path_isfile(file_path):
-            continue
-        if 'speech.wav' not in file_path:
-            continue
-        gen_and_save_subt(file_path, split_subt_dir)
+    # if util.path_exist(split_subt_dir):
+    #     return
+    #
+    # for file in os.listdir(audio_split_dir):
+    #     file_path = os.path.join(audio_split_dir, file)
+    #     if not util.path_isfile(file_path):
+    #         continue
+    #     if 'speech.wav' not in file_path:
+    #         continue
+    #     gen_and_save_subt(file_path, split_subt_dir)
 
     subtitle = {
         "segments": [],
@@ -62,17 +62,18 @@ def gen_and_join_subt(audio_path, audio_batch_path, audio_split_dir, output_dir)
         content = util.read_file(split_subt_path)
         subt = json.loads(content)
         subt = util_subt.shift_subt_time(subt, segment['start'])
-        subtitle['segments'].append(subt['segments'])
-        subtitle['word_segments'].append(subt['word_segments'])
-        subtitle['languages'].append(subt['language'])
+        subtitle['segments'].extend(subt['segments'])
+        subtitle['word_segments'].extend(subt['word_segments'])
+        if subt['language']:
+            subtitle['languages'].append(subt['language'])
 
     if len(subtitle['languages']) > 0:
         counter = Counter(subtitle['languages'])
         most_common = counter.most_common(1)
         subtitle['language'] = most_common[0][0] if most_common else ''
 
-    util_subt.save_subt_as_vtt(audio_path, subtitle, output_dir)
     gen_subt_path = util_subt.save_subt_as_json(audio_path, subtitle, output_dir)
+    util_subt.save_subt_as_vtt(audio_path, subtitle, output_dir)
     return gen_subt_path
 
 

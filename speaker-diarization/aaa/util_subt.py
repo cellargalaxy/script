@@ -109,12 +109,24 @@ def gradual_segments(segments, gradual_duration_ms=500):
 
 def shift_subt_time(subt, duration_ms):
     duration = duration_ms / 1000.0
-    for i, segment in enumerate(subt['segments']):
-        subt['segments'][i]['start'] = subt['segments'][i]['start'] + duration
-        subt['segments'][i]['end'] = subt['segments'][i]['end'] + duration
-    for i, segment in enumerate(subt['word_segments']):
-        subt['word_segments'][i]['start'] = subt['word_segments'][i]['start'] + duration
-        subt['word_segments'][i]['end'] = subt['word_segments'][i]['end'] + duration
+
+    segments = subt.get('segments', [])
+    for i, segment in segments:
+        segments[i]['start'] = segments['start'] + duration
+        segments[i]['end'] = segments['end'] + duration
+        words = segments[i].get('words', [])
+        for i, word in words:
+            words[i]['start'] = words['start'] + duration
+            words[i]['end'] = words['end'] + duration
+        segments[i]['words'] = words
+    subt['segments'] = segments
+
+    word_segments = subt.get('word_segments', [])
+    for i, segment in enumerate(word_segments):
+        word_segments[i]['start'] = word_segments[i]['start'] + duration
+        word_segments[i]['end'] = word_segments[i]['end'] + duration
+    subt['word_segments'] = word_segments
+
     return subt
 
 
