@@ -107,25 +107,6 @@ def gradual_segments(segments, gradual_duration_ms=500):
     return gradual
 
 
-def save_sub_as_vtt(audio_path, sub, save_dir=''):
-    if not save_dir:
-        save_dir = util.get_ancestor_dir(audio_path)
-    util.mkdir(save_dir)
-    vtt_writer = get_writer("vtt", save_dir)
-    vtt_writer(
-        sub,
-        audio_path,
-        {"max_line_width": None, "max_line_count": None, "highlight_words": True},
-    )
-
-
-def save_sub_as_json(audio_path, sub, save_dir=''):
-    if not save_dir:
-        save_dir = util.get_ancestor_dir(audio_path)
-    json_path = os.path.join(save_dir, util.get_file_name(audio_path) + '.json')
-    util.save_file(json.dumps(sub), json_path)
-
-
 def save_segments_as_srt(segments, file_path, skip_silene=False):
     results = []
     for i, segment in enumerate(segments):
@@ -141,3 +122,22 @@ def save_segments_as_srt(segments, file_path, skip_silene=False):
     util.mkdir(file_path)
     subs = pysubs2.load_from_whisper(results)
     subs.save(file_path)
+
+
+def save_subt_as_vtt(audio_path, subt, save_dir=''):
+    if not save_dir:
+        save_dir = util.get_ancestor_dir(audio_path)
+    util.mkdir(save_dir)
+    vtt_writer = get_writer("vtt", save_dir)
+    vtt_writer(
+        subt,
+        audio_path,
+        {"max_line_width": None, "max_line_count": None, "highlight_words": True},
+    )
+
+
+def save_subt_as_json(audio_path, subt, save_dir=''):
+    if not save_dir:
+        save_dir = util.get_ancestor_dir(audio_path)
+    json_path = os.path.join(save_dir, util.get_file_name(audio_path) + '.json')
+    util.save_file(json.dumps(subt), json_path)
