@@ -5,6 +5,8 @@ logger = util.get_logger()
 
 
 def gen_subt(audio_path, auth_token):
+    logger.info("生成字幕: %s", audio_path)
+
     device = util.get_device_type()
     compute_type = util.get_compute_type()
 
