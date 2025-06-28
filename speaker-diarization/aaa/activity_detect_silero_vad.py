@@ -7,8 +7,8 @@ from pydub import AudioSegment
 logger = util.get_logger()
 
 
-def audio_activity(audio_path, sample_rate=16000):
-    logger.info("检测语音活动点: %s", audio_path)
+def activity_detect(audio_path, sample_rate=16000):
+    logger.info("活动检测: %s", audio_path)
 
     audio = AudioSegment.from_wav(audio_path)
     last_end = len(audio)
@@ -48,7 +48,7 @@ def audio_activity(audio_path, sample_rate=16000):
         segments.append({"start": pre_end, "end": last_end, "vad_type": 'silene'})
 
     segments = util_subt.fix_overlap_segments(segments)
-    segments = util_subt.unit_segments(segments)
+    segments = util_subt.unit_segments(segments, 'vad_type')
     util_subt.check_segments(segments)
 
     del audio

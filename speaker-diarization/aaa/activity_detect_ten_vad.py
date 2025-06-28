@@ -8,13 +8,13 @@ import math
 logger = util.get_logger()
 
 
-def audio_activity(audio_path,
+def activity_detect(audio_path,
                    frame_rate=10,
                    threshold=0.4,
                    speech_threshold=0.8,
                    silene_threshold=0.5,
                    min_speech_duration_ms=250):
-    logger.info("检测语音活动点: %s", audio_path)
+    logger.info("活动检测: %s", audio_path)
 
     audio = AudioSegment.from_wav(audio_path)
     last_end = len(audio)
@@ -63,10 +63,11 @@ def audio_activity(audio_path,
         segments.append({"start": pre_end, "end": last_end, "vad_type": 'silene'})
 
     segments = util_subt.fix_overlap_segments(segments)
-    segments = util_subt.unit_segments(segments)
+    segments = util_subt.unit_segments(segments, 'vad_type')
     util_subt.check_segments(segments)
 
     del audio
+    del data
     del ten_vad_instance
     util.exec_gc()
 

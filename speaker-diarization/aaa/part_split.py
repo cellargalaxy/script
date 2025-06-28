@@ -6,11 +6,11 @@ from pydub import AudioSegment
 logger = util.get_logger()
 
 
-def audio_split(audio_path, audio_batch_path, output_dir):
+def part_split(audio_path, part_divide_path, output_dir):
     if util.path_exist(output_dir):
         return
 
-    content = util.read_file(audio_batch_path)
+    content = util.read_file(part_divide_path)
     segments = json.loads(content)
     util.mkdir(output_dir)
     audio = AudioSegment.from_wav(audio_path)
@@ -20,12 +20,12 @@ def audio_split(audio_path, audio_batch_path, output_dir):
         cut.export(cut_path, format="wav")
 
 
-def audio_split_by_manager(manager):
-    logger.info("audio_split,enter,manager: %s", json.dumps(manager))
+def part_split_by_manager(manager):
+    logger.info("part_split,enter,manager: %s", json.dumps(manager))
     audio_path = manager.get('merge_audio_channel_path')
-    audio_batch_path = manager.get('audio_batch_path')
-    output_dir = os.path.join(manager.get('output_dir'), "audio_split")
+    part_divide_path = manager.get('part_divide_path')
+    output_dir = os.path.join(manager.get('output_dir'), "part_split")
     util.delete_path(output_dir)
-    audio_split(audio_path, audio_batch_path, output_dir)
-    manager['audio_split_dir'] = output_dir
-    logger.info("audio_split,leave,manager: %s", json.dumps(manager))
+    part_split(audio_path, part_divide_path, output_dir)
+    manager['part_split_dir'] = output_dir
+    logger.info("part_split,leave,manager: %s", json.dumps(manager))

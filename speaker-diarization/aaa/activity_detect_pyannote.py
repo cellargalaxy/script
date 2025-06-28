@@ -1,4 +1,3 @@
-import json
 import util_subt
 from pydub import AudioSegment
 from pyannote.audio import Pipeline
@@ -9,14 +8,13 @@ import torch
 logger = util.get_logger()
 
 
-def audio_activity(audio_path, auth_token=''):
-    logger.info("检测语音活动点: %s", audio_path)
+def activity_detect(audio_path, auth_token):
+    logger.info("活动检测: %s", audio_path)
 
     audio = AudioSegment.from_wav(audio_path)
     last_end = len(audio)
 
-    pipeline = Pipeline.from_pretrained("pyannote/voice-activity-detection",
-                                        use_auth_token=auth_token)
+    pipeline = Pipeline.from_pretrained("pyannote/voice-activity-detection", use_auth_token=auth_token)
     pipeline = pipeline.to(torch.device(util.get_device_type()))
     results = pipeline(audio_path)
 
@@ -43,7 +41,7 @@ def audio_activity(audio_path, auth_token=''):
         segments.append({"start": pre_end, "end": last_end, "vad_type": 'silene'})
 
     segments = util_subt.fix_overlap_segments(segments)
-    segments = util_subt.unit_segments(segments)
+    segments = util_subt.unit_segments(segments, 'vad_type')
     util_subt.check_segments(segments)
 
     del audio

@@ -1,11 +1,9 @@
 import json
 from whisperx.utils import get_writer
 import util
-import os
 import pysubs2
 import math
 import copy
-import whisperx
 
 logger = util.get_logger()
 
@@ -22,17 +20,17 @@ def fix_overlap_segments(segments):
     return segments
 
 
-def unit_segments(segments):
-    list = []
+def unit_segments(segments, type_key):
+    results = []
     for i, segment in enumerate(segments):
-        vad_type = ''
-        if len(list) > 0:
-            vad_type = list[len(list) - 1]['vad_type']
-        if segment['vad_type'] == vad_type:
-            list[len(list) - 1]['end'] = segment['end']
+        key = ''
+        if len(results) > 0:
+            key = results[len(results) - 1][type_key]
+        if segment[type_key] == key:
+            results[len(results) - 1]['end'] = segment['end']
         else:
-            list.append(segment)
-    return list
+            results.append(segment)
+    return results
 
 
 def check_segments(segments):
