@@ -7,7 +7,7 @@ logger = util.get_logger()
 def extract_audio_track(video_path, index, audio_path):
     util.mkdir(audio_path)
     cmd = [
-        'bin/ffmpeg',
+        'ffmpeg',
         '-i', video_path,
         '-map', "0:a:{}".format(index),  # 在第0个输入文件中选择第index个音轨
         '-ar', '44100',
@@ -24,7 +24,7 @@ def extract_audio_track(video_path, index, audio_path):
 def merge_audio_channel(input_path, output_path):
     util.mkdir(output_path)
     cmd = [
-        'bin/ffmpeg',
+        'ffmpeg',
         '-i', input_path,
         '-ac', '1',
         '-ar', '16000',

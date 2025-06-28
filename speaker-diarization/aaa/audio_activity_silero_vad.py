@@ -14,7 +14,7 @@ def audio_activity(audio_path, sample_rate=16000):
     del audio
     util.exec_gc()
 
-    model, utils = torch.hub.load(repo_or_dir='model/silero-vad', model='silero_vad', source='local')
+    model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad', model='silero_vad')
     (get_speech_timestamps, save_audio, read_audio, VADIterator, collect_chunks) = utils
     wave = read_audio(audio_path, sampling_rate=sample_rate)
     speech_timestamps = get_speech_timestamps(

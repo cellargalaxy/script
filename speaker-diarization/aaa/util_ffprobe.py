@@ -10,7 +10,7 @@ def get_audio_track_info(video_path):
     :return: [{"index": 1, "tags": {"language": "jpn"}}, {"index": 2, "tags": {"language": "eng"}}]
     """
     cmd = [
-        'bin/ffprobe',
+        'ffprobe',
         '-v', 'error',
         '-select_streams', 'a',
         '-show_entries', 'stream',

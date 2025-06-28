@@ -46,10 +46,12 @@ def audio_batch(audio_activity_path, output_dir, min_silene_duration_ms=500, min
     for i, segment in enumerate(batches):
         if segment['start'] == segment['end']:
             continue
+        if segment.get('vad_type', '') not in ('silene', 'speech'):
+            segment['vad_type'] = 'speech'
         segments.append(segment)
-    util_subt.check_segments(segments)
-    util.save_file(json.dumps(segments), audio_batch_path)
-    util_subt.save_segments_as_srt(segments, os.path.join(output_dir, 'audio_batch.srt'), skip_silene=True)
+        util_subt.check_segments(segments)
+        util.save_file(json.dumps(segments), audio_batch_path)
+        util_subt.save_segments_as_srt(segments, os.path.join(output_dir, 'audio_batch.srt'), skip_silene=True)
     return audio_batch_path
 
 

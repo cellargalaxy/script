@@ -15,7 +15,7 @@ def audio_split(audio_path, audio_batch_path, output_dir):
     util.mkdir(output_dir)
     audio = AudioSegment.from_wav(audio_path)
     for i, segment in enumerate(segments):
-        cut_path = os.path.join(output_dir, f'{i:05d}_{segment.get("vad_type", "speech")}.wav')
+        cut_path = os.path.join(output_dir, f'{i:05d}_{segment["vad_type"]}.wav')
         cut = audio[segment['start']:segment['end']]
         cut.export(cut_path, format="wav")
 

@@ -107,6 +107,17 @@ def gradual_segments(segments, gradual_duration_ms=500):
     return gradual
 
 
+def shift_subt_time(subt, duration_ms):
+    duration = duration_ms / 1000.0
+    for i, segment in enumerate(subt['segments']):
+        subt['segments'][i]['start'] = subt['segments'][i]['start'] + duration
+        subt['segments'][i]['end'] = subt['segments'][i]['end'] + duration
+    for i, segment in enumerate(subt['word_segments']):
+        subt['word_segments'][i]['start'] = subt['word_segments'][i]['start'] + duration
+        subt['word_segments'][i]['end'] = subt['word_segments'][i]['end'] + duration
+    return subt
+
+
 def save_segments_as_srt(segments, file_path, skip_silene=False):
     results = []
     for i, segment in enumerate(segments):
