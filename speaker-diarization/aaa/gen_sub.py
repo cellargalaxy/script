@@ -1,6 +1,6 @@
 import whisperx
 import util
-import util_sub
+import util_subt
 import os
 import json
 
@@ -27,8 +27,8 @@ def gen_sub(audio_path):
 
 def gen_and_save_sub(audio_path, output_dir):
     sub = gen_sub(audio_path)
-    util_sub.save_sub_as_vtt(audio_path, sub, output_dir)
-    util_sub.save_sub_as_json(audio_path, sub, output_dir)
+    util_subt.save_sub_as_vtt(audio_path, sub, output_dir)
+    util_subt.save_sub_as_json(audio_path, sub, output_dir)
 
 
 def gen_and_save_subs(audio_dir, output_dir):#subtitle

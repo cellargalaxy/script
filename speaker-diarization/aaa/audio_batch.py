@@ -1,6 +1,6 @@
 import util
 import json
-import util_sub
+import util_subt
 import os
 
 logger = util.get_logger()
@@ -13,9 +13,9 @@ def audio_batch(audio_activity_path, output_dir, min_silene_duration_ms=500, min
 
     content = util.read_file(audio_activity_path)
     segments = json.loads(content)
-    segments = util_sub.gradual_segments(segments, gradual_duration_ms=min_silene_duration_ms)
+    segments = util_subt.gradual_segments(segments, gradual_duration_ms=min_silene_duration_ms)
     util.save_file(json.dumps(segments), os.path.join(output_dir, 'audio_batch_gradual.json'))
-    util_sub.save_segments_as_srt(segments, os.path.join(output_dir, 'audio_batch_gradual.srt'), skip_silene=True)
+    util_subt.save_segments_as_srt(segments, os.path.join(output_dir, 'audio_batch_gradual.srt'), skip_silene=True)
 
     batches = []
     for i, segment in enumerate(segments):
@@ -47,9 +47,9 @@ def audio_batch(audio_activity_path, output_dir, min_silene_duration_ms=500, min
         if segment['start'] == segment['end']:
             continue
         segments.append(segment)
-    util_sub.check_segments(segments)
+    util_subt.check_segments(segments)
     util.save_file(json.dumps(segments), audio_batch_path)
-    util_sub.save_segments_as_srt(segments, os.path.join(output_dir, 'audio_batch.srt'), skip_silene=True)
+    util_subt.save_segments_as_srt(segments, os.path.join(output_dir, 'audio_batch.srt'), skip_silene=True)
     return audio_batch_path
 
 

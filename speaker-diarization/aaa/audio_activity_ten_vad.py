@@ -1,6 +1,6 @@
 import util
 import json
-import util_sub
+import util_subt
 from pydub import AudioSegment
 from ten_vad import TenVad
 import scipy.io.wavfile as Wavfile
@@ -66,8 +66,8 @@ def audio_activity(audio_path,
     if pre_end < last_end:
         segments.append({"start": pre_end, "end": last_end, "vad_type": 'silene'})
 
-    segments = util_sub.fix_overlap_segments(segments)
-    segments = util_sub.unit_segments(segments)
-    util_sub.check_segments(segments)
+    segments = util_subt.fix_overlap_segments(segments)
+    segments = util_subt.unit_segments(segments)
+    util_subt.check_segments(segments)
     logger.info("检测语音活动点,segments: %s", json.dumps(segments))
     return segments

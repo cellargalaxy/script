@@ -1,6 +1,6 @@
 import util
 import json
-import util_sub
+import util_subt
 import os
 import audio_activity_pyannote
 
@@ -13,7 +13,7 @@ def audio_activity(audio_path, output_dir, auth_token):
         return audio_activity_path
     segments = audio_activity_pyannote.audio_activity(audio_path, auth_token=auth_token)
     util.save_file(json.dumps(segments), audio_activity_path)
-    util_sub.save_segments_as_srt(segments, os.path.join(output_dir, 'audio_activity.srt'))
+    util_subt.save_segments_as_srt(segments, os.path.join(output_dir, 'audio_activity.srt'))
     return audio_activity_path
 
 
