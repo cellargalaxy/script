@@ -2,7 +2,6 @@ import util
 import json
 import util_sub
 import os
-import math
 
 logger = util.get_logger()
 
