@@ -11,8 +11,6 @@ logger = util.get_logger()
 def audio_activity(audio_path, sample_rate=16000):
     audio = AudioSegment.from_wav(audio_path)
     last_end = len(audio)
-    del audio
-    util.exec_gc()
 
     model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad', model='silero_vad')
     (get_speech_timestamps, save_audio, read_audio, VADIterator, collect_chunks) = utils
@@ -41,9 +39,6 @@ def audio_activity(audio_path, sample_rate=16000):
             segments.append({"start": pre_end, "end": start, "vad_type": 'silene'})
         if start < end:
             segments.append({"start": start, "end": end, "vad_type": 'speech'})
-
-    del model
-    util.exec_gc()
 
     pre_end = 0
     if len(segments) > 0:

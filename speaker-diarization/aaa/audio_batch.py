@@ -6,7 +6,7 @@ import os
 logger = util.get_logger()
 
 
-def audio_batch(audio_activity_path, output_dir, min_silene_duration_ms=500, min_speech_duration_ms=1000 * 10):
+def audio_batch(audio_activity_path, output_dir, min_silene_duration_ms=500, min_speech_duration_ms=1000 * 60):
     audio_batch_path = os.path.join(output_dir, 'audio_batch.json')
     if util.path_exist(audio_batch_path):
         return audio_batch_path

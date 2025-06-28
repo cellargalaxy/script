@@ -17,9 +17,6 @@ def speaker_diarization(audio_path, auth_token=""):
         start = math.ceil(turn.start * 1000)
         end = math.floor(turn.end * 1000)
         segments.append({"start": start, "end": end, "speaker": speaker})
-    del pipeline
-    del diarization
-    util.exec_gc()
     logger.info("说话人检测,segments: %s", json.dumps(segments))
     return segments
 

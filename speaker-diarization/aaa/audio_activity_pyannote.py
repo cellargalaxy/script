@@ -12,8 +12,6 @@ logger = util.get_logger()
 def audio_activity(audio_path, auth_token=''):
     audio = AudioSegment.from_wav(audio_path)
     last_end = len(audio)
-    del audio
-    util.exec_gc()
 
     pipeline = Pipeline.from_pretrained("pyannote/voice-activity-detection",
                                         use_auth_token=auth_token)
@@ -35,10 +33,6 @@ def audio_activity(audio_path, auth_token=''):
             segments.append({"start": pre_end, "end": start, "vad_type": 'silene'})
         if start < end:
             segments.append({"start": start, "end": end, "vad_type": 'speech'})
-
-    del pipeline
-    del results
-    util.exec_gc()
 
     pre_end = 0
     if len(segments) > 0:

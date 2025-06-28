@@ -12,8 +12,6 @@ def is_audio_same(a_path, b_path):
     verification = SpeakerRecognition.from_hparams(source="speechbrain/spkrec-ecapa-voxceleb",
                                                    savedir="model/spkrec-ecapa-voxceleb")
     score, prediction = verification.verify_files(a_path, b_path)
-    del verification
-    util.exec_gc()
     return prediction
 
 

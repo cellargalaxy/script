@@ -17,8 +17,6 @@ def audio_activity(audio_path,
                    min_speech_duration_ms=250):
     audio = AudioSegment.from_wav(audio_path)
     last_end = len(audio)
-    del audio
-    util.exec_gc()
 
     simple_rate, data = Wavfile.read(audio_path)
     frame_simple = int(simple_rate / frame_rate)  # 每侦采样数
@@ -56,9 +54,6 @@ def audio_activity(audio_path,
             continue
         if segments[i]['vad_type'] == 'speech' and segments[i]['end'] - segments[i]['start'] < min_speech_duration_ms:
             segments[i]['vad_type'] = 'silene'
-
-    del ten_vad_instance
-    util.exec_gc()
 
     pre_end = 0
     if len(segments) > 0:
