@@ -30,7 +30,7 @@ manager = {
     # "audio_activity_path": 'output/demo/audio_activity/audio_activity.json'
     # "audio_batch_path": 'output/demo/audio_batch/audio_batch.json'
     # "audio_split_dir": 'output/demo/audio_split'
-    # "gen_subt_path": 'output/demo/gen_subt/demo.json'
+    # "gen_subt_path": 'output/demo/gen_subt/gen_subt.json'
 }
 
 util.print_device_info()

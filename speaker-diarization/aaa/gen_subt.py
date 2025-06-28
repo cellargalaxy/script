@@ -1,39 +1,29 @@
-import whisperx
 import util
 import util_subt
 import os
 import json
 from collections import Counter
+import gen_subt_whisperx
 
 logger = util.get_logger()
 
 
-def gen_subt(audio_path):
-    device = util.get_device_type()
-    compute_type = util.get_compute_type()
-
-    model = whisperx.load_model("large-v3", device, compute_type=compute_type)
-    audio = whisperx.load_audio(audio_path)
-    result = model.transcribe(audio, batch_size=16)
-
-    model_a, metadata = whisperx.load_align_model(language_code=result["language"], device=device)
-    aligned_result = whisperx.align(result["segments"], model_a, metadata, audio, device, return_char_alignments=False)
-    aligned_result["language"] = result["language"]
-    return aligned_result
-
-
 def gen_and_save_subt(audio_path, output_dir):
-    sub = gen_subt(audio_path)
-    util_subt.save_subt_as_json(audio_path, sub, output_dir)
-    util_subt.save_subt_as_vtt(audio_path, sub, output_dir)
-    return sub
+    subt = gen_subt_whisperx.gen_subt(audio_path)
+    filename = util.get_file_name(audio_path)
+    json_path = os.path.join(output_dir, f"{filename}.json")
+    util_subt.save_subt_as_json(subt, json_path)
+    srt_path = os.path.join(output_dir, f"{filename}.srt")
+    util_subt.save_subt_as_srt(subt, srt_path)
+    return srt_path
 
 
-def gen_and_join_subt(audio_path, audio_batch_path, audio_split_dir, output_dir):
+def gen_and_join_subt(audio_batch_path, audio_split_dir, output_dir):
+    json_path = os.path.join(output_dir, 'gen_subt.json')
+    if util.path_exist(json_path):
+        return json_path
+
     split_subt_dir = os.path.join(output_dir, 'split_subt')
-    if util.path_exist(split_subt_dir):
-        return
-
     for file in os.listdir(audio_split_dir):
         file_path = os.path.join(audio_split_dir, file)
         if not util.path_isfile(file_path):
@@ -62,23 +52,22 @@ def gen_and_join_subt(audio_path, audio_batch_path, audio_split_dir, output_dir)
         subtitle['word_segments'].extend(subt['word_segments'])
         if subt['language']:
             subtitle['languages'].append(subt['language'])
-
     if len(subtitle['languages']) > 0:
         counter = Counter(subtitle['languages'])
         most_common = counter.most_common(1)
         subtitle['language'] = most_common[0][0] if most_common else ''
 
-    gen_subt_path = util_subt.save_subt_as_json(audio_path, subtitle, output_dir)
-    util_subt.save_subt_as_vtt(audio_path, subtitle, output_dir)
-    return gen_subt_path
+    util_subt.save_subt_as_json(subtitle, json_path)
+    srt_path = os.path.join(output_dir, 'gen_subt.srt')
+    util_subt.save_subt_as_srt(subtitle, srt_path)
+    return json_path
 
 
 def gen_subt_by_manager(manager):
     logger.info("gen_subt,enter,manager: %s", json.dumps(manager))
-    merge_audio_channel_path = manager.get('merge_audio_channel_path')
     audio_batch_path = manager.get('audio_batch_path')
     audio_split_dir = manager.get('audio_split_dir')
     output_dir = os.path.join(manager.get('output_dir'), "gen_subt")
-    gen_subt_path =gen_and_join_subt(merge_audio_channel_path, audio_batch_path, audio_split_dir, output_dir)
+    gen_subt_path = gen_and_join_subt(audio_batch_path, audio_split_dir, output_dir)
     manager['gen_subt_path'] = gen_subt_path
     logger.info("gen_subt,leave,manager: %s", json.dumps(manager))

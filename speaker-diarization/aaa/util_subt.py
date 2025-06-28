@@ -5,6 +5,7 @@ import os
 import pysubs2
 import math
 import copy
+import whisperx
 
 logger = util.get_logger()
 
@@ -130,7 +131,7 @@ def shift_subt_time(subt, duration_ms):
     return subt
 
 
-def save_segments_as_srt(segments, file_path, skip_silene=False):
+def save_segments_as_srt(segments, save_path, skip_silene=False):
     results = []
     for i, segment in enumerate(segments):
         start = segment['start'] / 1000.0
@@ -142,26 +143,21 @@ def save_segments_as_srt(segments, file_path, skip_silene=False):
             continue
         obj = {'start': start, 'end': end, 'text': text}
         results.append(obj)
-    util.mkdir(file_path)
+    util.mkdir(save_path)
     subs = pysubs2.load_from_whisper(results)
-    subs.save(file_path)
+    subs.save(save_path)
 
 
-def save_subt_as_vtt(audio_path, subt, save_dir=''):
-    if not save_dir:
-        save_dir = util.get_ancestor_dir(audio_path)
+def save_subt_as_srt(subt, save_path):
+    save_dir = util.get_ancestor_dir(save_path)
     util.mkdir(save_dir)
-    vtt_writer = get_writer("vtt", save_dir)
-    vtt_writer(
+    writer = get_writer("srt", save_dir)
+    writer(
         subt,
-        audio_path,
+        util.get_file_basename(save_path),
         {"max_line_width": None, "max_line_count": None, "highlight_words": True},
     )
 
 
-def save_subt_as_json(audio_path, subt, save_dir=''):
-    if not save_dir:
-        save_dir = util.get_ancestor_dir(audio_path)
-    json_path = os.path.join(save_dir, util.get_file_name(audio_path) + '.json')
-    util.save_file(json.dumps(subt), json_path)
-    return json_path
+def save_subt_as_json(subt, save_path):
+    util.save_file(json.dumps(subt), save_path)
