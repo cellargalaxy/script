@@ -21,7 +21,7 @@ logger = util.get_logger()
 manager = {
     "video_path": "../long.mkv",
     "audio_track_index": 0,
-    "auth_token": "",
+    "auth_token": os.environ.get("auth_token", ""),
 
     # "output_dir": "output/demo",
     # "audio_path": 'output/demo/extract_audio/wav.wav',
