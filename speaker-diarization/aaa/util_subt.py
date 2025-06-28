@@ -152,3 +152,4 @@ def save_subt_as_json(audio_path, subt, save_dir=''):
         save_dir = util.get_ancestor_dir(audio_path)
     json_path = os.path.join(save_dir, util.get_file_name(audio_path) + '.json')
     util.save_file(json.dumps(subt), json_path)
+    return json_path

@@ -22,7 +22,7 @@ def audio_split(audio_path, audio_batch_path, output_dir):
 
 def audio_split_by_manager(manager):
     logger.info("audio_split,enter,manager: %s", json.dumps(manager))
-    audio_path = manager.get('noise_reduction_audio_path')
+    audio_path = manager.get('merge_audio_channel_path')
     audio_batch_path = manager.get('audio_batch_path')
     output_dir = os.path.join(manager.get('output_dir'), "audio_split")
     util.delete_path(output_dir)

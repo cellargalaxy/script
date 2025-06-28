@@ -3,6 +3,11 @@ import os
 bin_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bin")
 os.environ["PATH"] = bin_dir + os.pathsep + os.environ.get("PATH", "")
 
+os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+os.environ['http_proxy'] = 'http://192.168.123.5:10808'
+os.environ['https_proxy'] = 'http://192.168.123.5:10808'
+os.environ['no_proxy'] = 'localhost,127.0.0.1,::1,192.168.123.5,mirrors.ustc.edu.cn'
+
 import util
 import pre_treatment
 import noise_reduction_demucs
@@ -25,7 +30,7 @@ manager = {
     # "audio_activity_path": 'output/demo/audio_activity/audio_activity.json'
     # "audio_batch_path": 'output/demo/audio_batch/audio_batch.json'
     # "audio_split_dir": 'output/demo/audio_split'
-    # "gen_subt_dir": 'output/demo/gen_subt'
+    # "gen_subt_path": 'output/demo/gen_subt/demo.json'
 }
 
 util.print_device_info()
