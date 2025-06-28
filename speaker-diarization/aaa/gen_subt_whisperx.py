@@ -4,7 +4,7 @@ import util
 logger = util.get_logger()
 
 
-def gen_subt(audio_path):
+def gen_subt(audio_path, auth_token):
     device = util.get_device_type()
     compute_type = util.get_compute_type()
 
@@ -15,4 +15,10 @@ def gen_subt(audio_path):
     model_a, metadata = whisperx.load_align_model(language_code=result["language"], device=device)
     aligned_result = whisperx.align(result["segments"], model_a, metadata, audio, device, return_char_alignments=False)
     aligned_result["language"] = result["language"]
-    return aligned_result
+
+    diarize_model = whisperx.diarize.DiarizationPipeline(use_auth_token=auth_token, device=device)
+    diarize_segments = diarize_model(audio)
+    diarize_result = whisperx.assign_word_speakers(diarize_segments, aligned_result)
+    diarize_result["language"] = result["language"]
+
+    return diarize_result

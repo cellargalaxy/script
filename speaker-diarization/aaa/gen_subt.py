@@ -8,8 +8,8 @@ import gen_subt_whisperx
 logger = util.get_logger()
 
 
-def gen_and_save_subt(audio_path, output_dir):
-    subt = gen_subt_whisperx.gen_subt(audio_path)
+def gen_and_save_subt(audio_path, output_dir, auth_token):
+    subt = gen_subt_whisperx.gen_subt(audio_path, auth_token)
     filename = util.get_file_name(audio_path)
     json_path = os.path.join(output_dir, f"{filename}.json")
     util_subt.save_subt_as_json(subt, json_path)
@@ -18,7 +18,7 @@ def gen_and_save_subt(audio_path, output_dir):
     return srt_path
 
 
-def gen_and_join_subt(audio_batch_path, audio_split_dir, output_dir):
+def gen_and_join_subt(audio_batch_path, audio_split_dir, output_dir, auth_token):
     json_path = os.path.join(output_dir, 'gen_subt.json')
     if util.path_exist(json_path):
         return json_path
@@ -30,7 +30,7 @@ def gen_and_join_subt(audio_batch_path, audio_split_dir, output_dir):
             continue
         if 'speech.wav' not in file_path:
             continue
-        gen_and_save_subt(file_path, split_subt_dir)
+        gen_and_save_subt(file_path, split_subt_dir, auth_token)
 
     subtitle = {
         "segments": [],
@@ -67,7 +67,8 @@ def gen_subt_by_manager(manager):
     logger.info("gen_subt,enter,manager: %s", json.dumps(manager))
     audio_batch_path = manager.get('audio_batch_path')
     audio_split_dir = manager.get('audio_split_dir')
+    auth_token = manager.get('auth_token')
     output_dir = os.path.join(manager.get('output_dir'), "gen_subt")
-    gen_subt_path = gen_and_join_subt(audio_batch_path, audio_split_dir, output_dir)
+    gen_subt_path = gen_and_join_subt(audio_batch_path, audio_split_dir, output_dir, auth_token)
     manager['gen_subt_path'] = gen_subt_path
     logger.info("gen_subt,leave,manager: %s", json.dumps(manager))
