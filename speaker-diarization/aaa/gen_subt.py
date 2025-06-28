@@ -35,16 +35,16 @@ def gen_and_save_subt(audio_path, output_dir):
 
 def gen_and_join_subt(audio_path, audio_batch_path, audio_split_dir, output_dir):
     split_subt_dir = os.path.join(output_dir, 'split_subt')
-    # if util.path_exist(split_subt_dir):
-    #     return
-    #
-    # for file in os.listdir(audio_split_dir):
-    #     file_path = os.path.join(audio_split_dir, file)
-    #     if not util.path_isfile(file_path):
-    #         continue
-    #     if 'speech.wav' not in file_path:
-    #         continue
-    #     gen_and_save_subt(file_path, split_subt_dir)
+    if util.path_exist(split_subt_dir):
+        return
+
+    for file in os.listdir(audio_split_dir):
+        file_path = os.path.join(audio_split_dir, file)
+        if not util.path_isfile(file_path):
+            continue
+        if 'speech.wav' not in file_path:
+            continue
+        gen_and_save_subt(file_path, split_subt_dir)
 
     subtitle = {
         "segments": [],
