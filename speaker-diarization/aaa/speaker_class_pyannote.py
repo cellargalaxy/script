@@ -8,7 +8,7 @@ from pydub import AudioSegment
 logger = util.get_logger()
 
 
-def speaker_diarization(audio_path, auth_token):
+def speaker_class(audio_path, auth_token):
     audio = AudioSegment.from_wav(audio_path)
     last_end = len(audio)
 
@@ -24,7 +24,7 @@ def speaker_diarization(audio_path, auth_token):
         if last_end < end:
             end = last_end
         segments.append({"start": start, "end": end, "speaker": speaker})
-    logger.info("说话人检测,segments: %s", json.dumps(segments))
+    logger.info("说话人分类,segments: %s", json.dumps(segments))
     return segments
 
 

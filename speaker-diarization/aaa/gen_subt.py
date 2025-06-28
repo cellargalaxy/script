@@ -12,7 +12,7 @@ def gen_and_save_subt(audio_path, output_dir, auth_token):
     subt = gen_subt_whisperx.gen_subt(audio_path, auth_token)
     filename = util.get_file_name(audio_path)
     json_path = os.path.join(output_dir, f"{filename}.json")
-    util_subt.save_subt_as_json(subt, json_path)
+    util_subt.save_as_json(subt, json_path)
     srt_path = os.path.join(output_dir, f"{filename}.srt")
     util_subt.save_subt_as_srt(subt, srt_path)
     return srt_path
@@ -23,14 +23,14 @@ def gen_and_join_subt(audio_batch_path, audio_split_dir, output_dir, auth_token)
     if util.path_exist(json_path):
         return json_path
 
-    split_subt_dir = os.path.join(output_dir, 'split_subt')
+    split_dir = os.path.join(output_dir, 'split')
     for file in os.listdir(audio_split_dir):
         file_path = os.path.join(audio_split_dir, file)
         if not util.path_isfile(file_path):
             continue
         if 'speech.wav' not in file_path:
             continue
-        gen_and_save_subt(file_path, split_subt_dir, auth_token)
+        gen_and_save_subt(file_path, split_dir, auth_token)
 
     subtitle = {
         "segments": [],
@@ -42,7 +42,7 @@ def gen_and_join_subt(audio_batch_path, audio_split_dir, output_dir, auth_token)
     content = util.read_file(audio_batch_path)
     segments = json.loads(content)
     for i, segment in enumerate(segments):
-        split_subt_path = os.path.join(split_subt_dir, f'{i:05d}_{segment["vad_type"]}.json')
+        split_subt_path = os.path.join(split_dir, f'{i:05d}_{segment["vad_type"]}.json')
         if not util.path_exist(split_subt_path):
             continue
         content = util.read_file(split_subt_path)
@@ -57,7 +57,7 @@ def gen_and_join_subt(audio_batch_path, audio_split_dir, output_dir, auth_token)
         most_common = counter.most_common(1)
         subtitle['language'] = most_common[0][0] if most_common else ''
 
-    util_subt.save_subt_as_json(subtitle, json_path)
+    util_subt.save_as_json(subtitle, json_path)
     srt_path = os.path.join(output_dir, 'gen_subt.srt')
     util_subt.save_subt_as_srt(subtitle, srt_path)
     return json_path

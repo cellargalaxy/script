@@ -131,6 +131,16 @@ def shift_subt_time(subt, duration_ms):
     return subt
 
 
+def shift_segments_time(segments, duration_ms):
+    duration = duration_ms / 1000.0
+
+    for i, segment in enumerate(segments):
+        segments[i]['start'] = segments[i]['start'] + duration
+        segments[i]['end'] = segments[i]['end'] + duration
+
+    return segments
+
+
 def save_segments_as_srt(segments, save_path, skip_silene=False):
     results = []
     for i, segment in enumerate(segments):
@@ -159,5 +169,5 @@ def save_subt_as_srt(subt, save_path):
     )
 
 
-def save_subt_as_json(subt, save_path):
-    util.save_file(json.dumps(subt), save_path)
+def save_as_json(obj, save_path):
+    util.save_file(json.dumps(obj), save_path)
