@@ -1,5 +1,4 @@
 import util
-import json
 import util_subt
 from pydub import AudioSegment
 from ten_vad import TenVad
@@ -15,6 +14,8 @@ def audio_activity(audio_path,
                    speech_threshold=0.8,
                    silene_threshold=0.5,
                    min_speech_duration_ms=250):
+    logger.info("检测语音活动点: %s", audio_path)
+
     audio = AudioSegment.from_wav(audio_path)
     last_end = len(audio)
 
@@ -64,5 +65,9 @@ def audio_activity(audio_path,
     segments = util_subt.fix_overlap_segments(segments)
     segments = util_subt.unit_segments(segments)
     util_subt.check_segments(segments)
-    logger.info("检测语音活动点,segments: %s", json.dumps(segments))
+
+    del audio
+    del ten_vad_instance
+    util.exec_gc()
+
     return segments

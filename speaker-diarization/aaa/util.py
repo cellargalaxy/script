@@ -183,6 +183,7 @@ def path_isfile(path):
 
 def exec_gc():
     torch.cuda.empty_cache()
+    torch.cuda.ipc_collect()
     gc.collect()
 
 
