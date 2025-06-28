@@ -111,11 +111,11 @@ def shift_subt_time(subt, duration_ms):
     duration = duration_ms / 1000.0
 
     segments = subt.get('segments', [])
-    for i, segment in segments:
+    for i, segment in enumerate(segments):
         segments[i]['start'] = segments['start'] + duration
         segments[i]['end'] = segments['end'] + duration
         words = segments[i].get('words', [])
-        for i, word in words:
+        for i, word in enumerate(words):
             words[i]['start'] = words['start'] + duration
             words[i]['end'] = words['end'] + duration
         segments[i]['words'] = words
