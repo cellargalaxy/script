@@ -15,7 +15,7 @@ def gen_and_save(audio_path, output_dir, auth_token):
     util_subt.save_as_json(subt, json_path)
     srt_path = os.path.join(output_dir, f"{filename}.srt")
     util_subt.save_subt_as_srt(subt, srt_path)
-    return srt_path
+    return json_path
 
 
 def gen_and_join(part_divide_path, part_split_dir, output_dir, auth_token):

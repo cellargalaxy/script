@@ -15,6 +15,7 @@ import activity_detect
 import part_divide
 import part_split
 import subt_gen
+import speaker_detect
 
 logger = util.get_logger()
 
@@ -35,3 +36,4 @@ activity_detect.activity_detect_by_manager(manager)
 part_divide.part_divide_by_manager(manager)
 part_split.part_split_by_manager(manager)
 subt_gen.subt_gen_by_manager(manager)
+speaker_detect.speaker_detect_by_manager(manager)

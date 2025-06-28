@@ -130,6 +130,13 @@ def shift_subt_time(subt, duration_ms):
 
 
 def shift_segments_time(segments, duration_ms):
+    for i, segment in enumerate(segments):
+        segments[i]['start'] = segments[i]['start'] + duration_ms
+        segments[i]['end'] = segments[i]['end'] + duration_ms
+    return segments
+
+
+def shift_segments_time(segments, duration_ms):
     duration = duration_ms / 1000.0
 
     for i, segment in enumerate(segments):
