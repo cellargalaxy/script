@@ -1,10 +1,1 @@
-{
-  "audio_filepath": "../demo_eng_single.wav",
-  "offset": 0,
-  "duration": null,
-  "label": "infer",
-  "text": "-",
-  "num_speakers": null,
-  "rttm_filepath": null,
-  "uem_filepath": null
-}
+{  "audio_filepath": "../demo_eng_single.wav",  "offset": 0,  "duration": null,  "label": "infer",  "text": "-",  "num_speakers": null,  "rttm_filepath": null,  "uem_filepath": null}
