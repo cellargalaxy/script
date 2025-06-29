@@ -2,13 +2,13 @@ import util
 import util_subt
 import os
 import json
-import speaker_detect_pyannote
+import activity_detect_ten_vad
 
 logger = util.get_logger()
 
 
 def detect_and_save(audio_path, output_dir, auth_token):
-    segments = speaker_detect_pyannote.speaker_detect(audio_path, auth_token)
+    segments = activity_detect_ten_vad.activity_detect(audio_path)
     filename = util.get_file_name(audio_path)
     json_path = os.path.join(output_dir, f"{filename}.json")
     util_subt.save_as_json(segments, json_path)
@@ -18,8 +18,8 @@ def detect_and_save(audio_path, output_dir, auth_token):
 
 
 def detect_and_join(part_divide_path, part_split_dir, output_dir, auth_token):
-    json_path = os.path.join(output_dir, 'speaker_detect.json')
-    srt_path = os.path.join(output_dir, 'speaker_detect.srt')
+    json_path = os.path.join(output_dir, 'part_activity_detect.json')
+    srt_path = os.path.join(output_dir, 'part_activity_detect.srt')
     if util.path_exist(json_path):
         return json_path
 
@@ -50,12 +50,12 @@ def detect_and_join(part_divide_path, part_split_dir, output_dir, auth_token):
     return json_path
 
 
-def speaker_detect_by_manager(manager):
-    logger.info("speaker_detect,enter,manager: %s", json.dumps(manager))
+def part_activity_detect_by_manager(manager):
+    logger.info("part_activity_detect,enter,manager: %s", json.dumps(manager))
     part_divide_path = manager.get('part_divide_path')
     part_split_dir = manager.get('part_split_dir')
     auth_token = manager.get('auth_token')
-    output_dir = os.path.join(manager.get('output_dir'), "speaker_detect")
-    speaker_detect_path = detect_and_join(part_divide_path, part_split_dir, output_dir, auth_token)
-    manager['speaker_detect_path'] = speaker_detect_path
-    logger.info("speaker_detect,leave,manager: %s", json.dumps(manager))
+    output_dir = os.path.join(manager.get('output_dir'), "part_activity_detect")
+    part_activity_detect_path = detect_and_join(part_divide_path, part_split_dir, output_dir, auth_token)
+    manager['part_activity_detect_path'] = part_activity_detect_path
+    logger.info("part_activity_detect,leave,manager: %s", json.dumps(manager))

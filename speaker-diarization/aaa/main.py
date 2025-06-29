@@ -14,13 +14,14 @@ import noise_reduction_demucs
 import activity_detect
 import part_divide
 import part_split
-import subt_gen
+import part_activity_detect
 import speaker_detect
+import subt_gen
 
 logger = util.get_logger()
 
 manager = {
-    "video_path": '../long.mkv',
+    "video_path": '../test.mkv',
     "audio_track_index": 0,
     "auth_token": os.environ.get('auth_token', ''),
 }
@@ -35,5 +36,7 @@ pre_treatment.merge_audio_channel_by_manager(manager)
 activity_detect.activity_detect_by_manager(manager)
 part_divide.part_divide_by_manager(manager)
 part_split.part_split_by_manager(manager)
-subt_gen.subt_gen_by_manager(manager)
-speaker_detect.speaker_detect_by_manager(manager)
+
+part_activity_detect.part_activity_detect_by_manager(manager)
+# speaker_detect.speaker_detect_by_manager(manager)
+# subt_gen.subt_gen_by_manager(manager)
