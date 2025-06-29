@@ -171,5 +171,4 @@ def save_subt_as_srt(subt, save_path):
     )
 
 
-def save_as_json(obj, save_path):
-    util.save_file(json.dumps(obj), save_path)
+

@@ -9,6 +9,7 @@ import GPUtil
 import gc
 import shutil
 from inputimeout import inputimeout
+import json
 
 
 def get_logger(name='main', fmt='%(asctime)s %(levelname)-5s %(filename)s:%(lineno)d - %(message)s'):
@@ -156,6 +157,10 @@ def get_ancestor_dir(file_path):
     """
     file_dir = os.path.dirname(file_path)
     return file_dir
+
+
+def save_as_json(obj, save_path):
+    save_file(json.dumps(obj), save_path)
 
 
 def save_file(content, file_path):
