@@ -13,7 +13,7 @@ def detect_and_save(audio_path, output_dir, auth_token):
     json_path = os.path.join(output_dir, f"{filename}.json")
     util_subt.save_as_json(segments, json_path)
     srt_path = os.path.join(output_dir, f"{filename}.srt")
-    util_subt.save_segments_as_srt(segments, srt_path)
+    util_subt.save_segments_as_srt(segments, srt_path, skip_silene=True)
     return json_path
 
 
@@ -46,7 +46,7 @@ def detect_and_join(part_divide_path, part_split_dir, output_dir, auth_token):
         segments.extend(segs)
 
     util_subt.save_as_json(segments, json_path)
-    util_subt.save_segments_as_srt(segments, srt_path)
+    util_subt.save_segments_as_srt(segments, srt_path, skip_silene=True)
     return json_path
 
 

@@ -19,7 +19,7 @@ def activity_detect(audio_path, output_dir, auth_token):
 
     segments = activity_detect_pyannote.activity_detect(audio_path, auth_token=auth_token)
     util.save_file(json.dumps(segments), json_path)
-    util_subt.save_segments_as_srt(segments, srt_path)
+    util_subt.save_segments_as_srt(segments, srt_path, skip_silene=True)
     return json_path
 
 
