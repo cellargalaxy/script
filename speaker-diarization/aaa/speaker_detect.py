@@ -3,13 +3,12 @@ import util_subt
 import os
 import json
 import speaker_detect_pyannote
-import speaker_detect_nemo
 
 logger = util.get_logger()
 
 
 def detect_and_save(audio_path, output_dir, auth_token):
-    segments = speaker_detect_nemo.speaker_detect(audio_path, auth_token)
+    segments = speaker_detect_pyannote.speaker_detect(audio_path, auth_token)
     filename = util.get_file_name(audio_path)
     json_path = os.path.join(output_dir, f"{filename}.json")
     util.save_as_json(segments, json_path)
