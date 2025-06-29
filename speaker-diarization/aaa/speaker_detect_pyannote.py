@@ -8,7 +8,7 @@ import util_subt
 logger = util.get_logger()
 
 
-def speaker_detect(audio_path, auth_token):
+def speaker_detect(audio_path, auth_token, min_speech_duration_ms=250):
     logger.info("说话人检测: %s", audio_path)
 
     audio = AudioSegment.from_wav(audio_path)
@@ -26,6 +26,8 @@ def speaker_detect(audio_path, auth_token):
         end = math.ceil(turn.end * 1000)
         if last_end < end:
             end = last_end
+        if end - start < min_speech_duration_ms:
+            continue
         segments.append({"start": start, "end": end, "speaker": speaker})
 
     segments = util_subt.fix_overlap_segments(segments)
