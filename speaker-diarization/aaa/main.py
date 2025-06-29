@@ -21,7 +21,7 @@ import subt_gen
 logger = util.get_logger()
 
 manager = {
-    "video_path": '../test.mkv',
+    "video_path": '../long.mkv',
     "audio_track_index": 0,
     "auth_token": os.environ.get('auth_token', ''),
 }
