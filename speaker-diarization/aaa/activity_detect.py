@@ -3,6 +3,7 @@ import json
 import util_subt
 import os
 import activity_detect_pyannote
+import activity_detect_ten_vad
 
 logger = util.get_logger()
 
@@ -13,8 +14,11 @@ def activity_detect(audio_path, output_dir, auth_token):
     if util.path_exist(json_path):
         return json_path
 
-    segments = activity_detect_pyannote.activity_detect(audio_path, auth_token=auth_token)
+    segments = activity_detect_ten_vad.activity_detect(audio_path)
+    util.save_file(json.dumps(segments), os.path.join(output_dir, 'ten_vad.json'))
+    util_subt.save_segments_as_srt(segments, os.path.join(output_dir, 'ten_vad.srt'))
 
+    segments = activity_detect_pyannote.activity_detect(audio_path, auth_token=auth_token)
     util.save_file(json.dumps(segments), json_path)
     util_subt.save_segments_as_srt(segments, srt_path)
     return json_path
