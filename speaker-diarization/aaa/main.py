@@ -38,5 +38,5 @@ part_divide.part_divide_by_manager(manager)
 part_split.part_split_by_manager(manager)
 
 part_activity_detect.part_activity_detect_by_manager(manager)
-# speaker_detect.speaker_detect_by_manager(manager)
-# subt_gen.subt_gen_by_manager(manager)
+speaker_detect.speaker_detect_by_manager(manager)
+subt_gen.subt_gen_by_manager(manager)
