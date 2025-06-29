@@ -1,0 +1,30 @@
+# diar.yaml (再次修正版)
+
+device: 'cuda'
+
+diarizer:
+  manifest_filepath: ./input_manifest.json
+  out_dir: ./diar_output
+
+  oracle_vad: false # <--- 新增这一行
+
+  vad:
+    model_path: vad_multilingual_marblenet
+    parameters:
+      window_length_in_sec: 0.15
+      shift_length_in_sec: 0.01
+      smoothing: True
+      overlap: 0.1
+
+  speaker_embeddings:
+    model_path: ecapa_tdnn
+    parameters:
+      window_length_in_sec: 1.5
+      shift_length_in_sec: 0.75
+      normalize: True
+      use_cuda: True
+      batch_size: 32
+
+  clustering:
+    method: spectral  # 可选: spectral / affinity / kmeans
+    max_num_speakers: 5

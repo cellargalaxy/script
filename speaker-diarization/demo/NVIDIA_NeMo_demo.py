@@ -9,8 +9,8 @@ from omegaconf import OmegaConf # NeMo使用OmegaConf来管理复杂的配置
 # 2. 加载预训练的MSDD Diarization模型
 #    这个模型内部集成了VAD、声纹提取(TitaNet)和说话人变化检测(MSDD)
 print("Loading Diarization Model...")
-diarization_model = nemo_asr.models.ClusterDiarizer.from_pretrained(
-    model_name="diar_msdd_telephonic_wpe_titanet_ls" 
+diarization_model = nemo_asr.models.ClusteringDiarizer.from_pretrained(
+    model_name="stt_hi_conformer_ctc_medium"
 )
 print("Model Loaded.")
 
