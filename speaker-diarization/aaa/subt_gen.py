@@ -5,12 +5,13 @@ import json
 from collections import Counter
 import subt_gen_whisperx
 import subt_gen_whisper_timestamped
+import subt_gen_faster_whisper
 
 logger = util.get_logger()
 
 
 def gen_and_save(audio_path, output_dir, auth_token):
-    subt = subt_gen_whisper_timestamped.subt_gen(audio_path, auth_token)
+    subt = subt_gen_faster_whisper.subt_gen(audio_path, auth_token)
     filename = util.get_file_name(audio_path)
     json_path = os.path.join(output_dir, f"{filename}.json")
     util.save_as_json(subt, json_path)

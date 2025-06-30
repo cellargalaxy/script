@@ -117,7 +117,8 @@ def shift_subt_time(subt, duration_ms):
         for j, word in enumerate(words):
             words[j]['start'] = words[j]['start'] + duration
             words[j]['end'] = words[j]['end'] + duration
-        segments[i]['words'] = words
+        if len(words) > 0:
+            segments[i]['words'] = words
     subt['segments'] = segments
 
     word_segments = subt.get('word_segments', [])
@@ -161,14 +162,18 @@ def save_segments_as_srt(segments, save_path, skip_silene=False):
 
 
 def save_subt_as_srt(subt, save_path):
+    highlight_words = False
+    if subt.get('word_segments', []):
+        highlight_words = True
+    segments = subt['segments']
+    for i, segment in enumerate(segments):
+        if segment.get('words', []):
+            highlight_words = True
     save_dir = util.get_ancestor_dir(save_path)
     util.mkdir(save_dir)
     writer = get_writer("srt", save_dir)
     writer(
         subt,
         util.get_file_basename(save_path),
-        {"max_line_width": None, "max_line_count": None, "highlight_words": True},
+        {"max_line_width": None, "max_line_count": None, "highlight_words": highlight_words},
     )
-
-
-

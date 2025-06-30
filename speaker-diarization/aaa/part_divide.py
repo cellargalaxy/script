@@ -6,7 +6,7 @@ import os
 logger = util.get_logger()
 
 
-def part_divide(activity_detect_path, output_dir, min_silene_duration_ms=500, min_speech_duration_ms=1000 * 30):
+def part_divide(activity_detect_path, output_dir, min_silene_duration_ms=500, min_speech_duration_ms=1000 * 5):
     json_path = os.path.join(output_dir, 'part_divide.json')
     srt_path = os.path.join(output_dir, 'part_divide.srt')
     if util.path_exist(json_path):
