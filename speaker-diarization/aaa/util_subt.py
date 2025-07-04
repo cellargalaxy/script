@@ -137,10 +137,15 @@ def shift_segments_time(segments, duration_ms):
     return segments
 
 
-def shift_segments_time(segments, duration_ms):
+def subt2segments(subt):
+    segments = subt.get('segments', [])
     for i, segment in enumerate(segments):
-        segments[i]['start'] = segments[i]['start'] + duration_ms
-        segments[i]['end'] = segments[i]['end'] + duration_ms
+        del segments[i]['words']
+        segments[i]['start'] = math.floor(segments[i]['start'] * 1000)
+        if segments[i]['start'] < 0:
+            segments[i]['start'] = 0
+        segments[i]['end'] = math.ceil(segments[i]['end'] * 1000)
+    segments = fix_overlap_segments(segments)
     return segments
 
 

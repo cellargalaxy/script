@@ -1,0 +1,85 @@
+import util
+import json
+import util_subt
+import os
+from pydub import AudioSegment
+
+logger = util.get_logger()
+
+
+def segment_divide(audio_path, subt_gen_path, output_dir,
+                   min_silene_duration_ms=500,
+                   min_speech_duration_ms=500,
+                   silene_duration_ms=500):
+    json_path = os.path.join(output_dir, 'segment_divide.json')
+    srt_path = os.path.join(output_dir, 'segment_divide.srt')
+    if util.path_exist(json_path):
+        return json_path
+
+    audio = AudioSegment.from_wav(audio_path)
+    last_end = len(audio)
+
+    content = util.read_file(subt_gen_path)
+    subt = json.loads(content)
+    segments = util_subt.subt2segments(subt)
+    if len(segments) > 0 and last_end < segments[-1]['end']:
+        segments[-1]['end'] = last_end
+    gradual = []
+    for i, segment in enumerate(segments):
+        if segment['end'] - segment['start'] < min_speech_duration_ms:
+            continue
+        gradual.append(segment)
+    gradual = util_subt.gradual_segments(gradual, gradual_duration_ms=min_silene_duration_ms)
+    util.save_file(json.dumps(gradual), os.path.join(output_dir, 'gradual.json'))
+    util_subt.save_segments_as_srt(gradual, os.path.join(output_dir, 'gradual.srt'), skip_silene=True)
+
+    arrange = []
+    for i, segment in enumerate(gradual):
+        pre_end = 0
+        if len(arrange) > 0:
+            pre_end = arrange[-1]['end']
+        arrange.append({
+            "start": pre_end,
+            "end": pre_end + silene_duration_ms,
+            "vad_type": 'silene',
+        })
+        duration = segment['end'] - segment['start']
+        arrange.append({
+            "start": pre_end + silene_duration_ms,
+            "end": pre_end + silene_duration_ms + duration,
+            "vad_type": 'speech',
+        })
+    if len(arrange) > 0:
+        pre_end = arrange[-1]['end']
+        arrange.append({
+            "start": pre_end,
+            "end": pre_end + silene_duration_ms,
+            "vad_type": 'silene',
+        })
+    util.save_file(json.dumps(arrange), os.path.join(output_dir, 'arrange.json'))
+    util_subt.save_segments_as_srt(arrange, os.path.join(output_dir, 'arrange.srt'), skip_silene=True)
+
+    blank = AudioSegment.silent(duration=silene_duration_ms)
+    arrange_data = AudioSegment.silent(duration=silene_duration_ms)
+    for i, segment in enumerate(gradual):
+        cut = audio[segment['start']:segment['end']]
+        arrange_data = arrange_data + cut
+        arrange_data = arrange_data + blank
+    arrange_path = os.path.join(output_dir, 'arrange.wav')
+    util.mkdir(arrange_path)
+    arrange_data.export(arrange_path, format="wav")
+
+    # util_subt.check_segments(segments)
+    # util.save_file(json.dumps(segments), json_path)
+    # util_subt.save_segments_as_srt(segments, srt_path, skip_silene=True)
+    return json_path
+
+
+def segment_divide_by_manager(manager):
+    logger.info("segment_divide,enter,manager: %s", json.dumps(manager))
+    audio_path = manager.get('merge_audio_channel_path')
+    subt_gen_path = manager.get('subt_gen_path')
+    output_dir = os.path.join(manager.get('output_dir'), "segment_divide")
+    segment_divide_path = segment_divide(audio_path, subt_gen_path, output_dir)
+    manager['segment_divide_path'] = segment_divide_path
+    logger.info("segment_divide,leave,manager: %s", json.dumps(manager))
