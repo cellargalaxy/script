@@ -29,6 +29,18 @@ def segment_divide(audio_path, subt_gen_path, output_dir,
         if segment['end'] - segment['start'] < min_speech_duration_ms:
             continue
         gradual.append(segment)
+    for i, segment in enumerate(gradual):
+        gradual[i]['vad_type'] = 'speech'
+    segments = []
+    for i, segment in enumerate(gradual):
+        segments.append(segment)
+        pre_end = 0
+        if i > 0:
+            pre_end = gradual[i - 1]['end']
+        if pre_end < gradual[i]['start']:
+            segments.append({"start": pre_end, "end": gradual[i]['start'], "vad_type": 'silene'})
+    gradual = segments
+    util_subt.check_segments(gradual)
     gradual = util_subt.gradual_segments(gradual, gradual_duration_ms=min_silene_duration_ms)
     util.save_file(json.dumps(gradual), os.path.join(output_dir, 'gradual.json'))
     util_subt.save_segments_as_srt(gradual, os.path.join(output_dir, 'gradual.srt'), skip_silene=True)
