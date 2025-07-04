@@ -205,6 +205,11 @@ def delete_path(path):
         shutil.rmtree(path)
 
 
+def listdir(path):
+    file_names = sorted(os.listdir(path))
+    return file_names
+
+
 def get_script_path():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     return script_dir

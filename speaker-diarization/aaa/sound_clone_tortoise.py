@@ -25,7 +25,7 @@ def sound_clone_one(audio_dir, speaker, text, output_dir):
 
 
 def sound_clone(audio_dir, text, output_dir):
-    for speaker in os.listdir(audio_dir):
+    for speaker in util.listdir(audio_dir):
         speaker_path = os.path.join(audio_dir, speaker)
         sound_clone_one(speaker_path, speaker, text, output_dir)
 

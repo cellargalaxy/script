@@ -25,7 +25,7 @@ def gen_and_join(part_divide_path, part_split_dir, output_dir, auth_token):
         return json_path
 
     split_dir = os.path.join(output_dir, 'split')
-    for file in os.listdir(part_split_dir):
+    for file in util.listdir(part_split_dir):
         file_path = os.path.join(part_split_dir, file)
         if not util.path_isfile(file_path):
             continue

@@ -31,7 +31,7 @@ def sample_inspection(audio_path, audio_paths):
 
 def audio_purification(audio_dir, output_dir):
     audio_paths = []
-    for file in os.listdir(audio_dir):
+    for file in util.listdir(audio_dir):
         file_path = os.path.join(audio_dir, file)
         if not util.path_isfile(file_path):
             audio_purification(file_path, output_dir)
