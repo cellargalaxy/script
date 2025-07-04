@@ -42,7 +42,7 @@ def activity_detect(audio_path, auth_token):
 
     segments = util_subt.fix_overlap_segments(segments)
     segments = util_subt.unit_segments(segments, 'vad_type')
-    util_subt.check_segments(segments)
+    util_subt.check_coherent_segments(segments)
 
     del audio
     del pipeline

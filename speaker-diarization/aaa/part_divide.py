@@ -52,7 +52,7 @@ def part_divide(activity_detect_path, output_dir, min_silene_duration_ms=500, mi
             segment['vad_type'] = 'speech'
         segments.append(segment)
 
-    util_subt.check_segments(segments)
+    util_subt.check_coherent_segments(segments)
     util.save_file(json.dumps(segments), json_path)
     util_subt.save_segments_as_srt(segments, srt_path, skip_silene=True)
     return json_path

@@ -1,5 +1,7 @@
 import whisper_timestamped as whisper
 import util
+import util_subt
+from pydub import AudioSegment
 
 logger = util.get_logger()
 
@@ -7,12 +9,14 @@ logger = util.get_logger()
 def subt_gen(audio_path, auth_token):
     logger.info("字幕生成: %s", audio_path)
 
+    audio = AudioSegment.from_wav(audio_path)
+    last_end = len(audio)
+
     model = whisper.load_model("large-v3", device=util.get_device_type())
     audio = whisper.load_audio(audio_path)
     result = whisper.transcribe(model, audio)
     subt = {
         "segments": [],
-        "word_segments": [],
         "language": result["language"],
     }
     segments = result['segments']
@@ -26,7 +30,6 @@ def subt_gen(audio_path, auth_token):
                 "score": word['confidence'],
             }
             words.append(obj)
-            subt['word_segments'].append(obj)
         obj = {
             "start": segment['start'],
             "end": segment['end'],
@@ -34,6 +37,27 @@ def subt_gen(audio_path, auth_token):
             "words": words,
         }
         subt['segments'].append(obj)
+
+    segments = []
+    for i, segment in enumerate(subt['segments']):
+        if last_end <= segment['start']:
+            continue
+        if last_end <= segment['end']:
+            segment['end'] = last_end
+        segments.append(segment)
+    subt['segments'] = segments
+
+    segments = []
+    for i, segment in enumerate(subt['segments']):
+        if i == 0:
+            segments.append(segments[i])
+            continue
+        if segments[i]['start'] < segments[i - 1]['end']:
+            continue
+        segments.append(segments[i])
+    subt['segments'] = segments
+
+    util_subt.check_discrete_segments(subt['segments'])
 
     del model
     del audio

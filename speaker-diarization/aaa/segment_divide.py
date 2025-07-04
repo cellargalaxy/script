@@ -42,7 +42,7 @@ def segment_divide(audio_path, subt_gen_path, output_dir,
     if len(segments) > 0 and segments[-1]['end'] < last_end:
         segments.append({"start": segments[-1]['end'], "end": last_end, "vad_type": 'silene'})
     gradual = segments
-    util_subt.check_segments(gradual)
+    util_subt.check_coherent_segments(gradual)
     gradual = util_subt.gradual_segments(gradual, gradual_duration_ms=min_silene_duration_ms)
     util.save_file(json.dumps(gradual), os.path.join(output_dir, 'gradual.json'))
     util_subt.save_segments_as_srt(gradual, os.path.join(output_dir, 'gradual.srt'), skip_silene=True)

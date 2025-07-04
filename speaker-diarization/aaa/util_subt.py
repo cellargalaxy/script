@@ -33,7 +33,7 @@ def unit_segments(segments, type_key):
     return results
 
 
-def check_segments(segments):
+def check_coherent_segments(segments):  # 连贯与离散  Coherent  discrete
     for i, segment in enumerate(segments):
         start = segments[i].get('start', -1)
         if not isinstance(start, int):
@@ -53,9 +53,37 @@ def check_segments(segments):
             logger.error("检查segments，start与end非法: %s, segment:%s, %s", i, json.dumps(segment),
                          json.dumps(segments))
             raise ValueError("检查segments，start与end非法")
-        if i != 0:
+        if i > 0:
             pre_end = segments[i - 1]['end']
             if pre_end != start:
+                logger.error("检查segments，pre_end与start非法: %s, segment:%s, %s", i, json.dumps(segment),
+                             json.dumps(segments))
+                raise ValueError("检查segments，pre_end与start非法")
+
+
+def check_discrete_segments(segments):
+    for i, segment in enumerate(segments):
+        start = segments[i].get('start', -1)
+        if not isinstance(start, int) and not isinstance(start, float):
+            logger.error("检查segments，start类型非法: %s, segment:%s, %s", i, json.dumps(segment), json.dumps(segments))
+            raise ValueError("检查segments，start类型非法")
+        if start < 0:
+            logger.error("检查segments，start非法: %s, segment:%s, %s", i, json.dumps(segment), json.dumps(segments))
+            raise ValueError("检查segments，start非法")
+        end = segments[i].get('end', -1)
+        if not isinstance(end, int) and not isinstance(end, float):
+            logger.error("检查segments，end类型非法: %s, segment:%s, %s", i, json.dumps(segment), json.dumps(segments))
+            raise ValueError("检查segments，end类型非法")
+        if end < 0:
+            logger.error("检查segments，end非法: %s, segment:%s, %s", i, json.dumps(segment), json.dumps(segments))
+            raise ValueError("检查segments，end非法")
+        if end <= start:
+            logger.error("检查segments，start与end非法: %s, segment:%s, %s", i, json.dumps(segment),
+                         json.dumps(segments))
+            raise ValueError("检查segments，start与end非法")
+        if i > 0:
+            pre_end = segments[i - 1]['end']
+            if start < pre_end:
                 logger.error("检查segments，pre_end与start非法: %s, segment:%s, %s", i, json.dumps(segment),
                              json.dumps(segments))
                 raise ValueError("检查segments，pre_end与start非法")
@@ -102,7 +130,7 @@ def gradual_segments(segments, gradual_duration_ms=500):
         if segment['start'] == segment['end']:
             continue
         gradual.append(segment)
-    check_segments(gradual)
+    check_coherent_segments(gradual)
     return gradual
 
 
@@ -141,10 +169,10 @@ def subt2segments(subt):
     segments = subt.get('segments', [])
     for i, segment in enumerate(segments):
         del segments[i]['words']
-        segments[i]['start'] = math.floor(segments[i]['start'] * 1000)
+        segments[i]['start'] = round(segments[i]['start'] * 1000)
         if segments[i]['start'] < 0:
             segments[i]['start'] = 0
-        segments[i]['end'] = math.ceil(segments[i]['end'] * 1000)
+        segments[i]['end'] = round(segments[i]['end'] * 1000)
     segments = fix_overlap_segments(segments)
     return segments
 
