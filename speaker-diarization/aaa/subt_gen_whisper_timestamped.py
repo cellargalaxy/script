@@ -50,11 +50,11 @@ def subt_gen(audio_path, auth_token):
     segments = []
     for i, segment in enumerate(subt['segments']):
         if i == 0:
-            segments.append(segments[i])
+            segments.append(subt['segments'][i])
             continue
-        if segments[i]['start'] < segments[i - 1]['end']:
+        if subt['segments'][i]['start'] < subt['segments'][i - 1]['end']:
             continue
-        segments.append(segments[i])
+        segments.append(subt['segments'][i])
     subt['segments'] = segments
 
     util_subt.check_discrete_segments(subt['segments'])
