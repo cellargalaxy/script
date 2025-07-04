@@ -33,12 +33,14 @@ def segment_divide(audio_path, subt_gen_path, output_dir,
         gradual[i]['vad_type'] = 'speech'
     segments = []
     for i, segment in enumerate(gradual):
-        segments.append(segment)
         pre_end = 0
         if i > 0:
             pre_end = gradual[i - 1]['end']
         if pre_end < gradual[i]['start']:
             segments.append({"start": pre_end, "end": gradual[i]['start'], "vad_type": 'silene'})
+        segments.append(segment)
+    if len(segments) > 0 and segments[-1]['end'] < last_end:
+        segments.append({"start": segments[-1]['end'], "end": last_end, "vad_type": 'silene'})
     gradual = segments
     util_subt.check_segments(gradual)
     gradual = util_subt.gradual_segments(gradual, gradual_duration_ms=min_silene_duration_ms)
