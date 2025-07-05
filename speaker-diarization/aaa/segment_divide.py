@@ -44,53 +44,50 @@ def segment_divide(audio_path, subt_gen_path, output_dir,
     gradual = segments
     util_subt.check_coherent_segments(gradual)
     gradual = util_subt.gradual_segments(gradual, gradual_duration_ms=min_silene_duration_ms, audio_data=audio)
-    util.save_file(json.dumps(gradual), os.path.join(output_dir, 'gradual.json'))
-    util_subt.save_segments_as_srt(gradual, os.path.join(output_dir, 'gradual.srt'), skip_silene=True)
+    util.save_file(json.dumps(gradual), json_path)
+    util_subt.save_segments_as_srt(gradual, srt_path, skip_silene=True)
 
-    arrange = []
-    for i, segment in enumerate(gradual):
-        if segment['vad_type'] == 'silene':
-            continue
-        pre_end = 0
-        if len(arrange) > 0:
-            pre_end = arrange[-1]['end']
-        arrange.append({
-            "start": pre_end,
-            "end": pre_end + silene_duration_ms,
-            "vad_type": 'silene',
-        })
-        duration = segment['end'] - segment['start']
-        arrange.append({
-            "start": pre_end + silene_duration_ms,
-            "end": pre_end + silene_duration_ms + duration,
-            "vad_type": 'speech',
-            "text": segment['text'],
-        })
-    if len(arrange) > 0:
-        pre_end = arrange[-1]['end']
-        arrange.append({
-            "start": pre_end,
-            "end": pre_end + silene_duration_ms,
-            "vad_type": 'silene',
-        })
-    util.save_file(json.dumps(arrange), os.path.join(output_dir, 'arrange.json'))
-    util_subt.save_segments_as_srt(arrange, os.path.join(output_dir, 'arrange.srt'), skip_silene=True)
+    # arrange = []
+    # for i, segment in enumerate(gradual):
+    #     if segment['vad_type'] == 'silene':
+    #         continue
+    #     pre_end = 0
+    #     if len(arrange) > 0:
+    #         pre_end = arrange[-1]['end']
+    #     arrange.append({
+    #         "start": pre_end,
+    #         "end": pre_end + silene_duration_ms,
+    #         "vad_type": 'silene',
+    #     })
+    #     duration = segment['end'] - segment['start']
+    #     arrange.append({
+    #         "start": pre_end + silene_duration_ms,
+    #         "end": pre_end + silene_duration_ms + duration,
+    #         "vad_type": 'speech',
+    #         "text": segment['text'],
+    #     })
+    # if len(arrange) > 0:
+    #     pre_end = arrange[-1]['end']
+    #     arrange.append({
+    #         "start": pre_end,
+    #         "end": pre_end + silene_duration_ms,
+    #         "vad_type": 'silene',
+    #     })
+    # util_subt.check_coherent_segments(arrange)
+    # util.save_file(json.dumps(arrange), os.path.join(output_dir, 'arrange.json'))
+    # util_subt.save_segments_as_srt(arrange, os.path.join(output_dir, 'arrange.srt'), skip_silene=True)
+    #
+    # blank_data = AudioSegment.silent(duration=silene_duration_ms)
+    # arrange_data = AudioSegment.silent(duration=silene_duration_ms)
+    # for i, segment in enumerate(gradual):
+    #     if segment['vad_type'] == 'silene':
+    #         continue
+    #     cut = audio[segment['start']:segment['end']]
+    #     arrange_data = arrange_data + cut + blank_data
+    # arrange_path = os.path.join(output_dir, 'arrange.wav')
+    # util.mkdir(arrange_path)
+    # arrange_data.export(arrange_path, format="wav")
 
-    blank = AudioSegment.silent(duration=silene_duration_ms)
-    arrange_data = AudioSegment.silent(duration=silene_duration_ms)
-    for i, segment in enumerate(gradual):
-        if segment['vad_type'] == 'silene':
-            continue
-        cut = audio[segment['start']:segment['end']]
-        arrange_data = arrange_data + cut
-        arrange_data = arrange_data + blank
-    arrange_path = os.path.join(output_dir, 'arrange.wav')
-    util.mkdir(arrange_path)
-    arrange_data.export(arrange_path, format="wav")
-
-    # util_subt.check_segments(segments)
-    # util.save_file(json.dumps(segments), json_path)
-    # util_subt.save_segments_as_srt(segments, srt_path, skip_silene=True)
     return json_path
 
 
