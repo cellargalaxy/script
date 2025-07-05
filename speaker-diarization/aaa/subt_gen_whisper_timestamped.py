@@ -1,3 +1,5 @@
+import math
+
 import whisper_timestamped as whisper
 import util
 import util_subt
@@ -45,7 +47,7 @@ def subt_gen(audio_path, auth_token):
             continue
         end = round(segment['end'] * 1000)
         if last_end <= end:
-            segment['end'] = last_end
+            segment['end'] = math.floor(last_end / 1000.0)
         segments.append(segment)
     subt['segments'] = segments
 
