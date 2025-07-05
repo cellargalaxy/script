@@ -9,7 +9,7 @@ logger = util.get_logger()
 
 def segment_divide(audio_path, subt_gen_path, output_dir,
                    min_silene_duration_ms=500,
-                   min_speech_duration_ms=500,
+                   min_speech_duration_ms=1000,
                    silene_duration_ms=1000):
     json_path = os.path.join(output_dir, 'segment_divide.json')
     srt_path = os.path.join(output_dir, 'segment_divide.srt')
@@ -38,7 +38,7 @@ def segment_divide(audio_path, subt_gen_path, output_dir,
             pre_end = gradual[i - 1]['end']
         if pre_end < gradual[i]['start']:
             segments.append({"start": pre_end, "end": gradual[i]['start'], "vad_type": 'silene'})
-        segments.append(segment)
+        segments.append(gradual[i])
     if len(segments) > 0 and segments[-1]['end'] < last_end:
         segments.append({"start": segments[-1]['end'], "end": last_end, "vad_type": 'silene'})
     gradual = segments
@@ -49,6 +49,8 @@ def segment_divide(audio_path, subt_gen_path, output_dir,
 
     arrange = []
     for i, segment in enumerate(gradual):
+        if segment['vad_type'] == 'silene':
+            continue
         pre_end = 0
         if len(arrange) > 0:
             pre_end = arrange[-1]['end']
@@ -62,6 +64,7 @@ def segment_divide(audio_path, subt_gen_path, output_dir,
             "start": pre_end + silene_duration_ms,
             "end": pre_end + silene_duration_ms + duration,
             "vad_type": 'speech',
+            "text": segment['text'],
         })
     if len(arrange) > 0:
         pre_end = arrange[-1]['end']
