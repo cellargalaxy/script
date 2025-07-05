@@ -25,7 +25,6 @@ def part_split_by_manager(manager):
     audio_path = manager.get('merge_audio_channel_path')
     part_divide_path = manager.get('part_divide_path')
     output_dir = os.path.join(manager.get('output_dir'), "part_split")
-    util.delete_path(output_dir)
     part_split(audio_path, part_divide_path, output_dir)
     manager['part_split_dir'] = output_dir
     logger.info("part_split,leave,manager: %s", json.dumps(manager))

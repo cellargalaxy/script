@@ -55,7 +55,6 @@ def audio_purification_by_manager(manager):
     logger.info("audio_purification,enter,manager: %s", json.dumps(manager))
     audio_dir = manager.get('audio_class_dir')
     output_dir = os.path.join(manager.get('output_dir'), "audio_purification")
-    util.delete_path(output_dir)
     audio_purification(audio_dir, output_dir)
     manager['audio_purification_dir'] = output_dir
     logger.info("audio_purification,leave,manager: %s", json.dumps(manager))

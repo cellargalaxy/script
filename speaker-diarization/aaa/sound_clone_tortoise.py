@@ -35,7 +35,6 @@ def sound_clone_by_manager(manager):
     audio_dir = manager.get('audio_class_dir')
     text = manager.get('sound_clone_text')
     output_dir = os.path.join(manager.get('output_dir'), "sound_clone")
-    util.delete_path(output_dir)
     sound_clone(audio_dir, text, output_dir)
     manager['sound_clone_dir'] = output_dir
     logger.info("sound_clone,leave,manager: %s", json.dumps(manager))
