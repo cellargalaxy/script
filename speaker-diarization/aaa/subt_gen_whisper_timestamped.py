@@ -47,7 +47,9 @@ def subt_gen(audio_path, auth_token):
             continue
         end = round(segment['end'] * 1000)
         if last_end <= end:
-            segment['end'] = math.floor(last_end / 1000.0)
+            segment['end'] = last_end / 1000.0
+        if segment['end'] < segment['start']:
+            continue
         segments.append(segment)
     subt['segments'] = segments
 
