@@ -80,7 +80,7 @@ def segment_detect(file_dir, output_dir, auth_token):
     if util.path_exist(union_find_path):
         return
 
-    confidences = segment_detect_pyannote.verify_by_dir(file_dir, output_dir, auth_token)
+    confidences = segment_detect_pyannote.verify_by_dir(file_dir, auth_token)
     util.save_as_json(confidences, os.path.join(output_dir, 'confidences.json'))
 
     results = best_union_find(confidences)

@@ -5,7 +5,6 @@ import util
 from pyannote.audio import Model
 from scipy.spatial.distance import cdist
 from pyannote.audio import Inference
-import json
 
 logger = util.get_logger()
 
@@ -33,7 +32,7 @@ def verify_confidence(file_path_i, file_path_j, auth_token):
     return confidence
 
 
-def verify_by_dir(file_dir, output_dir, auth_token):
+def verify_by_dir(file_dir, auth_token):
     confidences = []
     files = util.listdir(file_dir)
     files = [s for s in files if "speech" in s]
