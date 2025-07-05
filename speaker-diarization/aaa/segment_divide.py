@@ -79,6 +79,8 @@ def segment_divide(audio_path, subt_gen_path, output_dir,
     blank = AudioSegment.silent(duration=silene_duration_ms)
     arrange_data = AudioSegment.silent(duration=silene_duration_ms)
     for i, segment in enumerate(gradual):
+        if segment['vad_type'] == 'silene':
+            continue
         cut = audio[segment['start']:segment['end']]
         arrange_data = arrange_data + cut
         arrange_data = arrange_data + blank
