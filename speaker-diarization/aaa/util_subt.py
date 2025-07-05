@@ -4,6 +4,7 @@ import util
 import pysubs2
 import math
 import copy
+import util_vad
 
 logger = util.get_logger()
 
@@ -89,7 +90,7 @@ def check_discrete_segments(segments):
                 raise ValueError("检查segments，pre_end与start非法")
 
 
-def gradual_segments(segments, gradual_duration_ms=500):
+def gradual_segments(segments, gradual_duration_ms=500, audio_data=None):
     if len(segments) <= 1:
         return segments
     segments = copy.deepcopy(segments)
@@ -115,6 +116,10 @@ def gradual_segments(segments, gradual_duration_ms=500):
             continue
         if duration < gradual_duration_ms * 4:
             mean = math.floor((segments[i]['end'] + segments[i]['start']) / 2.0)
+            if audio_data:
+                has_silene, min_probability, probability_ms = util_vad.has_silene_by_data(
+                    audio_data[segments[i]['start']:segments[i]['end']])
+                mean = min_probability
             segments[i - 1]['end'] = mean
             segments[i + 1]['start'] = mean
             segments[i]['end'] = 0
@@ -149,12 +154,6 @@ def shift_subt_time(subt, duration_ms):
             segments[i]['words'] = words
     subt['segments'] = segments
 
-    word_segments = subt.get('word_segments', [])
-    for i, segment in enumerate(word_segments):
-        word_segments[i]['start'] = word_segments[i]['start'] + duration
-        word_segments[i]['end'] = word_segments[i]['end'] + duration
-    subt['word_segments'] = word_segments
-
     return subt
 
 
@@ -168,7 +167,7 @@ def shift_segments_time(segments, duration_ms):
 def subt2segments(subt):
     segments = subt.get('segments', [])
     for i, segment in enumerate(segments):
-        del segments[i]['words']
+        segments[i].pop('words', None)
         segments[i]['start'] = round(segments[i]['start'] * 1000)
         if segments[i]['start'] < 0:
             segments[i]['start'] = 0
@@ -196,8 +195,6 @@ def save_segments_as_srt(segments, save_path, skip_silene=False):
 
 def save_subt_as_srt(subt, save_path):
     highlight_words = False
-    if subt.get('word_segments', []):
-        highlight_words = True
     segments = subt['segments']
     for i, segment in enumerate(segments):
         if segment.get('words', []):

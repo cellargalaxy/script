@@ -11,7 +11,6 @@ def subt_gen(audio_path, auth_token):
     segments, info = model.transcribe(audio_path, beam_size=5)
     subt = {
         "segments": [],
-        "word_segments": [],
         "language": info.language,
     }
     for segment in segments:

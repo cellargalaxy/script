@@ -3,13 +3,14 @@ import util_subt
 import os
 import json
 from collections import Counter
+import subt_gen_faster_whisper
 import subt_gen_whisper_timestamped
 
 logger = util.get_logger()
 
 
 def gen_and_save(audio_path, output_dir, auth_token):
-    subt = subt_gen_whisper_timestamped.subt_gen(audio_path, auth_token)
+    subt = subt_gen_faster_whisper.subt_gen(audio_path, auth_token)
     filename = util.get_file_name(audio_path)
     json_path = os.path.join(output_dir, f"{filename}.json")
     util.save_as_json(subt, json_path)
@@ -35,7 +36,6 @@ def gen_and_join(part_divide_path, part_split_dir, output_dir, auth_token):
 
     subtitle = {
         "segments": [],
-        "word_segments": [],
         "language": '',
         "languages": [],
     }
@@ -50,7 +50,6 @@ def gen_and_join(part_divide_path, part_split_dir, output_dir, auth_token):
         subt = json.loads(content)
         subt = util_subt.shift_subt_time(subt, segment['start'])
         subtitle['segments'].extend(subt['segments'])
-        subtitle['word_segments'].extend(subt['word_segments'])
         if subt['language']:
             subtitle['languages'].append(subt['language'])
     if len(subtitle['languages']) > 0:

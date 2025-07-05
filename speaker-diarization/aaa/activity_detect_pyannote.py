@@ -4,6 +4,7 @@ from pyannote.audio import Pipeline
 import math
 import util
 import torch
+import util_vad
 
 logger = util.get_logger()
 
@@ -22,7 +23,7 @@ def activity_detect(audio_path, auth_token):
     for result in results.get_timeline():
         pre_end = 0
         if len(segments) > 0:
-            pre_end = segments[len(segments) - 1]['end']
+            pre_end = segments[-1]['end']
         start = math.floor(result.start * 1000)
         if start < 0:
             start = 0
@@ -33,10 +34,14 @@ def activity_detect(audio_path, auth_token):
             segments.append({"start": pre_end, "end": start, "vad_type": 'silene'})
         if start < end:
             segments.append({"start": start, "end": end, "vad_type": 'speech'})
+        cut = audio[start:end]
+        has_speech, max_probability, probability_ms = util_vad.has_speech_by_data(cut)
+        if not has_speech:
+            segments[-1]['vad_type'] = 'silene'
 
     pre_end = 0
     if len(segments) > 0:
-        pre_end = segments[len(segments) - 1]['end']
+        pre_end = segments[-1]['end']
     if pre_end < last_end:
         segments.append({"start": pre_end, "end": last_end, "vad_type": 'silene'})
 
