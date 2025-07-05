@@ -119,7 +119,7 @@ def gradual_segments(segments, gradual_duration_ms=500, audio_data=None):
             if audio_data:
                 has_silene, min_probability, probability_ms = util_vad.has_silene_by_data(
                     audio_data[segments[i]['start']:segments[i]['end']])
-                mean = min_probability
+                mean = segments[i]['start'] + probability_ms
             segments[i - 1]['end'] = mean
             segments[i + 1]['start'] = mean
             segments[i]['end'] = 0
