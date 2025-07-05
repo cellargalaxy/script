@@ -3,6 +3,7 @@ import numpy as np
 import os
 import util
 import json
+from pydub import AudioSegment
 
 logger = util.get_logger()
 
@@ -75,6 +76,15 @@ def best_union_find(confidences):
     return best_results
 
 
+def join_audio(file_paths, output_path, silene_duration_ms=250):
+    blank_data = AudioSegment.silent(duration=silene_duration_ms)
+    audio_data = AudioSegment.silent(duration=silene_duration_ms)
+    for file_path in file_paths:
+        audio = AudioSegment.from_wav(file_path)
+        audio_data = audio_data + audio + blank_data
+    audio_data.export(output_path, format="wav")
+
+
 def segment_detect(file_dir, output_dir, auth_token):
     union_find_path = os.path.join(output_dir, 'union_find.json')
     if util.path_exist(union_find_path):
@@ -88,6 +98,8 @@ def segment_detect(file_dir, output_dir, auth_token):
 
     split_dir = os.path.join(output_dir, 'split')
     for i, result in enumerate(results):
+        join_audio_path = os.path.join(split_dir, f"speaker_{i}.wav")
+        join_audio(result, join_audio_path)
         for j, file_path in enumerate(result):
             cp_path = os.path.join(split_dir, f"speaker_{i}", util.get_file_basename(file_path))
             util.copy_file(file_path, cp_path)
