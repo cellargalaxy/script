@@ -1,4 +1,4 @@
-import segment_detect_pyannote
+import speaker_segment_pyannote
 import numpy as np
 import os
 import util
@@ -85,12 +85,12 @@ def join_audio(file_paths, output_path, silene_duration_ms=250):
     audio_data.export(output_path, format="wav")
 
 
-def segment_detect(file_dir, output_dir, auth_token):
+def speaker_segment(file_dir, output_dir, auth_token):
     union_find_path = os.path.join(output_dir, 'union_find.json')
     if util.path_exist(union_find_path):
         return
 
-    confidences = segment_detect_pyannote.verify_by_dir(file_dir, auth_token)
+    confidences = speaker_segment_pyannote.verify_by_dir(file_dir, auth_token)
     util.save_as_json(confidences, os.path.join(output_dir, 'confidences.json'))
 
     results = best_union_find(confidences)
@@ -107,11 +107,11 @@ def segment_detect(file_dir, output_dir, auth_token):
             util.copy_file(file_path, cp_path)
 
 
-def segment_detect_by_manager(manager):
-    logger.info("segment_detect,enter,manager: %s", json.dumps(manager))
+def speaker_segment_by_manager(manager):
+    logger.info("speaker_segment,enter,manager: %s", json.dumps(manager))
     file_dir = manager.get('segment_split_dir')
     auth_token = manager.get('auth_token')
-    output_dir = os.path.join(manager.get('output_dir'), "segment_detect")
-    segment_detect(file_dir, output_dir, auth_token)
-    manager['segment_detect_path'] = output_dir
-    logger.info("segment_detect,leave,manager: %s", json.dumps(manager))
+    output_dir = os.path.join(manager.get('output_dir'), "speaker_segment")
+    speaker_segment(file_dir, output_dir, auth_token)
+    manager['speaker_segment_path'] = output_dir
+    logger.info("speaker_segment,leave,manager: %s", json.dumps(manager))
