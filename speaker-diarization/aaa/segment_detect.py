@@ -99,9 +99,11 @@ def segment_detect(file_dir, output_dir, auth_token):
     split_dir = os.path.join(output_dir, 'split')
     for i, result in enumerate(results):
         join_audio_path = os.path.join(split_dir, f"speaker_{i}.wav")
+        util.mkdir(join_audio_path)
         join_audio(result, join_audio_path)
         for j, file_path in enumerate(result):
             cp_path = os.path.join(split_dir, f"speaker_{i}", util.get_file_basename(file_path))
+            util.mkdir(cp_path)
             util.copy_file(file_path, cp_path)
 
 
