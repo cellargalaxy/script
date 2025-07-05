@@ -17,6 +17,7 @@ import part_split
 import subt_gen
 import segment_divide
 import segment_split
+import segment_detect
 
 logger = util.get_logger()
 
@@ -40,3 +41,4 @@ part_split.part_split_by_manager(manager)
 subt_gen.subt_gen_by_manager(manager)
 segment_divide.segment_divide_by_manager(manager)
 segment_split.segment_split_by_manager(manager)
+segment_detect.segment_detect_by_manager(manager)

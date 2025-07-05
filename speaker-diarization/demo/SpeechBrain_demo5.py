@@ -1,22 +1,31 @@
 import os
 from speechbrain.inference.speaker import SpeakerRecognition
 import util
+import json
 
 verification = SpeakerRecognition.from_hparams(source="speechbrain/spkrec-ecapa-voxceleb",
                                                savedir="pretrained_models/spkrec-ecapa-voxceleb",
                                                run_opts={"device": "cuda"})
 
-results = []
 confidences = []
 audio_dir = '../aaa/output/long/segment_split'
-for file in util.listdir(audio_dir):
-    if not file.endswith('speech.wav') or file.endswith('00068_speech.wav'):
-        continue
-    audio_path = os.path.join(audio_dir, file)
-    score, prediction = verification.verify_files('../aaa/output/long/segment_split/00068_speech.wav', audio_path)
-    print(audio_path, score, prediction)
-    confidences.append(score.item())
-    results.append({"path": audio_path, "score": score.item()})
+files = util.listdir(audio_dir)
+for i in range(len(files)):
+    for j in range(i + 1, len(files)):
+        audio_path_i = os.path.join(audio_dir, files[i])
+        audio_path_j = os.path.join(audio_dir, files[j])
+        score, prediction = verification.verify_files(audio_path_i, audio_path_j)
+        confidences.append(score.item())
+
+util.save_file(json.dumps(confidences), 'SpeechBrain_demo5.json')
+
+import matplotlib.pyplot as plt
+
+plt.hist(confidences, bins=100, range=(0, 1), edgecolor='black')
+plt.xlabel('Value range')
+plt.ylabel('Count')
+plt.title('SpeechBrain_demo5')
+plt.show()
 
 # print()
 # arr_sorted = sorted(results, key=lambda x: x["score"], reverse=True)
@@ -48,7 +57,7 @@ for label in np.unique(labels_sorted):
 plt.plot(range(len(confidences_sorted)), confidences_sorted, color='gray', alpha=0.3, linestyle='--')
 plt.xlabel('Index (sorted)')
 plt.ylabel('Confidence')
-plt.title('SpeechBrain_demo2.py')
+plt.title('SpeechBrain_demo5.py')
 plt.legend()
 plt.ylim(0, 1)
 plt.grid(True)

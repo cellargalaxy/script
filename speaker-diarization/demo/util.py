@@ -148,3 +148,7 @@ def path_isfile(path):
 def exec_gc():
     torch.cuda.empty_cache()
     gc.collect()
+
+def listdir(path):
+    file_names = sorted(os.listdir(path))
+    return file_names

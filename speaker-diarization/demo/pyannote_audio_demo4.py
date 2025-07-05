@@ -1,10 +1,36 @@
 import os
-from speechbrain.inference.speaker import SpeakerRecognition
-import util
 
-verification = SpeakerRecognition.from_hparams(source="speechbrain/spkrec-ecapa-voxceleb",
-                                               savedir="pretrained_models/spkrec-ecapa-voxceleb",
-                                               run_opts={"device": "cuda"})
+bin_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bin")
+os.environ["PATH"] = bin_dir + os.pathsep + os.environ.get("PATH", "")
+
+os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+os.environ['http_proxy'] = 'http://192.168.123.5:10808'
+os.environ['https_proxy'] = 'http://192.168.123.5:10808'
+os.environ['no_proxy'] = 'localhost,127.0.0.1,::1,192.168.123.5,mirrors.ustc.edu.cn'
+
+import torch
+import numpy as np
+import os
+import util
+from pyannote.audio import Model
+
+model = Model.from_pretrained("pyannote/embedding", use_auth_token=os.environ.get('auth_token', ''))
+
+from scipy.spatial.distance import cdist
+from pyannote.audio import Inference
+
+inference = Inference(model, window="whole")
+inference.to(torch.device("cuda"))
+
+
+def cdist_distance(a, b):
+    embedding1 = inference(a)
+    embedding2 = inference(b)
+    embedding1 = np.array(embedding1).reshape(1, -1)
+    embedding2 = np.array(embedding2).reshape(1, -1)
+    distance = cdist(embedding1, embedding2, metric="cosine")[0, 0]
+    return distance
+
 
 results = []
 confidences = []
@@ -13,10 +39,10 @@ for file in util.listdir(audio_dir):
     if not file.endswith('speech.wav') or file.endswith('00068_speech.wav'):
         continue
     audio_path = os.path.join(audio_dir, file)
-    score, prediction = verification.verify_files('../aaa/output/long/segment_split/00068_speech.wav', audio_path)
-    print(audio_path, score, prediction)
-    confidences.append(score.item())
-    results.append({"path": audio_path, "score": score.item()})
+    score = cdist_distance('../aaa/output/long/segment_split/00068_speech.wav', audio_path)
+    print(audio_path, 1 - score)
+    confidences.append(1 - score)
+    results.append({"path": audio_path, "score": 1 - score})
 
 # print()
 # arr_sorted = sorted(results, key=lambda x: x["score"], reverse=True)
@@ -48,7 +74,7 @@ for label in np.unique(labels_sorted):
 plt.plot(range(len(confidences_sorted)), confidences_sorted, color='gray', alpha=0.3, linestyle='--')
 plt.xlabel('Index (sorted)')
 plt.ylabel('Confidence')
-plt.title('SpeechBrain_demo2.py')
+plt.title('pyannote_audio_demo4.py')
 plt.legend()
 plt.ylim(0, 1)
 plt.grid(True)

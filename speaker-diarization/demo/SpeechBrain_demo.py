@@ -15,8 +15,8 @@ def extract_embedding(file_path):
     return embedding
 
 # 3. 遍历所有音频
-audio_dir = '../gen_sub/output/demo/audio_split_segment_test'
-wav_files = [os.path.join(audio_dir, f) for f in os.listdir(audio_dir) if f.endswith('.wav')]
+audio_dir = '../aaa/output/long/segment_split'
+wav_files = [os.path.join(audio_dir, f) for f in os.listdir(audio_dir) if f.endswith('speech.wav')]
 embeddings = [extract_embedding(f) for f in wav_files]
 
 # 4. 聚类
