@@ -10,7 +10,7 @@ logger = util.get_logger()
 def segment_divide(audio_path, subt_gen_path, output_dir,
                    min_silene_duration_ms=500,
                    min_speech_duration_ms=500,
-                   silene_duration_ms=500):
+                   silene_duration_ms=1000):
     json_path = os.path.join(output_dir, 'segment_divide.json')
     srt_path = os.path.join(output_dir, 'segment_divide.srt')
     if util.path_exist(json_path):
