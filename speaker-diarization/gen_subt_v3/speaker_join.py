@@ -8,12 +8,13 @@ from pydub import AudioSegment
 logger = util.get_logger()
 
 
-def join_audio(audio_paths, output_path, silene_duration_ms=300):
+def join_audio(audio_paths, output_path, silene_duration_ms=350):
     blank_data = AudioSegment.silent(duration=silene_duration_ms)
     audio_data = AudioSegment.silent(duration=silene_duration_ms)
     for audio_path in audio_paths:
         audio = AudioSegment.from_wav(audio_path)
         audio_data = audio_data + audio + blank_data
+    util.mkdir(output_path)
     audio_data.export(output_path, format="wav")
 
 
