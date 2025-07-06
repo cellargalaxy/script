@@ -6,13 +6,13 @@ import os
 logger = util.get_logger()
 
 
-def part_divide(activity_detect_path, output_dir, min_silene_duration_ms=500, min_speech_duration_ms=1000 * 5):
+def part_divide(part_detect_path, output_dir, min_silene_duration_ms=500, min_speech_duration_ms=1000 * 5):
     json_path = os.path.join(output_dir, 'part_divide.json')
     srt_path = os.path.join(output_dir, 'part_divide.srt')
     if util.path_exist(json_path):
         return json_path
 
-    content = util.read_file(activity_detect_path)
+    content = util.read_file(part_detect_path)
     segments = json.loads(content)
     segments = util_subt.gradual_segments(segments, gradual_duration_ms=min_silene_duration_ms)
     util.save_file(json.dumps(segments), os.path.join(output_dir, 'gradual.json'))
@@ -60,9 +60,9 @@ def part_divide(activity_detect_path, output_dir, min_silene_duration_ms=500, mi
 
 def exec(manager):
     logger.info("part_divide,enter: %s", json.dumps(manager))
-    activity_detect_path = manager.get('activity_detect_path')
+    part_detect_path = manager.get('part_detect_path')
     output_dir = os.path.join(manager.get('output_dir'), "part_divide")
-    part_divide_path = part_divide(activity_detect_path, output_dir)
+    part_divide_path = part_divide(part_detect_path, output_dir)
     manager['part_divide_path'] = part_divide_path
     logger.info("part_divide,leave: %s", json.dumps(manager))
     util.exec_gc()
