@@ -22,8 +22,8 @@ def speaker_join(speaker_divide_dir, output_dir):
     if util.path_exist(output_dir):
         return
 
-    time.sleep(0.5)
-    util.input_timeout("调整说话人后回车", 60 * 10)
+    # time.sleep(0.5)
+    # util.input_timeout("调整说话人后回车", 60 * 10)
     speaker_divide_dir = os.path.join(speaker_divide_dir, "split")
     speaker_dirs = util.listdir(speaker_divide_dir)
     for speaker_dir in speaker_dirs:

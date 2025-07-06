@@ -58,30 +58,45 @@ def union_find(confidences):
 
 
 def best_union_find(confidences):
+    best_percent = 0
+    best_confidences = []
     best_results = []
     max_group_cnt = 0
     for percent in np.arange(1, 0, -0.01):
         percent = round(percent, 2)
         top_confidences = get_top_confidences(confidences, percent)
         results = union_find(top_confidences)
-        logger.info("并查集求优, percent: %s, group_cnt: %s", percent, len(results))
         if max_group_cnt <= len(results):
+            best_percent = percent
             max_group_cnt = len(results)
             best_results = results
+            best_confidences = top_confidences
         else:
             break
-    return best_results
+    logger.info("并查集求优, percent: %s, group_cnt: %s", best_percent, len(best_results))
+    return best_confidences, best_results
 
 
-def speaker_divide(speaker_detect_path, output_dir):
+def speaker_divide(speaker_detect_dir, output_dir):
     speaker_divide_path = os.path.join(output_dir, 'speaker_divide.json')
     if util.path_exist(speaker_divide_path):
         return
 
-    content = util.read_file(speaker_detect_path)
-    confidences = json.loads(content)
+    union_confidences = []
+    files = util.listdir(speaker_detect_dir)
+    for file in files:
+        if not file.endswith('.json'):
+            continue
+        logger.info("并查集求优: %s", file)
+        speaker_detect_path = os.path.join(speaker_detect_dir, file)
+        content = util.read_file(speaker_detect_path)
+        confidences = json.loads(content)
+        confidences, _ = best_union_find(confidences)
+        confidences = sorted(confidences, key=lambda x: x['confidence'], reverse=True)
+        util.save_as_json(confidences, os.path.join(output_dir, file))
+        union_confidences.extend(confidences)
 
-    results = best_union_find(confidences)
+    results = union_find(union_confidences)
     util.save_as_json(results, speaker_divide_path)
 
     split_dir = os.path.join(output_dir, 'split')
@@ -95,9 +110,9 @@ def speaker_divide(speaker_detect_path, output_dir):
 
 def exec(manager):
     logger.info("speaker_divide,enter: %s", json.dumps(manager))
-    speaker_detect_path = manager.get('speaker_detect_path')
+    speaker_detect_dir = manager.get('speaker_detect_dir')
     output_dir = os.path.join(manager.get('output_dir'), "speaker_divide")
-    speaker_divide(speaker_detect_path, output_dir)
+    speaker_divide(speaker_detect_dir, output_dir)
     manager['speaker_divide_dir'] = output_dir
     logger.info("speaker_divide,leave: %s", json.dumps(manager))
     util.exec_gc()
