@@ -33,7 +33,7 @@ def exec_gc():
 def get_embedding(path, auth_token):
     global embedding_map
     embedding = embedding_map.get(path, None)
-    if embedding:
+    if embedding is not None:
         return embedding
     inference = get_inference(auth_token)
     embedding = inference(path)
