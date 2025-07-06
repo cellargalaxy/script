@@ -230,7 +230,7 @@ def in_notebook() -> bool:
     return False
 
 
-def input_timeout(prompt, timeout, default):
+def input_timeout(prompt, timeout, default=None):
     if in_notebook():
         return default
     try:
