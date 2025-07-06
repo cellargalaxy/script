@@ -48,3 +48,4 @@ segment_split.exec(manager)
 
 speaker_detect.exec(manager)
 speaker_divide.exec(manager)
+speaker_join.exec(manager)

@@ -44,8 +44,8 @@ def speaker_detect(audio_dir, auth_token):
     files = [s for s in files if "speech.wav" in s]
     for i in range(len(files)):
         for j in range(i + 1, len(files)):
-            path_i = os.path.join(file_dir, files[i])
-            path_j = os.path.join(file_dir, files[j])
+            path_i = os.path.join(audio_dir, files[i])
+            path_j = os.path.join(audio_dir, files[j])
             confidence = confidence_detect(path_i, path_j, auth_token)
             confidences.append({"path_i": path_i, "path_j": path_j, "confidence": confidence})
     return confidences

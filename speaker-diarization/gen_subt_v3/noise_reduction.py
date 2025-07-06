@@ -1,4 +1,3 @@
-import demucs.separate
 import os
 import util
 import json

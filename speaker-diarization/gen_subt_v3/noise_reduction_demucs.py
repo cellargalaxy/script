@@ -1,7 +1,6 @@
 import demucs.separate
 import os
 import util
-import json
 
 logger = util.get_logger()
 

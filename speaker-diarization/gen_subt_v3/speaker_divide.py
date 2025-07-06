@@ -1,9 +1,7 @@
-import speaker_divide_pyannote
 import numpy as np
 import os
 import util
 import json
-from pydub import AudioSegment
 
 logger = util.get_logger()
 
@@ -100,6 +98,6 @@ def exec(manager):
     speaker_detect_path = manager.get('speaker_detect_path')
     output_dir = os.path.join(manager.get('output_dir'), "speaker_divide")
     speaker_divide(speaker_detect_path, output_dir)
-    manager['speaker_divide_path'] = output_dir
+    manager['speaker_divide_dir'] = output_dir
     logger.info("speaker_divide,leave: %s", json.dumps(manager))
     util.exec_gc()

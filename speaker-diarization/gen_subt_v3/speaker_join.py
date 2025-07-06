@@ -1,6 +1,6 @@
-import speaker_join_pyannote
-import numpy as np
 import os
+import time
+
 import util
 import json
 from pydub import AudioSegment
@@ -21,11 +21,14 @@ def speaker_join(speaker_divide_dir, output_dir):
     if util.path_exist(output_dir):
         return
 
+    time.sleep(0.5)
     util.input_timeout("调整说话人后回车", 60 * 10)
     speaker_divide_dir = os.path.join(speaker_divide_dir, "split")
     speaker_dirs = util.listdir(speaker_divide_dir)
     for speaker_dir in speaker_dirs:
         audio_paths = util.listdir(os.path.join(speaker_divide_dir, speaker_dir))
+        for i, segment in enumerate(audio_paths):
+            audio_paths[i] = os.path.join(speaker_divide_dir, speaker_dir, audio_paths[i])
         audio_path = os.path.join(output_dir, f"{speaker_dir}.wav")
         join_audio(audio_paths, audio_path)
 
