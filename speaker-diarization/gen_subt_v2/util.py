@@ -105,8 +105,8 @@ def get_compute_type():
 
 def get_file_ext(file_path):
     """
-    '/gen_subt_v2/bbb/ccc' -> ''
-    '/gen_subt_v2/bbb/ccc.txt' -> 'txt'
+    '/aaa/bbb/ccc' -> ''
+    '/aaa/bbb/ccc.txt' -> 'txt'
     :param file_path:
     :return:
     """
@@ -116,8 +116,8 @@ def get_file_ext(file_path):
 
 def get_file_name(file_path):
     """
-    '/gen_subt_v2/bbb/ccc' -> 'ccc'
-    '/gen_subt_v2/bbb/ccc.txt' -> 'ccc'
+    '/aaa/bbb/ccc' -> 'ccc'
+    '/aaa/bbb/ccc.txt' -> 'ccc'
     :param file_path:
     :return:
     """
@@ -127,8 +127,8 @@ def get_file_name(file_path):
 
 def get_file_basename(file_path):
     """
-    '/gen_subt_v2/bbb/ccc' -> 'ccc'
-    '/gen_subt_v2/bbb/ccc.txt' -> 'ccc.txt'
+    '/aaa/bbb/ccc' -> 'ccc'
+    '/aaa/bbb/ccc.txt' -> 'ccc.txt'
     :param file_path:
     :return:
     """
@@ -138,8 +138,8 @@ def get_file_basename(file_path):
 
 def get_parent_dir(file_path):
     """
-    '/gen_subt_v2/bbb/ccc' -> 'bbb'
-    '/gen_subt_v2/bbb/ccc.txt' -> 'bbb'
+    '/aaa/bbb/ccc' -> 'bbb'
+    '/aaa/bbb/ccc.txt' -> 'bbb'
     :param file_path:
     :return:
     """
@@ -150,8 +150,8 @@ def get_parent_dir(file_path):
 
 def get_ancestor_dir(file_path):
     """
-    '/gen_subt_v2/bbb/ccc' -> '/gen_subt_v2/bbb'
-    '/gen_subt_v2/bbb/ccc.txt' -> '/gen_subt_v2/bbb'
+    '/aaa/bbb/ccc' -> '/aaa/bbb'
+    '/aaa/bbb/ccc.txt' -> '/aaa/bbb'
     :param file_path:
     :return:
     """
