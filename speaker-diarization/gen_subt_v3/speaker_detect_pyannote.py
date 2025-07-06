@@ -9,6 +9,7 @@ from pyannote.audio import Inference
 logger = util.get_logger()
 
 inference = None
+embedding_map = {}
 
 
 def get_inference(auth_token):
@@ -24,15 +25,26 @@ def get_inference(auth_token):
 def exec_gc():
     global inference
     inference = None
+    global embedding_map
+    embedding_map = None
     util.exec_gc()
 
 
-def confidence_detect(path_i, path_j, auth_token):
+def get_embedding(path, auth_token):
+    global embedding_map
+    embedding = embedding_map.get(path, None)
+    if embedding:
+        return embedding
     inference = get_inference(auth_token)
-    embedding_i = inference(path_i)
-    embedding_j = inference(path_j)
-    embedding_i = np.array(embedding_i).reshape(1, -1)
-    embedding_j = np.array(embedding_j).reshape(1, -1)
+    embedding = inference(path)
+    embedding = np.array(embedding).reshape(1, -1)
+    embedding_map[path] = embedding
+    return embedding
+
+
+def confidence_detect(path_i, path_j, auth_token):
+    embedding_i = get_embedding(path_i, auth_token)
+    embedding_j = get_embedding(path_j, auth_token)
     distance = cdist(embedding_i, embedding_j, metric="cosine")[0, 0]
     confidence = 1 - distance
     return confidence
