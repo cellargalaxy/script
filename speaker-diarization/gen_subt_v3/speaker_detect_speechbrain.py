@@ -18,8 +18,8 @@ def get_verification():
 
 
 def exec_gc():
-    global inference
-    inference = None
+    global verification
+    verification = None
     util.exec_gc()
 
 
