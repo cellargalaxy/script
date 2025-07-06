@@ -13,10 +13,10 @@ import init
 import extract_audio
 import noise_reduction
 import merge_channel
-import activity_detect
+import part_detect
 import part_divide
 import part_split
-import subt_gen
+import segment_detect
 import segment_divide
 import segment_split
 import speaker_segment
@@ -24,7 +24,7 @@ import speaker_segment
 logger = util.get_logger()
 
 manager = {
-    "video_path": '../long.mkv',
+    "video_path": '../demo.mkv',
     "audio_track_index": 0,
     "auth_token": os.environ.get('auth_token', ''),
 }
@@ -36,11 +36,12 @@ extract_audio.exec(manager)
 noise_reduction.exec(manager)
 merge_channel.exec(manager)
 
-activity_detect.exec(manager)
+part_detect.exec(manager)
 part_divide.exec(manager)
 part_split.exec(manager)
 
-subt_gen.exec(manager)
-segment_divide.segment_divide_by_manager(manager)
-segment_split.segment_split_by_manager(manager)
-speaker_segment.speaker_segment_by_manager(manager)
+segment_detect.exec(manager)
+segment_divide.exec(manager)
+segment_split.exec(manager)
+
+# speaker_segment.speaker_segment_by_manager(manager)

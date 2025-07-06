@@ -27,3 +27,4 @@ def exec(manager):
     output_dir = os.path.join('output', file_name)
     manager['output_dir'] = output_dir
     logger.info("init,leave: %s", json.dumps(manager))
+    util.exec_gc()

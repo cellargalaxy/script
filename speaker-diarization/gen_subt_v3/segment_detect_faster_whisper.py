@@ -3,11 +3,27 @@ import util
 
 logger = util.get_logger()
 
+model = None
 
-def subt_gen(audio_path, auth_token):
+
+def get_model():
+    global model
+    if model:
+        return model
+    model = WhisperModel("large-v3", device=util.get_device_type(), compute_type=util.get_compute_type())
+    return model
+
+
+def exec_gc():
+    global model
+    model = None
+    util.exec_gc()
+
+
+def segment_detect(audio_path, auth_token):
     logger.info("字幕生成: %s", audio_path)
 
-    model = WhisperModel("large-v3", device=util.get_device_type(), compute_type=util.get_compute_type())
+    model = get_model()
     segments, info = model.transcribe(audio_path, beam_size=5)
     subt = {
         "segments": [],

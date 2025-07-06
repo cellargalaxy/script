@@ -21,3 +21,4 @@ def exec(manager):
     merge_channel(input_path, output_path)
     manager['merge_channel_path'] = output_path
     logger.info("merge_channel,leave: %s", json.dumps(manager))
+    util.exec_gc()

@@ -38,3 +38,4 @@ def exec(manager):
     extract_audio(video_path, audio_path, audio_track_index=audio_track_index)
     manager['audio_path'] = audio_path
     logger.info("extract_audio,leave: %s", json.dumps(manager))
+    util.exec_gc()

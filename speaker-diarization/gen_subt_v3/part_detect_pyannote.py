@@ -1,49 +1,47 @@
-import torch
-import util
-import math
 import util_subt
 from pydub import AudioSegment
+from pyannote.audio import Pipeline
+import math
+import util
+import torch
+import util_vad
 
 logger = util.get_logger()
 
 
-def activity_detect(audio_path, sample_rate=16000):
+def part_detect(audio_path, auth_token):
     logger.info("活动检测: %s", audio_path)
 
     audio = AudioSegment.from_wav(audio_path)
     last_end = len(audio)
 
-    model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad', model='silero_vad')
-    (get_speech_timestamps, save_audio, read_audio, VADIterator, collect_chunks) = utils
-    wave = read_audio(audio_path, sampling_rate=sample_rate)
-    speech_timestamps = get_speech_timestamps(
-        wave, model,
-        return_seconds=True,
-        sampling_rate=sample_rate,
-        min_silence_duration_ms=10,
-        min_speech_duration_ms=1000,
-        threshold=0.4,
-    )
+    pipeline = Pipeline.from_pretrained("pyannote/voice-activity-detection", use_auth_token=auth_token)
+    pipeline = pipeline.to(torch.device(util.get_device_type()))
+    results = pipeline(audio_path)
 
     segments = []
-    for i, segment in enumerate(speech_timestamps):
+    for result in results.get_timeline():
         pre_end = 0
         if len(segments) > 0:
-            pre_end = segments[len(segments) - 1]['end']
-        start = math.floor(segment['start'] * 1000)
+            pre_end = segments[-1]['end']
+        start = math.floor(result.start * 1000)
         if start < 0:
             start = 0
-        end = math.ceil(segment['end'] * 1000)
+        end = math.ceil(result.end * 1000)
         if last_end < end:
             end = last_end
         if pre_end < start:
             segments.append({"start": pre_end, "end": start, "vad_type": 'silene'})
         if start < end:
             segments.append({"start": start, "end": end, "vad_type": 'speech'})
+        cut = audio[start:end]
+        has_speech, max_probability, probability_ms = util_vad.has_speech_by_data(cut)
+        if not has_speech:
+            segments[-1]['vad_type'] = 'silene'
 
     pre_end = 0
     if len(segments) > 0:
-        pre_end = segments[len(segments) - 1]['end']
+        pre_end = segments[-1]['end']
     if pre_end < last_end:
         segments.append({"start": pre_end, "end": last_end, "vad_type": 'silene'})
 

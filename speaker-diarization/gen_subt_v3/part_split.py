@@ -28,3 +28,4 @@ def exec(manager):
     part_split(audio_path, part_divide_path, output_dir)
     manager['part_split_dir'] = output_dir
     logger.info("part_split,leave: %s", json.dumps(manager))
+    util.exec_gc()

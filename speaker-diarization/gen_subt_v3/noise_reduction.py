@@ -14,3 +14,4 @@ def exec(manager):
     output_path = noise_reduction_demucs.noise_reduction(audio_path, output_dir)
     manager['noise_reduction_path'] = output_path
     logger.info("noise_reduction,leave: %s", json.dumps(manager))
+    util.exec_gc()
