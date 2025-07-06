@@ -42,6 +42,7 @@ def segment_detect(audio_path, auth_token):
         }
         subt['segments'].append(obj)
 
+    segments = []
     for i, segment in enumerate(subt['segments']):
         start = round(segment['start'] * 1000)
         if last_end <= start:
@@ -65,9 +66,5 @@ def segment_detect(audio_path, auth_token):
     subt['segments'] = segments
 
     util_subt.check_discrete_segments(subt['segments'])
-
-    del model
-    del segments
-    util.exec_gc()
 
     return subt
