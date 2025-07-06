@@ -2,6 +2,7 @@ import util
 import os
 import json
 import speaker_detect_pyannote
+import speaker_detect_speechbrain
 
 logger = util.get_logger()
 
@@ -10,7 +11,7 @@ def speaker_detect(audio_dir, output_dir, auth_token):
     json_path = os.path.join(output_dir, 'speaker_detect.json')
     if util.path_exist(json_path):
         return json_path
-    confidences = speaker_detect_pyannote.speaker_detect(audio_dir, auth_token)
+    confidences = speaker_detect_speechbrain.speaker_detect(audio_dir, auth_token)
     util.save_as_json(confidences, json_path)
     return json_path
 
