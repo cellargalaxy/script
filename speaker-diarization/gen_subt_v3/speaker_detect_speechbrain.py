@@ -1,10 +1,6 @@
-import torch
-import numpy as np
 import os
 import util
-from pyannote.audio import Model
-from scipy.spatial.distance import cdist
-from pyannote.audio import Inference
+from speechbrain.inference.speaker import SpeakerRecognition
 
 logger = util.get_logger()
 
