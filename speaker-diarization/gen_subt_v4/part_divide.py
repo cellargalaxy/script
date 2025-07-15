@@ -63,9 +63,10 @@ def part_divide(audio_path, part_detect_path, output_dir, min_silene_duration_ms
 
 def exec(manager):
     logger.info("part_divide,enter: %s", json.dumps(manager))
+    audio_path = manager.get('merge_channel_path')
     part_detect_path = manager.get('part_detect_path')
     output_dir = os.path.join(manager.get('output_dir'), "part_divide")
-    part_divide_path = part_divide(part_detect_path, output_dir)
+    part_divide_path = part_divide(audio_path, part_detect_path, output_dir)
     manager['part_divide_path'] = part_divide_path
     logger.info("part_divide,leave: %s", json.dumps(manager))
     util.exec_gc()

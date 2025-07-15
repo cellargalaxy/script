@@ -6,7 +6,7 @@ os.environ["PATH"] = bin_dir + os.pathsep + os.environ.get("PATH", "")
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
 os.environ['http_proxy'] = 'http://192.168.123.5:10808'
 os.environ['https_proxy'] = 'http://192.168.123.5:10808'
-os.environ['no_proxy'] = 'localhost,127.0.0.1,::1,192.168.123.5,mirrors.ustc.edu.cn'
+os.environ['no_proxy'] = 'localhost,127.0.0.1,::1,192.168.123.5,mirrors.ustc.edu.cn,hf-mirror.com'
 
 import util
 import init
