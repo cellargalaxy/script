@@ -19,7 +19,7 @@ def part_divide(audio_path, part_detect_path, output_dir, min_speech_duration_ms
     content = util.read_file(part_detect_path)
     segments = json.loads(content)
     for i, segment in enumerate(segments):
-        if segments[i]['end'] - segments[i]['start'] >= min_speech_duration_ms:
+        if segments[i]['end'] - segments[i]['start'] < min_speech_duration_ms:
             segments[i]['vad_type'] = 'silene'
     segments = util_subt.unit_segments(segments, 'vad_type')
     segments = util_subt.gradual_segments(segments, gradual_duration_ms=min_silene_duration_ms, audio_data=audio)
