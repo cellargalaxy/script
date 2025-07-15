@@ -124,10 +124,20 @@ def gradual_segments(segments, gradual_duration_ms=500, audio_data=None):
             segments[i + 1]['start'] = mean
             segments[i]['end'] = 0
         else:
-            segments[i - 1]['end'] = segments[i - 1]['end'] + gradual_duration_ms
-            segments[i]['start'] = segments[i]['start'] + gradual_duration_ms
-            segments[i]['end'] = segments[i]['end'] - gradual_duration_ms
-            segments[i + 1]['start'] = segments[i + 1]['start'] - gradual_duration_ms
+            mean = gradual_duration_ms
+            if audio_data:
+                has_silene, min_probability, probability_ms = util_vad.has_silene_by_data(
+                    audio_data[segments[i]['start']:(segments[i]['start'] + gradual_duration_ms + gradual_duration_ms)])
+                mean = probability_ms
+            segments[i - 1]['end'] = segments[i - 1]['end'] + mean
+            segments[i]['start'] = segments[i]['start'] + mean
+            mean = gradual_duration_ms
+            if audio_data:
+                has_silene, min_probability, probability_ms = util_vad.has_silene_by_data(
+                    audio_data[(segments[i]['end'] - gradual_duration_ms - gradual_duration_ms):segments[i]['end']])
+                mean = gradual_duration_ms + gradual_duration_ms - probability_ms
+            segments[i]['end'] = segments[i]['end'] - mean
+            segments[i + 1]['start'] = segments[i + 1]['start'] - mean
     gradual = []
     for i, segment in enumerate(segments):
         if segment['end'] == 0:

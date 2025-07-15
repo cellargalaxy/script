@@ -13,7 +13,7 @@ def part_detect(audio_path, output_dir, auth_token):
     if util.path_exist(json_path):
         return json_path
     segments = part_detect_pyannote.part_detect(audio_path, auth_token=auth_token)
-    util.save_file(json.dumps(segments), json_path)
+    util.save_as_json(segments, json_path)
     util_subt.save_segments_as_srt(segments, srt_path, skip_silene=True)
     return json_path
 

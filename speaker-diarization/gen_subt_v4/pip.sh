@@ -8,6 +8,7 @@ pip install pydub
 pip install faster-whisper
 pip install "nemo_toolkit[all]"
 pip install pyannote.audio
+pip3 install whisper-timestamped
 
 sudo apt install -y libc++1
 pip install -U --force-reinstall -v git+https://github.com/TEN-framework/ten-vad.git
