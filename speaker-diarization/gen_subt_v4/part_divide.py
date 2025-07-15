@@ -7,7 +7,8 @@ import os
 logger = util.get_logger()
 
 
-def part_divide(audio_path, part_detect_path, output_dir, min_silene_duration_ms=500, min_speech_duration_ms=1000 * 15):
+def part_divide(audio_path, part_detect_path, output_dir, min_speech_duration_ms=500, min_silene_duration_ms=500,
+                part_speech_duration_ms=1000 * 15):
     json_path = os.path.join(output_dir, 'part_divide.json')
     srt_path = os.path.join(output_dir, 'part_divide.srt')
     if util.path_exist(json_path):
@@ -17,6 +18,10 @@ def part_divide(audio_path, part_detect_path, output_dir, min_silene_duration_ms
 
     content = util.read_file(part_detect_path)
     segments = json.loads(content)
+    for i, segment in enumerate(segments):
+        if segments[i]['end'] - segments[i]['start'] >= min_speech_duration_ms:
+            segments[i]['vad_type'] = 'silene'
+    segments = util_subt.unit_segments(segments, 'vad_type')
     segments = util_subt.gradual_segments(segments, gradual_duration_ms=min_silene_duration_ms, audio_data=audio)
     util.save_as_json(segments, os.path.join(output_dir, 'gradual.json'))
     util_subt.save_segments_as_srt(segments, os.path.join(output_dir, 'gradual.srt'), skip_silene=True)
@@ -26,7 +31,7 @@ def part_divide(audio_path, part_detect_path, output_dir, min_silene_duration_ms
         if len(parts) == 0:
             parts.append({"start": 0, "end": 0})
             continue
-        if segment['end'] - parts[-1]['start'] < min_speech_duration_ms:
+        if segment['end'] - parts[-1]['start'] < part_speech_duration_ms:
             continue
         if segment['vad_type'] != 'silene':
             continue
