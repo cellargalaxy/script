@@ -25,6 +25,7 @@ def unit_segments(segments, type_key, type_value=None):
     results = []
     for i, segment in enumerate(segments):
         if type_value and segment[type_key] != type_value:
+            results.append(segment)
             continue
         pre_type = ''
         if len(results) > 0:
