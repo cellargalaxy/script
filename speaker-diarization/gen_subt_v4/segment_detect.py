@@ -10,11 +10,13 @@ logger = util.get_logger()
 
 
 def gen_and_save(audio_path, output_dir, auth_token):
-    subt = segment_detect_whisper_timestamped.segment_detect(audio_path, auth_token)
     filename = util.get_file_name(audio_path)
     json_path = os.path.join(output_dir, f"{filename}.json")
-    util.save_as_json(subt, json_path)
     srt_path = os.path.join(output_dir, f"{filename}.srt")
+    if util.path_exist(json_path):
+        return json_path
+    subt = segment_detect_faster_whisper.segment_detect(audio_path, auth_token)
+    util.save_as_json(subt, json_path)
     util_subt.save_subt_as_srt(subt, srt_path)
     return json_path
 
@@ -72,4 +74,4 @@ def exec(manager):
     segment_detect_path = gen_and_join(part_divide_path, part_split_dir, output_dir, auth_token)
     manager['segment_detect_path'] = segment_detect_path
     logger.info("segment_detect,leave: %s", json.dumps(manager))
-    segment_detect_whisper_timestamped.exec_gc()
+    segment_detect_faster_whisper.exec_gc()

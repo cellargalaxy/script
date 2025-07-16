@@ -62,7 +62,7 @@ def segment_detect(audio_path, auth_token):
         end = round(segment['end'] * 1000)
         if last_end <= end:
             segment['end'] = last_end / 1000.0
-        if segment['end'] < segment['start']:
+        if segment['end'] <= segment['start']:
             continue
         segments.append(segment)
     subt['segments'] = segments

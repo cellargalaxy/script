@@ -21,30 +21,23 @@ def segment_divide(audio_path, segment_detect_path, output_dir,
     content = util.read_file(segment_detect_path)
     subt = json.loads(content)
     segments = util_subt.subt2segments(subt)
-    if len(segments) > 0 and last_end < segments[-1]['end']:
-        segments[-1]['end'] = last_end
-    gradual = []
     for i, segment in enumerate(segments):
-        if segment['end'] - segment['start'] < min_speech_duration_ms:
-            continue
-        gradual.append(segment)
-    for i, segment in enumerate(gradual):
-        gradual[i]['vad_type'] = 'speech'
-    segments = []
-    for i, segment in enumerate(gradual):
-        pre_end = 0
-        if i > 0:
-            pre_end = gradual[i - 1]['end']
-        if pre_end < gradual[i]['start']:
-            segments.append({"start": pre_end, "end": gradual[i]['start'], "vad_type": 'silene'})
-        segments.append(gradual[i])
-    if len(segments) > 0 and segments[-1]['end'] < last_end:
-        segments.append({"start": segments[-1]['end'], "end": last_end, "vad_type": 'silene'})
-    gradual = segments
-    util_subt.check_coherent_segments(gradual)
-    gradual = util_subt.gradual_segments(gradual, gradual_duration_ms=min_silene_duration_ms, audio_data=audio)
-    util.save_file(json.dumps(gradual), json_path)
-    util_subt.save_segments_as_srt(gradual, srt_path, skip_silene=True)
+        segments[i]['vad_type'] = 'speech'
+    segments = util_subt.fill_segments(segments, last_end=last_end, vad_type='silene')
+    segments = util_subt.clipp_segments(segments, last_end)
+    for i, segment in enumerate(segments):
+        if segments[i]['end'] - segments[i]['start'] < min_speech_duration_ms:
+            segments[i]['too_mini_speech'] = True
+    segments = util_subt.gradual_segments(segments, gradual_duration_ms=min_silene_duration_ms, audio_data=audio)
+    for i, segment in enumerate(segments):
+        if segments[i].get('too_mini_speech', False):
+            segments[i]['vad_type'] = 'silene'
+            del segments[i]['too_mini_speech']
+    segments = util_subt.unit_segments(segments, 'vad_type')
+
+    util_subt.check_coherent_segments(segments)
+    util.save_as_json(segments, json_path)
+    util_subt.save_segments_as_srt(segments, srt_path, skip_silene=True)
 
     return json_path
 

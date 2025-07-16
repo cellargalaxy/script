@@ -54,6 +54,16 @@ def fill_segments(segments, last_end=None, vad_type=None):
     return full
 
 
+def clipp_segments(segments, last_end):
+    clipp = []
+    for i, segment in enumerate(segments):
+        if last_end < segment['start']:
+            continue
+        if last_end < segment['end']:
+            segment['end'] = last_end
+        clipp.append(segment)
+    return clipp
+
 
 def check_coherent_segments(segments):  # 连贯与离散  Coherent  discrete
     for i, segment in enumerate(segments):
