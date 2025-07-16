@@ -34,6 +34,27 @@ def unit_segments(segments, type_key):
     return results
 
 
+def fill_segments(segments, last_end=None, vad_type=None):
+    full = []
+    for i, segment in enumerate(segments):
+        pre_end = 0
+        if i > 0:
+            pre_end = segments[i - 1]['end']
+        if pre_end < segments[i]['start']:
+            obj = {"start": pre_end, "end": segments[i]['start']}
+            if vad_type:
+                obj['vad_type'] = vad_type
+            full.append(obj)
+        full.append(segments[i])
+    if last_end and len(full) > 0 and full[-1]['end'] < last_end:
+        obj = {"start": full[-1]['end'], "end": last_end}
+        if vad_type:
+            obj['vad_type'] = vad_type
+        full.append(obj)
+    return full
+
+
+
 def check_coherent_segments(segments):  # 连贯与离散  Coherent  discrete
     for i, segment in enumerate(segments):
         start = segments[i].get('start', -1)
