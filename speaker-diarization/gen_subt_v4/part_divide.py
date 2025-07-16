@@ -8,8 +8,8 @@ logger = util.get_logger()
 
 
 def part_divide(audio_path, part_detect_path, output_dir,
-                min_speech_duration_ms=500,
-                min_silene_duration_ms=500,
+                min_speech_duration_ms=300,
+                min_silene_duration_ms=300,
                 part_speech_duration_ms=1000 * 15):
     json_path = os.path.join(output_dir, 'part_divide.json')
     srt_path = os.path.join(output_dir, 'part_divide.srt')
