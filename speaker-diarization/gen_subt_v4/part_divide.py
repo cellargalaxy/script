@@ -25,7 +25,7 @@ def part_divide(audio_path, part_detect_path, output_dir,
             segments[i]['too_mini_speech'] = True
     segments = util_subt.gradual_segments(segments, gradual_duration_ms=min_silene_duration_ms, audio_data=audio)
     for i, segment in enumerate(segments):
-        if segments[i]['too_mini_speech']:
+        if segments[i].get('too_mini_speech', False):
             segments[i]['vad_type'] = 'silene'
             del segments[i]['too_mini_speech']
     segments = util_subt.unit_segments(segments, 'vad_type')
