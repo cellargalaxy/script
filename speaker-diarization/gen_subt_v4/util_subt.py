@@ -21,14 +21,16 @@ def fix_overlap_segments(segments):
     return segments
 
 
-def unit_segments(segments, type_key):
+def unit_segments(segments, type_key, type_value=None):
     results = []
     for i, segment in enumerate(segments):
-        key = ''
+        if type_value and segment[type_key] != type_value:
+            continue
+        pre_type = ''
         if len(results) > 0:
-            key = results[len(results) - 1][type_key]
-        if segment[type_key] == key:
-            results[len(results) - 1]['end'] = segment['end']
+            pre_type = results[-1].get(type_key, '')
+        if segment[type_key] == pre_type:
+            results[-1]['end'] = segment['end']
         else:
             results.append(segment)
     return results

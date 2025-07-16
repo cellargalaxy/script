@@ -33,7 +33,7 @@ def segment_divide(audio_path, segment_detect_path, output_dir,
         if segments[i].get('too_mini_speech', False):
             segments[i]['vad_type'] = 'silene'
             del segments[i]['too_mini_speech']
-    segments = util_subt.unit_segments(segments, 'vad_type')
+    segments = util_subt.unit_segments(segments, 'vad_type', type_value='silene')
 
     util_subt.check_coherent_segments(segments)
     util.save_as_json(segments, json_path)
