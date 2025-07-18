@@ -1,6 +1,7 @@
 import util
 import json
 import util_subt
+import util_vad
 import os
 from pydub import AudioSegment
 
@@ -25,15 +26,25 @@ def segment_divide(audio_path, segment_detect_path, output_dir,
         segments[i]['vad_type'] = 'speech'
     segments = util_subt.fill_segments(segments, last_end=last_end, vad_type='silene')
     segments = util_subt.clipp_segments(segments, last_end)
-    for i, segment in enumerate(segments):
-        if segments[i]['end'] - segments[i]['start'] < min_speech_duration_ms:
-            segments[i]['too_mini_speech'] = True
+
     segments = util_subt.gradual_segments(segments, gradual_duration_ms=min_silene_duration_ms, audio_data=audio)
     for i, segment in enumerate(segments):
-        if segments[i].get('too_mini_speech', False):
+        if segments[i]['end'] - segments[i]['start'] < min_speech_duration_ms:
             segments[i]['vad_type'] = 'silene'
-            del segments[i]['too_mini_speech']
     segments = util_subt.unit_segments(segments, 'vad_type', type_value='silene')
+
+    for i, segment in enumerate(segments):
+        if i == 0:
+            continue
+        if segments[i - 1]['vad_type'] != 'speech':
+            continue
+        if segments[i]['vad_type'] != 'speech':
+            continue
+        cut = audio[segments[i - 1]['end'] - 250:segments[i]['start'] + 250]
+        has_silene, min_probability, probability_ms = util_vad.has_silene_by_data(cut)
+        offset = probability_ms - 250
+        segments[i - 1]['end'] + offset
+        segments[i]['start'] + offset
 
     util_subt.check_coherent_segments(segments)
     util.save_as_json(segments, json_path)
