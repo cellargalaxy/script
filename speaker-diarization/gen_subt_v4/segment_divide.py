@@ -27,12 +27,6 @@ def segment_divide(audio_path, segment_detect_path, output_dir,
     segments = util_subt.fill_segments(segments, last_end=last_end, vad_type='silene')
     segments = util_subt.clipp_segments(segments, last_end)
 
-    segments = util_subt.gradual_segments(segments, gradual_duration_ms=min_silene_duration_ms, audio_data=audio)
-    for i, segment in enumerate(segments):
-        if segments[i]['end'] - segments[i]['start'] < min_speech_duration_ms:
-            segments[i]['vad_type'] = 'silene'
-    segments = util_subt.unit_segments(segments, 'vad_type', type_value='silene')
-
     for i, segment in enumerate(segments):
         if i == 0:
             continue
@@ -45,6 +39,12 @@ def segment_divide(audio_path, segment_detect_path, output_dir,
         offset = probability_ms - 250
         segments[i - 1]['end'] + offset
         segments[i]['start'] + offset
+
+    segments = util_subt.gradual_segments(segments, gradual_duration_ms=min_silene_duration_ms, audio_data=audio)
+    for i, segment in enumerate(segments):
+        if segments[i]['end'] - segments[i]['start'] < min_speech_duration_ms:
+            segments[i]['vad_type'] = 'silene'
+    segments = util_subt.unit_segments(segments, 'vad_type', type_value='silene')
 
     util_subt.check_coherent_segments(segments)
     util.save_as_json(segments, json_path)
