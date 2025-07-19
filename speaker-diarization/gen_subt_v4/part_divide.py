@@ -67,7 +67,7 @@ def part_divide(audio_path, part_detect_path, output_dir,
         segments.append(segment)
 
     util_subt.check_coherent_segments(segments)
-    util.save_file(json.dumps(segments), json_path)
+    util.save_as_json(segments, json_path)
     util_subt.save_segments_as_srt(segments, srt_path, skip_silene=True)
     return json_path
 
