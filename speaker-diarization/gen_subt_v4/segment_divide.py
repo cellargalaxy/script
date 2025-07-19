@@ -58,18 +58,22 @@ def segment_divide(audio_path, segment_detect_path, output_dir,
         mean_start = math.ceil((left_start + left_end) / 2.0)
         mean_end = math.ceil((right_start + right_end) / 2.0)
         mean_mean = -1
+        if segments[i]["text"] == "狼はその村の若者と約束を交わしたんじゃ":
+            logger.info("狼 mean: %s, %s", mean_start, mean_end)
         if mean_end - mean_start >= 50:
             cut = audio[mean_start:mean_end]
             has_silene, min_probability, probability_ms = util_vad.has_silene_by_data(cut)
+            if segments[i]["text"] == "狼はその村の若者と約束を交わしたんじゃ":
+                logger.info("狼 has_silene: %s", has_silene)
             if has_silene:
                 mean_mean = mean_start + probability_ms
         mean = -1
-        # if abs(segments[i]['start']-left_mean) < abs(segments[i]['start']-mean):
-        #     mean = left_mean
-        if abs(segments[i]['start'] - right_mean) < abs(segments[i]['start'] - mean):
+        if left_mean >= 0 and abs(segments[i]['start'] - left_mean) < abs(segments[i]['start'] - mean):
+            mean = left_mean
+        if right_mean >= 0 and abs(segments[i]['start'] - right_mean) < abs(segments[i]['start'] - mean):
             mean = right_mean
-        # if abs(segments[i]['start']-mean_mean) < abs(segments[i]['start']-mean):
-        #     mean = mean_mean
+        if mean_mean >= 0 and abs(segments[i]['start'] - mean_mean) < abs(segments[i]['start'] - mean):
+            mean = mean_mean
         if segments[i]["text"] == "狼はその村の若者と約束を交わしたんじゃ":
             logger.info("狼: %s, %s, %s, %s, %s", segments[i]['start'], left_mean, right_mean, mean_mean, mean, )
             # mean = mean+100
