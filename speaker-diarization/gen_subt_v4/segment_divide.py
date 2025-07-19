@@ -3,12 +3,14 @@ import json
 import util_subt
 import util_vad
 import os
+import math
 from pydub import AudioSegment
 
 logger = util.get_logger()
 
 
 def segment_divide(audio_path, segment_detect_path, output_dir,
+                   gradual_vad_duration_ms=500,
                    min_silene_duration_ms=500,
                    min_speech_duration_ms=1000):
     json_path = os.path.join(output_dir, 'segment_divide.json')
@@ -34,17 +36,52 @@ def segment_divide(audio_path, segment_detect_path, output_dir,
             continue
         if segments[i]['vad_type'] != 'speech':
             continue
-        cut = audio[segments[i - 1]['end'] - 250:segments[i]['start'] + 250]
-        has_silene, min_probability, probability_ms = util_vad.has_silene_by_data(cut)
-        offset = probability_ms - 250
-        segments[i - 1]['end'] + offset
-        segments[i]['start'] + offset
 
-    segments = util_subt.gradual_segments(segments, gradual_duration_ms=min_silene_duration_ms, audio_data=audio)
-    for i, segment in enumerate(segments):
-        if segments[i]['end'] - segments[i]['start'] < min_speech_duration_ms:
-            segments[i]['vad_type'] = 'silene'
-    segments = util_subt.unit_segments(segments, 'vad_type', type_value='silene')
+        left_start = math.ceil((segments[i - 1]['start'] + segments[i - 1]['end']) / 2.0)
+        left_start = max(left_start, segments[i - 1]['end'] - gradual_vad_duration_ms)
+        left_end = segments[i - 1]['end']
+        left_mean = -1
+        if left_end - left_start >= 50:
+            cut = audio[left_start:left_end]
+            has_silene, min_probability, probability_ms = util_vad.has_silene_by_data(cut)
+            if has_silene:
+                left_mean = left_start + probability_ms
+        right_start = segments[i]['start']
+        right_end = math.floor((segments[i]['start'] + segments[i]['end']) / 2.0)
+        right_end = min(right_end, segments[i]['start'] + gradual_vad_duration_ms)
+        right_mean = -1
+        if right_end - right_start >= 50:
+            cut = audio[right_start:right_end]
+            has_silene, min_probability, probability_ms = util_vad.has_silene_by_data(cut)
+            if has_silene:
+                right_mean = right_start + probability_ms
+        mean_start = math.ceil((left_start + left_end) / 2.0)
+        mean_end = math.ceil((right_start + right_end) / 2.0)
+        mean_mean = -1
+        if mean_end - mean_start >= 50:
+            cut = audio[mean_start:mean_end]
+            has_silene, min_probability, probability_ms = util_vad.has_silene_by_data(cut)
+            if has_silene:
+                mean_mean = mean_start + probability_ms
+        mean = -1
+        # if abs(segments[i]['start']-left_mean) < abs(segments[i]['start']-mean):
+        #     mean = left_mean
+        if abs(segments[i]['start'] - right_mean) < abs(segments[i]['start'] - mean):
+            mean = right_mean
+        # if abs(segments[i]['start']-mean_mean) < abs(segments[i]['start']-mean):
+        #     mean = mean_mean
+        if segments[i]["text"] == "狼はその村の若者と約束を交わしたんじゃ":
+            logger.info("狼: %s, %s, %s, %s, %s", segments[i]['start'], left_mean, right_mean, mean_mean, mean, )
+            # mean = mean+100
+        if mean >= 0:
+            segments[i - 1]['end'] = mean
+            segments[i]['start'] = mean
+
+    # segments = util_subt.gradual_segments(segments, gradual_duration_ms=min_silene_duration_ms, audio_data=audio)
+    # for i, segment in enumerate(segments):
+    #     if segments[i]['end'] - segments[i]['start'] < min_speech_duration_ms:
+    #         segments[i]['vad_type'] = 'silene'
+    # segments = util_subt.unit_segments(segments, 'vad_type', type_value='silene')
 
     util_subt.check_coherent_segments(segments)
     util.save_as_json(segments, json_path)
