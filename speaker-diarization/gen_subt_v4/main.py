@@ -31,8 +31,8 @@ manager = {
     "auth_token": os.environ.get('auth_token', ''),
 }
 
-util.delete_path('output/long/segment_divide')
-util.delete_path('output/long/segment_split')
+# util.delete_path('output/long/segment_divide')
+# util.delete_path('output/long/segment_split')
 
 util.print_device_info()
 init.exec(manager)
