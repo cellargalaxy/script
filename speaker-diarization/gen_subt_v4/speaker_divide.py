@@ -2,29 +2,10 @@ import numpy as np
 import os
 import util
 import json
+from collections import defaultdict
+import util_subt
 
 logger = util.get_logger()
-
-
-def get_threshold(confidences, percent):
-    min_confidence = 1
-    max_confidence = 0
-    for item in confidences:
-        if item['confidence'] < min_confidence:
-            min_confidence = item['confidence']
-        if max_confidence < item['confidence']:
-            max_confidence = item['confidence']
-    threshold = min_confidence + (max_confidence - min_confidence) * percent
-    return threshold
-
-
-def get_top_confidences(confidences, percent):
-    threshold = get_threshold(confidences, percent)
-    top_confidences = []
-    for item in confidences:
-        if threshold <= item['confidence']:
-            top_confidences.append(item)
-    return top_confidences
 
 
 class UnionFind:
@@ -32,9 +13,7 @@ class UnionFind:
         self.parent = {}
 
     def find(self, x):
-        if x not in self.parent:
-            self.parent[x] = x
-        if self.parent[x] != x:
+        if x != self.parent.setdefault(x, x):
             self.parent[x] = self.find(self.parent[x])
         return self.parent[x]
 
@@ -42,77 +21,57 @@ class UnionFind:
         self.parent[self.find(x)] = self.find(y)
 
 
-def union_find(confidences):
+def merge_groups(groups):
     uf = UnionFind()
-    for item in confidences:
-        uf.union(item['path_i'], item['path_j'])
-    groups = {}
-    for item in confidences:
-        for path in [item['path_i'], item['path_j']]:
-            root = uf.find(path)
-            groups.setdefault(root, set()).add(path)
-    results = [list(paths) for paths in groups.values()]
-    results = [sorted(sub) for sub in results]  # 第二维字符串升序排序
-    results.sort(key=len, reverse=True)  # 第一维按照子数组数量降序排序
-    return results
+
+    # 连接在同一个组中的元素
+    for group in groups:
+        for i in range(1, len(group)):
+            uf.union(group[i], group[0])
+
+    # 聚合所有属于同一个父节点的元素
+    merged = defaultdict(list)
+    for item in {x for group in groups for x in group}:
+        root = uf.find(item)
+        merged[root].append(item)
+
+    result = [sorted(group) for group in merged.values()]
+    result.sort(key=lambda x: len(x), reverse=True)
+    return result
 
 
-def best_union_find(confidences):
-    best_percent = 0
-    best_confidences = []
-    best_results = []
-    max_group_cnt = 0
-    for percent in np.arange(1, 0, -0.01):
-        percent = round(percent, 2)
-        top_confidences = get_top_confidences(confidences, percent)
-        results = union_find(top_confidences)
-        if max_group_cnt <= len(results):
-            best_percent = percent
-            max_group_cnt = len(results)
-            best_results = results
-            best_confidences = top_confidences
-        else:
-            break
-    logger.info("并查集求优, percent: %s, group_cnt: %s", best_percent, len(best_results))
-    return best_confidences, best_results
+def speaker_divide(segment_split_path, speaker_detect_path, output_dir):
+    json_path = os.path.join(output_dir, 'speaker_divide.json')
+    srt_path = os.path.join(output_dir, 'speaker_divide.srt')
+    if util.path_exist(json_path):
+        return json_path
 
+    content = util.read_file(speaker_detect_path)
+    groups = json.loads(content)
+    groups = merge_groups(groups)
+    cluster_map = {}
+    for i, group in enumerate(groups):
+        for j, file_name in enumerate(group):
+            cluster_map[file_name] = f"speaker_{i:02d}"
 
-def speaker_divide(speaker_detect_dir, output_dir):
-    speaker_divide_path = os.path.join(output_dir, 'speaker_divide.json')
-    if util.path_exist(speaker_divide_path):
-        return
+    content = util.read_file(segment_split_path)
+    segments = json.loads(content)
+    for i, segment in enumerate(segments):
+        speaker = cluster_map.get(segments[i]['file_name'], 'unknown')
+        segments[i]['speaker'] = speaker
 
-    union_confidences = []
-    files = util.listdir(speaker_detect_dir)
-    for file in files:
-        if not file.endswith('.json'):
-            continue
-        logger.info("并查集求优: %s", file)
-        speaker_detect_path = os.path.join(speaker_detect_dir, file)
-        content = util.read_file(speaker_detect_path)
-        confidences = json.loads(content)
-        confidences, _ = best_union_find(confidences)
-        confidences = sorted(confidences, key=lambda x: x['confidence'], reverse=True)
-        util.save_as_json(confidences, os.path.join(output_dir, file))
-        union_confidences.extend(confidences)
-
-    results = union_find(union_confidences)
-    util.save_as_json(results, speaker_divide_path)
-
-    split_dir = os.path.join(output_dir, 'split')
-    util.delete_path(split_dir)
-    for i, result in enumerate(results):
-        for j, file_path in enumerate(result):
-            cp_path = os.path.join(split_dir, f"speaker_{i}", util.get_file_basename(file_path))
-            util.mkdir(cp_path)
-            util.copy_file(file_path, cp_path)
+    util_subt.check_coherent_segments(segments)
+    util.save_as_json(segments, json_path)
+    util_subt.save_segments_as_srt(segments, srt_path, skip_silene=True)
+    return json_path
 
 
 def exec(manager):
     logger.info("speaker_divide,enter: %s", json.dumps(manager))
-    speaker_detect_dir = manager.get('speaker_detect_dir')
+    segment_split_path = manager.get('segment_split_path')
+    speaker_detect_path = manager.get('speaker_detect_path')
     output_dir = os.path.join(manager.get('output_dir'), "speaker_divide")
-    speaker_divide(speaker_detect_dir, output_dir)
-    manager['speaker_divide_dir'] = output_dir
+    speaker_divide_path = speaker_divide(segment_split_path, speaker_detect_path, output_dir)
+    manager['speaker_divide_path'] = speaker_divide_path
     logger.info("speaker_divide,leave: %s", json.dumps(manager))
     util.exec_gc()
