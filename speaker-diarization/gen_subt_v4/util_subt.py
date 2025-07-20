@@ -1,6 +1,6 @@
 import json
-from whisperx.utils import get_writer
 import util
+import util_whisperx
 import pysubs2
 import math
 import copy
@@ -245,7 +245,7 @@ def save_subt_as_srt(subt, save_path):
             highlight_words = True
     save_dir = util.get_ancestor_dir(save_path)
     util.mkdir(save_dir)
-    writer = get_writer("srt", save_dir)
+    writer = util_whisperx.get_writer("srt", save_dir)
     writer(
         subt,
         util.get_file_basename(save_path),
