@@ -8,10 +8,10 @@ import segment_detect_faster_whisper
 logger = util.get_logger()
 
 
-def gen_and_save(part_split_split_dir, segment, output_dir, auth_token):
-    wav_path = os.path.join(part_split_split_dir, segment['wav_name'])
-    json_path = os.path.join(output_dir, segment['json_name'])
-    srt_path = os.path.join(output_dir, segment['srt_name'])
+def gen_and_save(segment, auth_token):
+    wav_path = segment['wav_path']
+    json_path = segment['json_path']
+    srt_path = segment['srt_path']
     if not wav_path.endswith('speech.wav'):
         return
     if util.path_exist(json_path):
@@ -21,21 +21,22 @@ def gen_and_save(part_split_split_dir, segment, output_dir, auth_token):
     util_subt.save_subt_as_srt(subt, srt_path)
 
 
-def gen_and_join(part_split_json_path, part_split_split_dir, output_dir, auth_token):
+def gen_and_join(part_split_path, output_dir, auth_token):
     json_path = os.path.join(output_dir, 'segment_detect.json')
     srt_path = os.path.join(output_dir, 'segment_detect.srt')
     if util.path_exist(json_path):
         return json_path
 
-    content = util.read_file(part_split_json_path)
+    content = util.read_file(part_split_path)
     segments = json.loads(content)
-    for i, segment in enumerate(segments):
-        segments[i]['json_name'] = f"{segments[i]['file_name']}.json"
-        segments[i]['srt_name'] = f"{segments[i]['file_name']}.srt"
 
     split_dir = os.path.join(output_dir, 'split')
     for i, segment in enumerate(segments):
-        gen_and_save(part_split_split_dir, segment, split_dir, auth_token)
+        segments[i]['json_path'] = os.path.join(split_dir, f"{segments[i]['file_name']}.json")
+        segments[i]['srt_path'] = os.path.join(split_dir, f"{segments[i]['file_name']}.srt")
+
+    for i, segment in enumerate(segments):
+        gen_and_save(segment, auth_token)
 
     subtitle = {
         "segments": [],
@@ -44,7 +45,9 @@ def gen_and_join(part_split_json_path, part_split_split_dir, output_dir, auth_to
     }
 
     for i, segment in enumerate(segments):
-        split_path = os.path.join(split_dir, segment['json_name'])
+        split_path = segment['json_path']
+        if not util.path_exist(split_path):
+            continue
         content = util.read_file(split_path)
         subt = json.loads(content)
         subt = util_subt.shift_subt_time(subt, segment['start'])
@@ -64,11 +67,10 @@ def gen_and_join(part_split_json_path, part_split_split_dir, output_dir, auth_to
 
 def exec(manager):
     logger.info("segment_detect,enter: %s", json.dumps(manager))
-    part_split_json_path = manager.get('part_split_json_path')
-    part_split_split_dir = manager.get('part_split_split_dir')
+    part_split_path = manager.get('part_split_path')
     auth_token = manager.get('auth_token')
     output_dir = os.path.join(manager.get('output_dir'), "segment_detect")
-    json_path = gen_and_join(part_split_json_path, part_split_split_dir, output_dir, auth_token)
+    json_path = gen_and_join(part_split_path, output_dir, auth_token)
     manager['segment_detect_path'] = json_path
     logger.info("segment_detect,leave: %s", json.dumps(manager))
     segment_detect_faster_whisper.exec_gc()

@@ -73,10 +73,12 @@ def segment_divide(audio_path, segment_detect_path, output_dir, min_silene_durat
             segments[i]['vad_type'] = 'silene'
     segments = util_subt.unit_segments(segments, 'vad_type', type_value='silene')
 
+    for i, segment in enumerate(segments):
+        segments[i]['file_name'] = f"{i:05d}_{segments[i]['vad_type']}"
+
     util_subt.check_coherent_segments(segments)
     util.save_as_json(segments, json_path)
     util_subt.save_segments_as_srt(segments, srt_path, skip_silene=True)
-
     return json_path
 
 

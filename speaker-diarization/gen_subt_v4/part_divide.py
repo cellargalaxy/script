@@ -29,8 +29,8 @@ def part_divide(audio_path, part_detect_path, output_dir,
             segments[i]['vad_type'] = 'silene'
             del segments[i]['too_mini_speech']
     segments = util_subt.unit_segments(segments, 'vad_type')
-    util.save_as_json(segments, os.path.join(output_dir, 'gradual.json'))
-    util_subt.save_segments_as_srt(segments, os.path.join(output_dir, 'gradual.srt'), skip_silene=True)
+    # util.save_as_json(segments, os.path.join(output_dir, 'gradual.json'))
+    # util_subt.save_segments_as_srt(segments, os.path.join(output_dir, 'gradual.srt'), skip_silene=True)
 
     parts = []
     for i, segment in enumerate(segments):
@@ -65,6 +65,9 @@ def part_divide(audio_path, part_detect_path, output_dir,
         if segment.get('vad_type', '') not in ('silene', 'speech'):
             segment['vad_type'] = 'speech'
         segments.append(segment)
+
+    for i, segment in enumerate(segments):
+        segments[i]['file_name'] = f"{i:05d}_{segments[i]['vad_type']}"
 
     util_subt.check_coherent_segments(segments)
     util.save_as_json(segments, json_path)
