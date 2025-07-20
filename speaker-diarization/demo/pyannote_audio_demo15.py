@@ -1,3 +1,4 @@
+from sklearn.cluster import AgglomerativeClustering
 import torch
 import numpy as np
 import util
@@ -79,60 +80,11 @@ for i in range(len(audio_files)):
     embedding = np.squeeze(embedding)  # 确保是 (D,)
     embedding_list.append(embedding)
 
-import umap
-import hdbscan
+# 4. 聚类
+X = np.vstack(embedding_list)
+clustering = AgglomerativeClustering(n_clusters=None, distance_threshold=1.0).fit(X)  # 可调 threshold
+labels = clustering.labels_
 
-# 1. 假设你已有 pyannote 生成的 embedding 向量： (N, D)
-embeddings = np.array(embedding_list)
-
-# 2. 推荐使用 cosine 距离前先 L2 标准化
-embeddings = embeddings / np.linalg.norm(embeddings, axis=1, keepdims=True)
-
-# 3. 用 UMAP 预降维（提高 HDBSCAN 的稳定性）
-reducer = umap.UMAP(n_neighbors=10, min_dist=0.1, metric='cosine', random_state=42)
-embedding_umap = reducer.fit_transform(embeddings)
-
-# 4. HDBSCAN 聚类
-clusterer = hdbscan.HDBSCAN(min_cluster_size=3,  # 可调，控制最小类规模
-                            metric='euclidean',
-                            cluster_selection_method='eom',
-                            prediction_data=True)
-cluster_labels = clusterer.fit_predict(embedding_umap)
-
-# 5. 可获取每个点的聚类置信度
-probabilities = clusterer.probabilities_
-
-# cluster_labels == -1 的为未归类噪声
-for filename, label, prob in zip(audio_files, cluster_labels, probabilities):
-    short_name = filename.split('/')[-1]
-    print(f"File: {short_name}, Label: {label}, Confidence: {prob:.2f}")
-
-import matplotlib.pyplot as plt
-import numpy as np
-
-# 设定颜色，给不同簇分配不同颜色，-1 (噪声) 用灰色
-num_clusters = len(set(cluster_labels)) - (1 if -1 in cluster_labels else 0)
-palette = plt.cm.get_cmap('tab20', num_clusters)
-
-plt.figure(figsize=(12, 9))
-
-for i, (coord, label, prob, filename) in enumerate(zip(embedding_umap, cluster_labels, probabilities, audio_files)):
-    x, y = coord
-    if label == -1:
-        color = 'lightgray'
-        marker = 'x'
-    else:
-        color = palette(label)
-        marker = 'o'
-    plt.scatter(x, y, color=color, marker=marker, s=50, alpha=0.8)
-
-    # 标注每个点，显示文件名（去路径取文件名）和置信度（保留两位小数）
-    short_name = filename.split('/')[-1]
-    plt.text(x, y, f"{short_name}\n{prob:.2f}", fontsize=8, alpha=0.7, verticalalignment='bottom',
-             horizontalalignment='right')
-
-plt.title('UMAP + HDBSCAN 聚类结果')
-plt.xlabel('UMAP Dimension 1')
-plt.ylabel('UMAP Dimension 2')
-plt.grid(True)
-plt.show()
+# 5. 输出每个文件对应的聚类标签
+for file, label in zip(audio_files, labels):
+    print(f"{file} -> Cluster {label}")

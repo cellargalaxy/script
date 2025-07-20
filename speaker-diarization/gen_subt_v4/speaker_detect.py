@@ -2,7 +2,6 @@ import util
 import os
 import json
 import speaker_detect_pyannote
-import speaker_detect_nemo
 
 logger = util.get_logger()
 
@@ -12,8 +11,6 @@ def speaker_detect(audio_dir, output_dir, auth_token):
         return
     confidences = speaker_detect_pyannote.speaker_detect(audio_dir, auth_token)
     util.save_as_json(confidences, os.path.join(output_dir, 'pyannote.json'))
-    confidences = speaker_detect_nemo.speaker_detect(audio_dir, auth_token)
-    util.save_as_json(confidences, os.path.join(output_dir, 'nemo.json'))
     return
 
 

@@ -1,3 +1,4 @@
+from pyannote.audio.pipelines.clustering import AgglomerativeClustering
 import torch
 import numpy as np
 import os
@@ -5,9 +6,6 @@ import util
 from pyannote.audio import Model
 from scipy.spatial.distance import cdist
 from pyannote.audio import Inference
-import json
-
-logger = util.get_logger()
 
 inference = None
 embedding_map = {}
@@ -23,14 +21,6 @@ def get_inference(auth_token):
     return inference
 
 
-def exec_gc():
-    global inference
-    inference = None
-    global embedding_map
-    embedding_map = None
-    util.exec_gc()
-
-
 def get_embedding(path, auth_token):
     global embedding_map
     embedding = embedding_map.get(path, None)
@@ -43,10 +33,29 @@ def get_embedding(path, auth_token):
     return embedding
 
 
-def detect_window(audio_dir, audio_names, auth_token):
+def confidence_detect(path_i, path_j, auth_token):
+    embedding_i = get_embedding(path_i, auth_token)
+    embedding_j = get_embedding(path_j, auth_token)
+    distance = cdist(embedding_i, embedding_j, metric="cosine")[0, 0]
+    confidence = 1 - distance
+    return confidence
+
+
+audio_dir = '../gen_subt_v4/output/long_jpn/segment_split'
+audio_names = util.listdir(audio_dir)
+audio_names = sorted([s for s in audio_names if "speech.wav" in s])
+print(audio_names)
+
+for i, audio_name in enumerate(audio_names):
+    if i + 10 > len(audio_names):
+        break
+    if audio_names[i] != '00062_speech.wav':
+        continue
+    group_names = audio_names[i:i + 10]
+    group_paths = [os.path.join(audio_dir, name) for name in group_names]
+
     embedding_list = []
-    for j, audio_name in enumerate(audio_names):
-        audio_path = os.path.join(audio_dir, audio_name)
+    for j, group_path in enumerate(group_paths):
         embedding = get_embedding(group_path, '')
         embedding = np.squeeze(embedding)
         embedding_list.append(embedding)
@@ -63,27 +72,6 @@ def detect_window(audio_dir, audio_names, auth_token):
         embeddings=embeddings, min_clusters=1, max_clusters=len(embedding_list)
     )
     print(clusters)
-
-
-def speaker_detect(segment_divide_path, audio_dir, auth_token, min_speech_duration_ms=1000):
-    content = util.read_file(segment_divide_path)
-    segments = json.loads(content)
-
-    for i, segment in enumerate(segments):
-        segments[i]['path'] = os.path.join(audio_dir, f'{i:05d}_{segment["vad_type"]}.wav')
-
-    speech_segments = []
-    for i, segment in enumerate(segments):
-        if segment['vad_type'] != 'speech':
-            continue
-        if segment['end'] - segment['start'] < min_speech_duration_ms:
-            continue
-        speech_segments.append(segment)
-
-    for i, segment in enumerate(speech_segments):
-        if i + 10 > len(speech_segments):
-            break
-        group_segments = speech_segments[i:i + 10]
-        group_paths = []
-        for i, group_segment in enumerate(group_segments):
-            group_path = os.path.join(audio_dir, group_segment['path'])
+    for filename, label in zip(group_names, clusters):
+        short_name = filename.split('/')[-1]
+        print(f"File: {short_name}, Label: {label}")

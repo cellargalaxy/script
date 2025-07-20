@@ -26,7 +26,7 @@ import speaker_join
 logger = util.get_logger()
 
 manager = {
-    "video_path": '../long.mkv',
+    "video_path": '../demo.mkv',
     "audio_track_index": 0,
     "auth_token": os.environ.get('auth_token', ''),
 }
