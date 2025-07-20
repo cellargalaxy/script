@@ -31,6 +31,9 @@ manager = {
     "auth_token": os.environ.get('auth_token', ''),
 }
 
+util.delete_path('output/long/segment_divide')
+util.delete_path('output/long/segment_split')
+
 util.print_device_info()
 init.exec(manager)
 
@@ -46,6 +49,6 @@ segment_detect.exec(manager)
 segment_divide.exec(manager)
 segment_split.exec(manager)
 
-speaker_detect.exec(manager)
-speaker_divide.exec(manager)
-speaker_join.exec(manager)
+# speaker_detect.exec(manager)
+# speaker_divide.exec(manager)
+# speaker_join.exec(manager)
