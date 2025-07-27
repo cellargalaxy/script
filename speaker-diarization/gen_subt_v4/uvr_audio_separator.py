@@ -26,7 +26,7 @@ def extract_main_vocal(audio_path, output_dir):
     if util.path_exist(output_path):
         return output_path
     separator = Separator(model_file_dir=model_file_dir, output_dir=output_dir)
-    separator.load_model(model_filename='mel_band_roformer_karaoke_becruily.ckpt')
+    separator.load_model(model_filename='mel_band_roformer_karaoke_gabox.ckpt')
     output_names = {
         "Vocals": "vocals",
         "Instrumental": "instrumental",
@@ -35,7 +35,22 @@ def extract_main_vocal(audio_path, output_dir):
     return output_path
 
 
+def extract_dereverb(audio_path, output_dir):
+    output_dir = os.path.join(output_dir, 'dereverb')
+    output_path = os.path.join(output_dir, 'noreverb.wav')
+    if util.path_exist(output_path):
+        return output_path
+    separator = Separator(model_file_dir=model_file_dir, output_dir=output_dir)
+    separator.load_model(model_filename='dereverb_mel_band_roformer_mono_anvuew.ckpt')
+    output_names = {
+        "Noreverb": "noreverb",
+        "Reverb": "reverb",
+    }
+    separator.separate([audio_path], output_names)
+    return output_path
+
 def uvr(audio_path, output_dir):
-    vocal_path = extract_vocal(audio_path, output_dir)
-    main_vocal_path = extract_main_vocal(vocal_path, output_dir)
-    return main_vocal_path
+    # vocal_path = extract_vocal(audio_path, output_dir)
+    main_vocal_path = extract_main_vocal(audio_path, output_dir)
+    dereverb_path = extract_dereverb(main_vocal_path, output_dir)
+    return dereverb_path

@@ -1,17 +1,16 @@
+from audio_separator.separator import Separator
+import util
 import os
 
 bin_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bin")
 os.environ["PATH"] = bin_dir + os.pathsep + os.environ.get("PATH", "")
 
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
-os.environ['http_proxy'] = 'http://192.168.123.5:10808'
-os.environ['https_proxy'] = 'http://192.168.123.5:10808'
-os.environ['no_proxy'] = 'localhost,127.0.0.1,::1,192.168.123.5,mirrors.ustc.edu.cn'
+os.environ['http_proxy'] = 'http://192.168.123.7:10808'
+os.environ['https_proxy'] = 'http://192.168.123.7:10808'
+os.environ['no_proxy'] = 'localhost,127.0.0.1,::1,192.168.123.7,mirrors.ustc.edu.cn,hf-mirror.com'
 
-import util
-import os
-from audio_separator.separator import Separator
-
+# 主唱提取
 models = [
     # "UVR_MDXNET_Main.onnx",  # 和声完全没有被去掉
     # "melband_roformer_big_beta4.ckpt",  # 和声完全没有被去掉
@@ -62,9 +61,16 @@ models = [
     # "UVR_MDXNET_KARA.onnx", # 有漏，压的没有5_HP大
     # "UVR_MDXNET_KARA_2.onnx", # 比5_HP好，但是压的也更大
 
-    "mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt", # 好
-    "mel_band_roformer_karaoke_gabox.ckpt", # 好
-    "mel_band_roformer_karaoke_becruily.ckpt", # 好
+    # "UVR-MDX-NET-Inst_HQ_3.onnx",  # 和声完全没有被去掉
+    # "UVR-MDX-NET-Inst_HQ_4.onnx", # 有漏
+    # "UVR-MDX-NET-Inst_HQ_5.onnx", # 和声完全没有被去掉
+    # "UVR-MDX-NET-Inst_Main.onnx", # 和声完全没有被去掉
+
+    # "mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt",  # 好
+    # "mel_band_roformer_karaoke_gabox.ckpt",  # 好
+    # "mel_band_roformer_karaoke_becruily.ckpt",  # 好
+
+    "mel_band_roformer_karaoke_gabox.ckpt",
 ]
 for model in models:
     separator = None
@@ -72,7 +78,16 @@ for model in models:
         separator = Separator(model_file_dir=os.path.join(util.get_home_dir(), '.cache', 'uvr'),
                               output_dir=os.path.join('output', model))
         separator.load_model(model_filename=model)
-        output_files = separator.separate(['output/vocals_mel_band_roformer.ckpt/long_jpn_(vocals)_vocals_mel_band_roformer.wav'])
+        output_files = separator.separate([
+            '../../demo_jpn_single.wav',
+            # 'BOW_AND_ARROW.flac',
+            # 'clover_wish.flac',
+            # 'Credit_Theme.flac',
+            # 'gang.mp3',
+            # 'I_Really.flac',
+            # 'innocent_arrogance.flac',
+            # 'more_than_words.flac',
+        ])
     except Exception as e:
         print(f'Failed to load model: {model}\nError: {e}')
     finally:
