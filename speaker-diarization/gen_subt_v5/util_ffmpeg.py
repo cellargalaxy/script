@@ -11,6 +11,7 @@ def extract_audio_track(video_path, index, audio_path):
         '-i', video_path,
         '-map', "0:a:{}".format(index),  # 在第0个输入文件中选择第index个音轨
         '-ar', '44100',
+        '-ac', '2',
         '-y',
         audio_path
     ]
