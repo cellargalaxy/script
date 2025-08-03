@@ -14,7 +14,7 @@ def part_detect(audio_path, output_dir, auth_token):
         return json_path
     segments = part_detect_pyannote.part_detect(audio_path, auth_token=auth_token)
     util.save_as_json(segments, json_path)
-    util_subt.save_segments_as_srt(segments, srt_path, skip_silene=True)
+    util_subt.save_segments_as_srt(segments, srt_path, skip_silence=True)
     return json_path
 
 

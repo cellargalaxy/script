@@ -62,7 +62,7 @@ def speaker_divide(segment_split_path, speaker_detect_path, output_dir):
 
     util_subt.check_coherent_segments(segments)
     util.save_as_json(segments, json_path)
-    util_subt.save_segments_as_srt(segments, srt_path, skip_silene=True)
+    util_subt.save_segments_as_srt(segments, srt_path, skip_silence=True)
     return json_path
 
 

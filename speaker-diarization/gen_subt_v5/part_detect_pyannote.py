@@ -31,19 +31,19 @@ def part_detect(audio_path, auth_token):
         if last_end < end:
             end = last_end
         if pre_end < start:
-            segments.append({"start": pre_end, "end": start, "vad_type": 'silene'})
+            segments.append({"start": pre_end, "end": start, "vad_type": 'silence'})
         if start < end:
             segments.append({"start": start, "end": end, "vad_type": 'speech'})
         cut = audio[start:end]
         has_speech, max_probability, probability_ms = util_vad.has_speech_by_data(cut)
         if not has_speech:
-            segments[-1]['vad_type'] = 'silene'
+            segments[-1]['vad_type'] = 'silence'
 
     pre_end = 0
     if len(segments) > 0:
         pre_end = segments[-1]['end']
     if pre_end < last_end:
-        segments.append({"start": pre_end, "end": last_end, "vad_type": 'silene'})
+        segments.append({"start": pre_end, "end": last_end, "vad_type": 'silence'})
 
     segments = util_subt.fix_overlap_segments(segments)
     segments = util_subt.unit_segments(segments, 'vad_type')

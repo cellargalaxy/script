@@ -12,6 +12,6 @@ def exec(manager):
     output_dir = os.path.join(manager.get('output_dir'), "extract_main_vocal")
     output_path = extract_main_vocal_uvr.extract_main_vocal(audio_path, output_dir)
     manager['extract_main_vocal_path'] = output_path
-    manager['audio_path'] = audio_path
+    manager['audio_path'] = output_path
     logger.info("extract_main_vocal,leave: %s", json.dumps(manager))
     util.exec_gc()

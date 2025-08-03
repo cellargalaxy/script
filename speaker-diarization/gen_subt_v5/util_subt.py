@@ -129,7 +129,7 @@ def gradual_segments(segments, gradual_duration_ms=500, audio_data=None):
         return segments
     segments = copy.deepcopy(segments)
     for i, segment in enumerate(segments):
-        if segments[i]['vad_type'] != 'silene':
+        if segments[i]['vad_type'] != 'silence':
             continue
         duration = segments[i]['end'] - segments[i]['start']
         if i == 0:
@@ -151,7 +151,7 @@ def gradual_segments(segments, gradual_duration_ms=500, audio_data=None):
         if duration < gradual_duration_ms * 4:
             mean = math.floor((segments[i]['end'] + segments[i]['start']) / 2.0)
             if audio_data:
-                has_silene, min_probability, probability_ms = util_vad.has_silene_by_data(
+                has_silence, min_probability, probability_ms = util_vad.has_silence_by_data(
                     audio_data[segments[i]['start']:segments[i]['end']])
                 mean = segments[i]['start'] + probability_ms
             segments[i - 1]['end'] = mean
@@ -160,14 +160,14 @@ def gradual_segments(segments, gradual_duration_ms=500, audio_data=None):
         else:
             mean = gradual_duration_ms
             if audio_data:
-                has_silene, min_probability, probability_ms = util_vad.has_silene_by_data(
+                has_silence, min_probability, probability_ms = util_vad.has_silence_by_data(
                     audio_data[segments[i]['start']:(segments[i]['start'] + gradual_duration_ms + gradual_duration_ms)])
                 mean = probability_ms
             segments[i - 1]['end'] = segments[i - 1]['end'] + mean
             segments[i]['start'] = segments[i]['start'] + mean
             mean = gradual_duration_ms
             if audio_data:
-                has_silene, min_probability, probability_ms = util_vad.has_silene_by_data(
+                has_silence, min_probability, probability_ms = util_vad.has_silence_by_data(
                     audio_data[(segments[i]['end'] - gradual_duration_ms - gradual_duration_ms):segments[i]['end']])
                 mean = gradual_duration_ms + gradual_duration_ms - probability_ms
             segments[i]['end'] = segments[i]['end'] - mean
@@ -220,7 +220,7 @@ def subt2segments(subt):
     return segments
 
 
-def save_segments_as_srt(segments, save_path, skip_silene=False):
+def save_segments_as_srt(segments, save_path, skip_silence=False):
     results = []
     for i, segment in enumerate(segments):
         start = segment['start'] / 1000.0
@@ -228,7 +228,7 @@ def save_segments_as_srt(segments, save_path, skip_silene=False):
         text = segment.get('text', '')
         if not text:
             text = f"[{segment.get('vad_type', '')}|{segment.get('speaker', '')}] {segment['start']}->{segment['end']}"
-        if skip_silene and segment.get('vad_type', '') == 'silene':
+        if skip_silence and segment.get('vad_type', '') == 'silence':
             continue
         obj = {'start': start, 'end': end, 'text': text}
         results.append(obj)
