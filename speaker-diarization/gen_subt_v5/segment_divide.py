@@ -46,10 +46,9 @@ def segment_divide(audio_path, segment_detect_path, output_dir, min_silence_dura
         if segments[i]['vad_type'] != 'speech':
             continue
         cut = audio[segments[i]['start']:segments[i]['end']]
-        has_silence, probability, probability_ms = util_vad.trim_right_silence(cut)
-        segments[i]['end'] = segments[i]['end'] - (segments[i]['end'] - segments[i]['start'] - probability_ms)
-        has_silence, probability, probability_ms = util_vad.trim_left_silence(cut)
-        segments[i]['start'] = segments[i]['start'] + probability_ms
+        left_ms, right_ms = util_vad.trim_silence(cut)
+        segments[i]['end'] = segments[i]['end'] - (segments[i]['end'] - segments[i]['start'] - right_ms)
+        segments[i]['start'] = segments[i]['start'] + left_ms
     segments = util_subt.fill_segments(segments, last_end=last_end, vad_type='silence')
     segments = util_subt.unit_segments(segments, 'vad_type', type_value='silence')
 
