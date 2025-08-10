@@ -1,26 +1,31 @@
-import util
-import os
-import json
 import speaker_detect_pyannote
+import os
+import util
+import json
 
 logger = util.get_logger()
 
 
-def speaker_detect(segment_split_path, output_dir, auth_token):
+def speaker_detect(speak_path, output_dir, auth_token, window=10, step=5):
     json_path = os.path.join(output_dir, 'speaker_detect.json')
     if util.path_exist(json_path):
         return json_path
-    groups = speaker_detect_pyannote.speaker_detect(segment_split_path, auth_token)
+
+    content = util.read_file(speak_path)
+    speaks = json.loads(content)
+    if len(speaks) < window:
+        window = len(speaks)
+
+    groups = []
+    left = 0
+    right = left + window
+    while right <= len(speaks):
+        if right + step > len(speaks):
+            right = len(speaks)
+        result = speaker_detect_pyannote.speaker_detect(speaks[left:right], auth_token)
+        groups.extend(result)
+        left += step
+        right += step
+
     util.save_as_json(groups, json_path)
     return json_path
-
-
-def exec(manager):
-    logger.info("speaker_detect,enter: %s", json.dumps(manager))
-    segment_split_path = manager.get('segment_split_path')
-    auth_token = manager.get('auth_token')
-    output_dir = os.path.join(manager.get('output_dir'), "speaker_detect")
-    speaker_detect_path = speaker_detect(segment_split_path, output_dir, auth_token)
-    manager['speaker_detect_path'] = speaker_detect_path
-    logger.info("speaker_detect,leave: %s", json.dumps(manager))
-    speaker_detect_pyannote.exec_gc()

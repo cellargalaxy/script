@@ -1,9 +1,7 @@
-import numpy as np
 import os
 import util
 import json
 from collections import defaultdict
-import util_subt
 
 logger = util.get_logger()
 
@@ -40,9 +38,8 @@ def merge_groups(groups):
     return result
 
 
-def speaker_divide(segment_split_path, speaker_detect_path, output_dir):
+def speaker_divide(speak_path, speaker_detect_path, output_dir):
     json_path = os.path.join(output_dir, 'speaker_divide.json')
-    srt_path = os.path.join(output_dir, 'speaker_divide.srt')
     if util.path_exist(json_path):
         return json_path
 
@@ -54,24 +51,25 @@ def speaker_divide(segment_split_path, speaker_detect_path, output_dir):
         for j, file_name in enumerate(group):
             cluster_map[file_name] = f"speaker_{i:02d}"
 
-    content = util.read_file(segment_split_path)
-    segments = json.loads(content)
-    for i, segment in enumerate(segments):
-        speaker = cluster_map.get(segments[i]['file_name'], 'unknown')
-        segments[i]['speaker'] = speaker
+    content = util.read_file(speak_path)
+    speaks = json.loads(content)
+    for i, speak in enumerate(speaks):
+        speaker = cluster_map.get(speak[i]['file_name'], 'unknown')
+        speak[i]['speaker'] = speaker
 
-    util_subt.check_coherent_segments(segments)
-    util.save_as_json(segments, json_path)
-    util_subt.save_segments_as_srt(segments, srt_path, skip_silence=True)
+    segment_map = {}
+    for i, speak in enumerate(speaks):
+        segments = segment_map.get(speak['speaker'], [])
+        segments.extend(speak['segments'])
+        segment_map[speak['speaker']] = segments
+
+    speaks = []
+    for speaker, segments in segment_map.items():
+        speak = {
+            'file_name': speaker,
+            'segments': segments,
+        }
+        speaks.append(speak)
+
+    util.save_as_json(speaks, json_path)
     return json_path
-
-
-def exec(manager):
-    logger.info("speaker_divide,enter: %s", json.dumps(manager))
-    segment_split_path = manager.get('segment_split_path')
-    speaker_detect_path = manager.get('speaker_detect_path')
-    output_dir = os.path.join(manager.get('output_dir'), "speaker_divide")
-    speaker_divide_path = speaker_divide(segment_split_path, speaker_detect_path, output_dir)
-    manager['speaker_divide_path'] = speaker_divide_path
-    logger.info("speaker_divide,leave: %s", json.dumps(manager))
-    util.exec_gc()

@@ -21,9 +21,10 @@ import part_split
 import segment_detect
 import segment_divide
 import segment_split
-import speaker_detect
-import speaker_divide
+import speaker_segment
 import speaker_join
+import speaker_neigh
+import speaker_overall
 
 logger = util.get_logger()
 
@@ -50,6 +51,7 @@ segment_detect.exec(manager)
 segment_divide.exec(manager)
 segment_split.exec(manager)
 
-# speaker_detect.exec(manager)
-# speaker_divide.exec(manager)
-# speaker_join.exec(manager)
+speaker_segment.exec(manager)
+speaker_join.exec(manager)
+speaker_neigh.exec(manager)
+speaker_overall.exec(manager)
