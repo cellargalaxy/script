@@ -49,13 +49,16 @@ def speaker_divide(speak_path, speaker_detect_path, output_dir):
     cluster_map = {}
     for i, group in enumerate(groups):
         for j, file_name in enumerate(group):
-            cluster_map[file_name] = f"speaker_{i:02d}"
+            speaker = f"speaker{i:03d}"
+            if len(group) <= 1:
+                speaker = 'unknown'
+            cluster_map[file_name] = speaker
 
     content = util.read_file(speak_path)
     speaks = json.loads(content)
     for i, speak in enumerate(speaks):
-        speaker = cluster_map.get(speak[i]['file_name'], 'unknown')
-        speak[i]['speaker'] = speaker
+        speaker = cluster_map[speaks[i]['file_name']]
+        speaks[i]['speaker'] = speaker
 
     segment_map = {}
     for i, speak in enumerate(speaks):
@@ -65,11 +68,13 @@ def speaker_divide(speak_path, speaker_detect_path, output_dir):
 
     speaks = []
     for speaker, segments in segment_map.items():
+        segments = sorted(segments, key=lambda x: x['file_name'])
         speak = {
             'file_name': speaker,
             'segments': segments,
         }
         speaks.append(speak)
+    speaks = sorted(speaks, key=lambda x: x['file_name'])
 
     util.save_as_json(speaks, json_path)
     return json_path

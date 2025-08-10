@@ -7,6 +7,10 @@ logger = util.get_logger()
 
 
 def join_audio(speak, silence_duration_ms=100):
+    segments = speak.get('segments', [])
+    if len(segments) == 1:
+        util.copy_file(segments[0]['wav_path'], speak['wav_path'])
+        return
     blank_data = AudioSegment.silent(duration=silence_duration_ms)
     audio_data = AudioSegment.silent(duration=silence_duration_ms)
     for i, segment in enumerate(speak['segments']):
@@ -28,8 +32,6 @@ def speaker_join(speak_path, output_dir):
         speaks[i]['wav_path'] = os.path.join(output_dir, 'speaker', f"{speaks[i]['file_name']}.wav")
 
     for i, speak in enumerate(speaks):
-        if speak['file_name'] == 'unknown':
-            continue
         join_audio(speak)
         for j, segment in enumerate(speak['segments']):
             copy_path = os.path.join(output_dir, 'speaker', speaks[i]['file_name'], f"{segment['file_name']}.wav")

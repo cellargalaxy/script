@@ -23,7 +23,7 @@ def speaker_segment(segment_paths, output_dir, min_speech_duration_ms=1000):
             speeches.append(segment)
         for j, segment in enumerate(speeches):
             speak = {
-                'file_name': f"speaker{i:02d}{j:03d}",
+                'file_name': f"speaker{i:03d}{j:03d}",
                 'segments': [segment],
             }
             speaks.append(speak)
@@ -35,7 +35,7 @@ def speaker_segment(segment_paths, output_dir, min_speech_duration_ms=1000):
 def exec(manager):
     logger.info("speaker_segment,enter: %s", json.dumps(manager))
     segment_paths = manager.get('segment_paths', [])
-    segment_path = manager.get('segment_path', None)
+    segment_path = manager.get('segment_split_path', None)
     if segment_path:
         segment_paths.append(segment_path)
     output_dir = os.path.join(manager.get('output_dir'), "speaker_segment")
