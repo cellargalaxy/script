@@ -48,7 +48,8 @@ def part_divide(audio_path, part_detect_path, output_dir,
         else:
             parts[-1]['end'] = segments[i]['end']
             parts.append({"start": segments[i]['end'], "end": 0})
-    parts.pop()
+    if len(parts) > 1:
+        parts.pop()
     parts[-1]['end'] = segments[-1]['end']
     parts[-1]['vad_type'] = 'silence'
     for i, segment in enumerate(segments):
