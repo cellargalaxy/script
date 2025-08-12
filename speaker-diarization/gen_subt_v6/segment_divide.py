@@ -22,13 +22,23 @@ def segment_divide(audio_path, segment_detect_path, output_dir, min_silence_dura
     segments = util_subt.subt2segments(subt)
     for i, segment in enumerate(segments):
         segments[i]['vad_type'] = 'speech'
-    segments = util_subt.fill_segments(segments, last_end=last_end, vad_type='silence')
-    segments = util_subt.clipp_segments(segments, last_end)
+    util.save_as_json(segments, os.path.join(output_dir, 'init_speech.json'))
+
+    for i, segment in enumerate(segments):
+        if segments[i]['vad_type'] != 'speech':
+            continue
+        cut = audio[segments[i]['start']:segments[i]['end']]
+        has_speech, max_probability, probability_ms = util_vad.has_speech_by_data(cut)
+        if not has_speech:
+            segments[i]['vad_type'] = 'silence'
+    util.save_as_json(segments, os.path.join(output_dir, 'has_speech.json'))
 
     for i, segment in enumerate(segments):
         if i == len(segments) - 1:
             continue
         if segments[i]['vad_type'] != 'speech':
+            continue
+        if segments[i + 1]['vad_type'] != 'speech':
             continue
         start = math.ceil((segments[i]['start'] + segments[i]['end']) / 2.0)
         start = max(start, segments[i]['end'] - 0)
@@ -40,6 +50,7 @@ def segment_divide(audio_path, segment_detect_path, output_dir, min_silence_dura
             mean = start + probability_ms
             segments[i]['end'] = mean
             segments[i + 1]['start'] = mean
+    util.save_as_json(segments, os.path.join(output_dir, 'find_valley.json'))
 
     for i, segment in enumerate(segments):
         if segments[i]['vad_type'] != 'speech':
@@ -50,16 +61,41 @@ def segment_divide(audio_path, segment_detect_path, output_dir, min_silence_dura
         segments[i]['start'] = segments[i]['start'] + left_ms
     segments = util_subt.fill_segments(segments, last_end=last_end, vad_type='silence')
     segments = util_subt.unit_segments(segments, 'vad_type', type_value='silence')
+    segments = util_subt.clipp_segments(segments, last_end)
+    util.save_as_json(segments, os.path.join(output_dir, 'trim_silence_1.json'))
 
-    segments = util_subt.gradual_segments(segments, gradual_duration_ms=min_silence_duration_ms, audio_data=audio)
     for i, segment in enumerate(segments):
+        if i == len(segments) - 1:
+            continue
         if segments[i]['vad_type'] != 'speech':
             continue
-        cut = audio[segments[i]['start']:segments[i]['end']]
-        has_speech, max_probability, probability_ms = util_vad.has_speech_by_data(cut)
-        if not has_speech:
-            segments[i]['vad_type'] = 'silence'
-    segments = util_subt.unit_segments(segments, 'vad_type', type_value='silence')
+        if segments[i + 1]['vad_type'] != 'silence':
+            continue
+        if segments[i + 1]['end'] - segments[i + 1]['start'] >= 1000:
+            segments[i]['end'] += 1000
+            segments[i + 1]['start'] += 1000
+        else:
+            segments[i]['end'] = segments[i + 1]['end']
+            segments[i + 1]['start'] += segments[i + 1]['end']
+    results = []
+    for i, segment in enumerate(segments):
+        if segment['end'] <= segment['start']:
+            continue
+        results.append(segment)
+    segments = results
+    util.save_as_json(segments, os.path.join(output_dir, 'silence_1000.json'))
+
+    # for i, segment in enumerate(segments):
+    #     if segments[i]['vad_type'] != 'speech':
+    #         continue
+    #     cut = audio[segments[i]['start']:segments[i]['end']]
+    #     left_ms, right_ms = util_vad.trim_silence(cut)
+    #     segments[i]['end'] = segments[i]['end'] - (segments[i]['end'] - segments[i]['start'] - right_ms)
+    #     segments[i]['start'] = segments[i]['start'] + left_ms
+    # segments = util_subt.fill_segments(segments, last_end=last_end, vad_type='silence')
+    # segments = util_subt.unit_segments(segments, 'vad_type', type_value='silence')
+    # segments = util_subt.clipp_segments(segments, last_end)
+    # util.save_as_json(segments, os.path.join(output_dir, 'trim_silence_2.json'))
 
     for i, segment in enumerate(segments):
         segments[i]['file_name'] = f"{i:05d}_{segments[i]['vad_type']}"
