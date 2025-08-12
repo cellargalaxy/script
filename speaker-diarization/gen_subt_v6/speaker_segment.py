@@ -12,8 +12,7 @@ def speaker_segment(segment_paths, output_dir, min_speech_duration_ms=1000):
 
     speaks = []
     for i, segment_path in enumerate(segment_paths):
-        content = util.read_file(segment_path)
-        segments = json.loads(content)
+        segments = util.read_file_to_obj(segment_path)
         speeches = []
         for j, segment in enumerate(segments):
             if segment['vad_type'] != 'speech':

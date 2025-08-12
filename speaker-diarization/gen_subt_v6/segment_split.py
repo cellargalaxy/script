@@ -13,8 +13,7 @@ def segment_split(audio_path, segment_divide_path, output_dir):
     if util.path_exist(json_path):
         return json_path
 
-    content = util.read_file(segment_divide_path)
-    segments = json.loads(content)
+    segments = util.read_file_to_obj(segment_divide_path)
 
     split_dir = os.path.join(output_dir, 'split')
     util.mkdir(split_dir)

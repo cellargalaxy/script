@@ -25,8 +25,7 @@ def speaker_join(speak_path, output_dir):
     if util.path_exist(json_path):
         return json_path
 
-    content = util.read_file(speak_path)
-    speaks = json.loads(content)
+    speaks = util.read_file_to_obj(speak_path)
 
     for i, speak in enumerate(speaks):
         speaks[i]['wav_path'] = os.path.join(output_dir, 'speaker', f"{speaks[i]['file_name']}.wav")

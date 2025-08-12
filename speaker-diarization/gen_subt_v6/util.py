@@ -176,6 +176,12 @@ def read_file(file_path, default_value=''):
         return file.read()
 
 
+def read_file_to_obj(file_path, default_value=''):
+    content = read_file(file_path, default_value=default_value)
+    obj = json.loads(content)
+    return obj
+
+
 def path_exist(path):
     return os.path.exists(path)
 

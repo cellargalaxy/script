@@ -18,8 +18,8 @@ def part_divide(audio_path, part_detect_path, output_dir,
 
     audio = AudioSegment.from_wav(audio_path)
 
-    content = util.read_file(part_detect_path)
-    segments = json.loads(content)
+    segments = util.read_file_to_obj(part_detect_path)
+
     for i, segment in enumerate(segments):
         if segments[i]['end'] - segments[i]['start'] < min_speech_duration_ms:
             segments[i]['too_mini_speech'] = True

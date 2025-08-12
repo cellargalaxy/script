@@ -27,8 +27,7 @@ def gen_and_join(part_split_path, output_dir, auth_token):
     if util.path_exist(json_path):
         return json_path
 
-    content = util.read_file(part_split_path)
-    segments = json.loads(content)
+    segments = util.read_file_to_obj(part_split_path)
 
     split_dir = os.path.join(output_dir, 'split')
     for i, segment in enumerate(segments):
@@ -48,8 +47,7 @@ def gen_and_join(part_split_path, output_dir, auth_token):
         split_path = segment['json_path']
         if not util.path_exist(split_path):
             continue
-        content = util.read_file(split_path)
-        subt = json.loads(content)
+        subt = util.read_file_to_obj(split_path)
         subt = util_subt.shift_subt_time(subt, segment['start'])
         subtitle['segments'].extend(subt['segments'])
         if subt['language']:

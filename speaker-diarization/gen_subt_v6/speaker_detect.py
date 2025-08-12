@@ -11,8 +11,7 @@ def speaker_detect(speak_path, output_dir, auth_token, window=10, step=5):
     if util.path_exist(json_path):
         return json_path
 
-    content = util.read_file(speak_path)
-    speaks = json.loads(content)
+    speaks = util.read_file_to_obj(speak_path)
     if len(speaks) < window:
         window = len(speaks)
 

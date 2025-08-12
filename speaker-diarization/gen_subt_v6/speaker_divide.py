@@ -43,8 +43,7 @@ def speaker_divide(speak_path, speaker_detect_path, output_dir):
     if util.path_exist(json_path):
         return json_path
 
-    content = util.read_file(speaker_detect_path)
-    groups = json.loads(content)
+    groups = util.read_file_to_obj(speaker_detect_path)
     groups = merge_groups(groups)
     cluster_map = {}
     for i, group in enumerate(groups):
@@ -54,8 +53,7 @@ def speaker_divide(speak_path, speaker_detect_path, output_dir):
                 speaker = 'unknown'
             cluster_map[file_name] = speaker
 
-    content = util.read_file(speak_path)
-    speaks = json.loads(content)
+    speaks = util.read_file_to_obj(speak_path)
     for i, speak in enumerate(speaks):
         speaker = cluster_map[speaks[i]['file_name']]
         speaks[i]['speaker'] = speaker

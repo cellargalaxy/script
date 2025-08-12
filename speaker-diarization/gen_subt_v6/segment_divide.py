@@ -18,8 +18,7 @@ def segment_divide(audio_path, segment_detect_path, output_dir, min_silence_dura
     audio = AudioSegment.from_wav(audio_path)
     last_end = len(audio)
 
-    content = util.read_file(segment_detect_path)
-    subt = json.loads(content)
+    subt = util.read_file_to_obj(segment_detect_path)
     segments = util_subt.subt2segments(subt)
     for i, segment in enumerate(segments):
         segments[i]['vad_type'] = 'speech'
