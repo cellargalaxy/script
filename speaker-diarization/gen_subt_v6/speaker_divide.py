@@ -1,6 +1,5 @@
 import os
 import util
-import json
 from collections import defaultdict
 
 logger = util.get_logger()

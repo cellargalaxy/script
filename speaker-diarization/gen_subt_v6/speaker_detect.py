@@ -1,12 +1,11 @@
 import speaker_detect_pyannote
 import os
 import util
-import json
 
 logger = util.get_logger()
 
 
-def speaker_detect(speak_path, output_dir, auth_token, window=10, step=5):
+def speaker_detect(speak_path, output_dir, auth_token, window=16, step=8):
     json_path = os.path.join(output_dir, 'speaker_detect.json')
     if util.path_exist(json_path):
         return json_path

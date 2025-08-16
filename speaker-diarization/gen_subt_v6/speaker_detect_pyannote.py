@@ -4,6 +4,7 @@ import numpy as np
 import util
 from pyannote.audio import Model
 from pyannote.audio import Inference
+import math
 
 logger = util.get_logger()
 
@@ -49,8 +50,10 @@ def speaker_detect(speaks, auth_token):
         embedding_list.append(embedding)
     embeddings = np.array(embedding_list)
 
-    clustering = AgglomerativeClustering().instantiate({"method": "average", "min_cluster_size": 0, "threshold": 0.5})
-    clusters = clustering.cluster(embeddings=embeddings, min_clusters=1, max_clusters=len(embedding_list))
+    clustering = AgglomerativeClustering().instantiate({"method": "average", "min_cluster_size": 0, "threshold": 0.6})
+    max_clusters = math.ceil(math.sqrt(len(embedding_list)))
+    max_clusters = max(max_clusters, 3)
+    clusters = clustering.cluster(embeddings=embeddings, min_clusters=1, max_clusters=max_clusters)
 
     cluster_map = {}
     for speak, cluster in zip(speaks, clusters):
