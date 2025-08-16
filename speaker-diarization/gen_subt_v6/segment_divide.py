@@ -5,23 +5,12 @@ import util_vad
 import os
 import math
 from pydub import AudioSegment
+import segment_divide_faster_whisper
 
 logger = util.get_logger()
 
 
-def segment_divide(audio_path, segment_detect_path, output_dir, min_silence_duration_ms=500):
-    json_path = os.path.join(output_dir, 'segment_divide.json')
-    srt_path = os.path.join(output_dir, 'segment_divide.srt')
-    if util.path_exist(json_path):
-        return json_path
-
-    audio = AudioSegment.from_wav(audio_path)
-    last_end = len(audio)
-
-    subt = util.read_file_to_obj(segment_detect_path)
-    segments = util_subt.subt2segments(subt)
-    segments = util_subt.clipp_segments(segments, last_end)
-
+def has_speech(audio, segments):
     results = []
     for i, segment in enumerate(segments):
         if segment['end'] - segment['start'] < 50:
@@ -31,9 +20,10 @@ def segment_divide(audio_path, segment_detect_path, output_dir, min_silence_dura
         if not has_speech:
             continue
         results.append(segment)
-    segments = results
-    util.save_as_json(segments, os.path.join(output_dir, 'has_speech.json'))
+    return results
 
+
+def find_valley(audio, segments):
     for i, segment in enumerate(segments):
         if i == len(segments) - 1:
             continue
@@ -48,19 +38,95 @@ def segment_divide(audio_path, segment_detect_path, output_dir, min_silence_dura
             segments[i]['end'] = mean
             if segments[i + 1]['start'] < mean:
                 segments[i + 1]['start'] = mean
+    return segments
+
+
+def trim_silence(audio, segments):
+    for i, segment in enumerate(segments):
+        cut = audio[segments[i]['start']:segments[i]['end']]
+        left_ms, right_ms = util_vad.trim_silence(cut)
+        if left_ms and right_ms:
+            segments[i]['end'] = segments[i]['end'] - (segments[i]['end'] - segments[i]['start'] - right_ms)
+            segments[i]['start'] = segments[i]['start'] + left_ms
+    return segments
+
+
+def segment_split(audio, segments):
+    results = []
+    for i, segment in enumerate(segments):
+        if segment['end'] - segment['start'] < 3000:
+            results.append(segment)
+            continue
+        cut = audio[segments[i]['start']:segments[i]['end']]
+        segs = segment_divide_faster_whisper.segment_divide(cut)
+        if len(segs) <= 1:
+            results.append(segment)
+            continue
+
+        iss = 'めでたしめでたし' in segment['text']
+        if iss:
+            print('0', segs)
+
+        segs = trim_silence(cut, segs)
+        if iss:
+            print('trim_silence', segs)
+
+        segs = find_valley(cut, segs)
+        if iss:
+            print('find_valley', segs)
+
+        # for j, _ in enumerate(segs):
+        #     if j == len(segs) - 1:
+        #         continue
+        #     segs[j]['end'] = segs[j + 1]['start']
+        # if iss:
+        #     print('+1', segs)
+
+        segs = util_subt.clipp_segments(segs, len(cut))
+        segs[0]['start'] = 0
+        segs[-1]['end'] = len(cut)
+        if iss:
+            print('clipp_segments', segs)
+            print('len(cut)', len(cut))
+
+        segs = util_subt.shift_segments_time(segs, segment['start'])
+        if iss:
+            print('shift_segments_time', segs)
+
+        results.extend(segs)
+    return results
+
+
+def segment_divide(audio_path, segment_detect_path, output_dir, auth_token):
+    json_path = os.path.join(output_dir, 'segment_divide.json')
+    srt_path = os.path.join(output_dir, 'segment_divide.srt')
+    if util.path_exist(json_path):
+        return json_path
+
+    audio = AudioSegment.from_wav(audio_path)
+    last_end = len(audio)
+
+    subt = util.read_file_to_obj(segment_detect_path)
+    segments = util_subt.subt2segments(subt)
+    segments = util_subt.clipp_segments(segments, last_end)
+
+    segments = has_speech(audio, segments)
+    util.save_as_json(segments, os.path.join(output_dir, 'has_speech.json'))
+
+    segments = find_valley(audio, segments)
     util.save_as_json(segments, os.path.join(output_dir, 'find_valley.json'))
 
-    # for i, segment in enumerate(segments):
-    #     cut = audio[segments[i]['start']:segments[i]['end']]
-    #     left_ms, right_ms = util_vad.trim_silence(cut)
-    #     segments[i]['end'] = segments[i]['end'] - (segments[i]['end'] - segments[i]['start'] - right_ms)
-    #     segments[i]['start'] = segments[i]['start'] + left_ms
-    # util.save_as_json(segments, os.path.join(output_dir, 'trim_silence.json'))
+    segments = segment_split(audio, segments)
+    util.save_as_json(segments, os.path.join(output_dir, 'segment_split.json'))
+
+    segments = trim_silence(audio, segments)
+    util.save_as_json(segments, os.path.join(output_dir, 'trim_silence.json'))
 
     for i, segment in enumerate(segments):
         segments[i]['vad_type'] = 'speech'
     segments = util_subt.fill_segments(segments, last_end=last_end, vad_type='silence')
     segments = util_subt.clipp_segments(segments, last_end)
+    util.save_as_json(segments, os.path.join(output_dir, 'fill_segments.json'))
 
     for i, segment in enumerate(segments):
         segments[i]['file_name'] = f"{i:05d}_{segments[i]['vad_type']}"
@@ -75,8 +141,9 @@ def exec(manager):
     logger.info("segment_divide,enter: %s", json.dumps(manager))
     audio_path = manager.get('audio_path')
     segment_detect_path = manager.get('segment_detect_path')
+    auth_token = manager.get('auth_token')
     output_dir = os.path.join(manager.get('output_dir'), "segment_divide")
-    segment_divide_path = segment_divide(audio_path, segment_detect_path, output_dir)
+    segment_divide_path = segment_divide(audio_path, segment_detect_path, output_dir, auth_token)
     manager['segment_divide_path'] = segment_divide_path
     logger.info("segment_divide,leave: %s", json.dumps(manager))
     util.exec_gc()

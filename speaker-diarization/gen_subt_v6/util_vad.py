@@ -4,7 +4,7 @@ import math
 
 
 def has_speech_by_data(data, frame_rate=50, threshold=0.8):
-    simple_rate, data = util_audio.pydub2wavfile(data)
+    simple_rate, data = util_audio.pydub2TenVad(data)
     frame_simple = int(simple_rate / frame_rate)
     frame_cnt = data.shape[0] // frame_simple
     ten_vad_instance = TenVad(frame_simple)
@@ -21,7 +21,7 @@ def has_speech_by_data(data, frame_rate=50, threshold=0.8):
 
 
 def has_silence_by_data(data, frame_rate=50, threshold=0.6):
-    simple_rate, data = util_audio.pydub2wavfile(data)
+    simple_rate, data = util_audio.pydub2TenVad(data)
     frame_simple = int(simple_rate / frame_rate)
     frame_cnt = data.shape[0] // frame_simple
     ten_vad_instance = TenVad(frame_simple)
@@ -38,7 +38,7 @@ def has_silence_by_data(data, frame_rate=50, threshold=0.6):
 
 
 def find_valley(data, frame_rate=50, speech_threshold=0.8, silence_threshold=0.4):
-    simple_rate, data = util_audio.pydub2wavfile(data)
+    simple_rate, data = util_audio.pydub2TenVad(data)
     frame_simple = int(simple_rate / frame_rate)
     frame_cnt = data.shape[0] // frame_simple
     ten_vad_instance = TenVad(frame_simple)
@@ -56,8 +56,8 @@ def find_valley(data, frame_rate=50, speech_threshold=0.8, silence_threshold=0.4
     return min_probability <= silence_threshold, min_probability, probability_ms
 
 
-def trim_silence(data, frame_rate=50, speech_threshold=0.8, silence_threshold=0.4):
-    simple_rate, data = util_audio.pydub2wavfile(data)
+def trim_silence(data, frame_rate=50, speech_threshold=0.8, silence_threshold=0.2):
+    simple_rate, data = util_audio.pydub2TenVad(data)
     frame_simple = int(simple_rate / frame_rate)
     frame_cnt = data.shape[0] // frame_simple
     ten_vad_instance = TenVad(frame_simple)
@@ -66,6 +66,8 @@ def trim_silence(data, frame_rate=50, speech_threshold=0.8, silence_threshold=0.
         audio_data = data[i * frame_simple: (i + 1) * frame_simple]
         probability, _ = ten_vad_instance.process(audio_data)
         probabilitys.append(probability)
+    if len(probabilitys) < 3:
+        return None, None
     max_i = 0
     max_probability = 0
     for i, probability in enumerate(probabilitys):
