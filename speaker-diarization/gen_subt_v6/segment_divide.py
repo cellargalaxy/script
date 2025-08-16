@@ -51,7 +51,7 @@ def trim_silence(audio, segments):
     return segments
 
 
-def segment_split(audio, segments):
+def split_segment(audio, segments):
     results = []
     for i, segment in enumerate(segments):
         if segment['end'] - segment['start'] < 3000:
@@ -62,42 +62,17 @@ def segment_split(audio, segments):
         if len(segs) <= 1:
             results.append(segment)
             continue
-
-        iss = 'めでたしめでたし' in segment['text']
-        if iss:
-            print('0', segs)
-
         segs = trim_silence(cut, segs)
-        if iss:
-            print('trim_silence', segs)
-
         segs = find_valley(cut, segs)
-        if iss:
-            print('find_valley', segs)
-
-        # for j, _ in enumerate(segs):
-        #     if j == len(segs) - 1:
-        #         continue
-        #     segs[j]['end'] = segs[j + 1]['start']
-        # if iss:
-        #     print('+1', segs)
-
         segs = util_subt.clipp_segments(segs, len(cut))
         segs[0]['start'] = 0
         segs[-1]['end'] = len(cut)
-        if iss:
-            print('clipp_segments', segs)
-            print('len(cut)', len(cut))
-
         segs = util_subt.shift_segments_time(segs, segment['start'])
-        if iss:
-            print('shift_segments_time', segs)
-
         results.extend(segs)
     return results
 
 
-def segment_divide(audio_path, segment_detect_path, output_dir, auth_token):
+def segment_divide(audio_path, segment_detect_path, output_dir):
     json_path = os.path.join(output_dir, 'segment_divide.json')
     srt_path = os.path.join(output_dir, 'segment_divide.srt')
     if util.path_exist(json_path):
@@ -116,8 +91,8 @@ def segment_divide(audio_path, segment_detect_path, output_dir, auth_token):
     segments = find_valley(audio, segments)
     util.save_as_json(segments, os.path.join(output_dir, 'find_valley.json'))
 
-    segments = segment_split(audio, segments)
-    util.save_as_json(segments, os.path.join(output_dir, 'segment_split.json'))
+    segments = split_segment(audio, segments)
+    util.save_as_json(segments, os.path.join(output_dir, 'split_segment.json'))
 
     segments = trim_silence(audio, segments)
     util.save_as_json(segments, os.path.join(output_dir, 'trim_silence.json'))
@@ -141,9 +116,8 @@ def exec(manager):
     logger.info("segment_divide,enter: %s", json.dumps(manager))
     audio_path = manager.get('audio_path')
     segment_detect_path = manager.get('segment_detect_path')
-    auth_token = manager.get('auth_token')
     output_dir = os.path.join(manager.get('output_dir'), "segment_divide")
-    segment_divide_path = segment_divide(audio_path, segment_detect_path, output_dir, auth_token)
+    segment_divide_path = segment_divide(audio_path, segment_detect_path, output_dir)
     manager['segment_divide_path'] = segment_divide_path
     logger.info("segment_divide,leave: %s", json.dumps(manager))
     util.exec_gc()
