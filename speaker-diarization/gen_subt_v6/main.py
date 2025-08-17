@@ -30,6 +30,30 @@ logger = util.get_logger()
 
 video_paths = [
     '../holo/S01E01.mkv',
+    '../holo/S01E02.mkv',
+    '../holo/S01E03.mkv',
+    '../holo/S01E04.mkv',
+    '../holo/S01E05.mkv',
+    '../holo/S01E06.mkv',
+    '../holo/S01E07.mkv',
+    '../holo/S01E08.mkv',
+    '../holo/S01E09.mkv',
+    '../holo/S01E10.mkv',
+    '../holo/S01E11.mkv',
+    '../holo/S01E12.mkv',
+    '../holo/S01E13.mkv',
+    '../holo/S01E14.mkv',
+    '../holo/S01E15.mkv',
+    '../holo/S01E16.mkv',
+    '../holo/S01E17.mkv',
+    '../holo/S01E18.mkv',
+    '../holo/S01E19.mkv',
+    '../holo/S01E20.mkv',
+    '../holo/S01E21.mkv',
+    '../holo/S01E22.mkv',
+    '../holo/S01E23.mkv',
+    '../holo/S01E24.mkv',
+    '../holo/S01E25.mkv',
 ]
 
 for i, video_path in enumerate(video_paths):
