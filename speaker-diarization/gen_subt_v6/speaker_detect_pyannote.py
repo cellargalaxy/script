@@ -50,8 +50,8 @@ def speaker_detect(speaks, auth_token):
         embedding_list.append(embedding)
     embeddings = np.array(embedding_list)
 
-    clustering = AgglomerativeClustering().instantiate({"method": "average", "min_cluster_size": 0, "threshold": 0.6})
-    max_clusters = math.ceil(math.sqrt(len(embedding_list)))
+    clustering = AgglomerativeClustering().instantiate({"method": "average", "min_cluster_size": 0, "threshold": 0.5})
+    max_clusters = math.ceil(len(embedding_list) / 2.0)
     max_clusters = max(max_clusters, 3)
     clusters = clustering.cluster(embeddings=embeddings, min_clusters=1, max_clusters=max_clusters)
 
