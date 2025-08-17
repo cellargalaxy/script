@@ -22,7 +22,7 @@ def extract_audio(video_path, audio_path, audio_track_index=0):
             logger.info("提取音轨，音轨, %s:%s", track.get('index', 0) - 1,
                         track.get('tags', {}).get('language', '未知'))
         time.sleep(0.5)
-        track_index = int(util.input_timeout("输入音轨编号: ", 60, audio_track_index))
+        track_index = int(util.input_timeout("输入音轨编号: ", 5, audio_track_index))
         if track_index < 0 or len(audio_tracks) <= track_index:
             logger.info("提取音轨，音轨选择错误")
             continue

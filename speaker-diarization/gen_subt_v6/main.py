@@ -28,30 +28,35 @@ import speaker_overall
 
 logger = util.get_logger()
 
-manager = {
-    "video_path": '../long.mkv',
-    "audio_track_index": 0,
-    "auth_token": os.environ.get('auth_token', ''),
-}
+video_paths = [
+    '../holo/S01E01.mkv',
+]
 
-util.print_device_info()
-init.exec(manager)
+for i, video_path in enumerate(video_paths):
+    manager = {
+        "video_path": video_path,
+        "audio_track_index": 0,
+        "auth_token": os.environ.get('auth_token', ''),
+    }
 
-extract_audio.exec(manager)
-extract_vocal.exec(manager)
-extract_main_vocal.exec(manager)
-extract_dereverb.exec(manager)
-merge_channel.exec(manager)
+    util.print_device_info()
+    init.exec(manager)
 
-part_detect.exec(manager)
-part_divide.exec(manager)
-part_split.exec(manager)
+    extract_audio.exec(manager)
+    extract_vocal.exec(manager)
+    extract_main_vocal.exec(manager)
+    extract_dereverb.exec(manager)
+    merge_channel.exec(manager)
 
-segment_detect.exec(manager)
-segment_divide.exec(manager)
-segment_split.exec(manager)
+    part_detect.exec(manager)
+    part_divide.exec(manager)
+    part_split.exec(manager)
 
-speaker_segment.exec(manager)
-speaker_join.exec(manager)
-speaker_neigh.exec(manager)
-speaker_overall.exec(manager)
+    segment_detect.exec(manager)
+    segment_divide.exec(manager)
+    segment_split.exec(manager)
+
+    speaker_segment.exec(manager)
+    speaker_join.exec(manager)
+    speaker_neigh.exec(manager)
+    speaker_overall.exec(manager)
