@@ -43,7 +43,7 @@ for i, video_path in enumerate(video_paths):
     init.exec(manager)
 
     extract_audio.exec(manager)
-    extract_vocal.exec(manager)
+    # extract_vocal.exec(manager)
     extract_main_vocal.exec(manager)
     extract_dereverb.exec(manager)
     merge_channel.exec(manager)
