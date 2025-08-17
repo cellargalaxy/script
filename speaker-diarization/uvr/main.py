@@ -45,7 +45,7 @@ def exec_batch(video_paths):
 
 
 video_paths = [
-    '../material/holo/S01E01.mkv',
+    '../material/music/love_2000.flac',
 ]
 
 exec_batch(video_paths)
