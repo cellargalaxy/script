@@ -25,6 +25,7 @@ import speaker_segment
 import speaker_join
 import speaker_neigh
 import speaker_overall
+import speaker_export
 
 logger = util.get_logger()
 
@@ -51,6 +52,7 @@ def exec(manager):
     speaker_join.exec(manager)
     speaker_neigh.exec(manager)
     speaker_overall.exec(manager)
+    speaker_export.exec(manager)
 
 
 def exec_batch(video_paths):
@@ -62,7 +64,9 @@ def exec_batch(video_paths):
         }
         try:
             exec(manager)
-        except Exception:
+        except Exception as e:
+            logger.error("exec_batch,err: %s", e)
+            util.input_timeout("异常，回车继续: ", 60)
             output_dir = manager.get('output_dir', None)
             if output_dir and len(output_dir) > 0 and util.path_exist(output_dir):
                 util.delete_path(output_dir)
