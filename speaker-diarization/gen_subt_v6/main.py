@@ -67,10 +67,6 @@ def exec_batch(video_paths):
         except Exception as e:
             logger.error("exec_batch,err: %s", e)
             util.input_timeout("异常，回车继续: ", 60)
-            output_dir = manager.get('output_dir', None)
-            if output_dir and len(output_dir) > 0 and util.path_exist(output_dir):
-                util.delete_path(output_dir)
-            exec(manager)
 
 
 video_paths = [
