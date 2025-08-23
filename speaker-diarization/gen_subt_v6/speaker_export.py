@@ -17,12 +17,14 @@ def speaker_export(audio_path, speaker_overall_path, output_dir):
 
     audio = AudioSegment.from_wav(audio_path)
     for i, speak in enumerate(speaks):
-        segments = speak['segments']
+        segments = speaks[i]['segments']
         for j, segment in enumerate(segments):
-            cut_path = os.path.join(output_dir, 'speaker', speak['file_name'], f"{segment['file_name']}.wav")
+            cut_path = os.path.join(output_dir, 'speaker', speaks[i]['file_name'], f"{segments[j]['file_name']}.wav")
+            segments[j]['wav_path'] = cut_path
             util.mkdir(cut_path)
-            cut = audio[segment['start']:segment['end']]
+            cut = audio[segments[j]['start']:segments[j]['end']]
             cut.export(cut_path, format='wav')
+        speaks[i]['segments'] = segments
 
     util.save_as_json(speaks, json_path)
     return json_path

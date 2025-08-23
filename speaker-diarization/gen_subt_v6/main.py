@@ -26,6 +26,7 @@ import speaker_join
 import speaker_neigh
 import speaker_overall
 import speaker_export
+import loudness_match
 
 logger = util.get_logger()
 
@@ -54,6 +55,8 @@ def exec(manager):
     speaker_overall.exec(manager)
     speaker_export.exec(manager)
 
+    loudness_match.exec(manager)
+
 
 def exec_batch(video_paths):
     for i, video_path in enumerate(video_paths):
@@ -71,30 +74,30 @@ def exec_batch(video_paths):
 
 video_paths = [
     '../material/holo/S01E01.mkv',
-    '../material/holo/S01E02.mkv',
-    '../material/holo/S01E03.mkv',
-    '../material/holo/S01E04.mkv',
-    '../material/holo/S01E05.mkv',
-    '../material/holo/S01E06.mkv',
-    '../material/holo/S01E07.mkv',
-    '../material/holo/S01E08.mkv',
-    '../material/holo/S01E09.mkv',
-    '../material/holo/S01E10.mkv',
-    '../material/holo/S01E11.mkv',
-    '../material/holo/S01E12.mkv',
-    '../material/holo/S01E13.mkv',
-    '../material/holo/S01E14.mkv',
-    '../material/holo/S01E15.mkv',
-    '../material/holo/S01E16.mkv',
-    '../material/holo/S01E17.mkv',
-    '../material/holo/S01E18.mkv',
-    '../material/holo/S01E19.mkv',
-    '../material/holo/S01E20.mkv',
-    '../material/holo/S01E21.mkv',
-    '../material/holo/S01E22.mkv',
-    '../material/holo/S01E23.mkv',
-    '../material/holo/S01E24.mkv',
-    '../material/holo/S01E25.mkv',
+    # '../material/holo/S01E02.mkv',
+    # '../material/holo/S01E03.mkv',
+    # '../material/holo/S01E04.mkv',
+    # '../material/holo/S01E05.mkv',
+    # '../material/holo/S01E06.mkv',
+    # '../material/holo/S01E07.mkv',
+    # '../material/holo/S01E08.mkv',
+    # '../material/holo/S01E09.mkv',
+    # '../material/holo/S01E10.mkv',
+    # '../material/holo/S01E11.mkv',
+    # '../material/holo/S01E12.mkv',
+    # '../material/holo/S01E13.mkv',
+    # '../material/holo/S01E14.mkv',
+    # '../material/holo/S01E15.mkv',
+    # '../material/holo/S01E16.mkv',
+    # '../material/holo/S01E17.mkv',
+    # '../material/holo/S01E18.mkv',
+    # '../material/holo/S01E19.mkv',
+    # '../material/holo/S01E20.mkv',
+    # '../material/holo/S01E21.mkv',
+    # '../material/holo/S01E22.mkv',
+    # '../material/holo/S01E23.mkv',
+    # '../material/holo/S01E24.mkv',
+    # '../material/holo/S01E25.mkv',
 ]
 
 exec_batch(video_paths)
