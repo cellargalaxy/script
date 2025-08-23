@@ -11,3 +11,5 @@ for f in */*.wav; do
     mv "$f" "$new"
 done
 
+python3 sum_wav_duration.py
+sleep 10
