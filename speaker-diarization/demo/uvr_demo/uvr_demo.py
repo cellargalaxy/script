@@ -54,7 +54,7 @@ models = [
     # "Reverb_HQ_By_FoxJoy.onnx",
     # "dereverb_mel_band_roformer_anvuew_sdr_19.1729.ckpt"
     #
-    # "5_HP-Karaoke-UVR.pth",
+    # "5_HP-Karaoke-UVR.pth", # 安装依赖：sudo apt-get install -y libsamplerate0 libsamplerate0-dev
     # "6_HP-Karaoke-UVR.pth",
     # "9_HP2-UVR.pth",  # 减淡了和声
     # "16_SP-UVR-MID-44100-2.pth",  # 减淡了和声
@@ -66,6 +66,12 @@ models = [
     # "UVR-MDX-NET-Inst_HQ_5.onnx", # 和声完全没有被去掉
     # "UVR-MDX-NET-Inst_Main.onnx", # 和声完全没有被去掉
 
+    # "melband_roformer_big_beta5e.ckpt",  # 和声完全没有被去掉
+    # "mel_band_roformer_instrumental_becruily.ckpt",  # 和声完全没有被去掉
+    # "mel_band_roformer_vocals_becruily.ckpt",  # 和声完全没有被去掉
+    # "melband_roformer_inst_v2.ckpt",  # 和声完全没有被去掉
+    # "melband_roformer_instvox_duality_v2.ckpt",  # 和声完全没有被去掉
+
     # "mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt",  # 好
     # "mel_band_roformer_karaoke_gabox.ckpt",  # 好
     # "mel_band_roformer_karaoke_becruily.ckpt",  # 好
@@ -75,20 +81,20 @@ models = [
 for model in models:
     separator = None
     try:
+        print(model)
         separator = Separator(model_file_dir=os.path.join(util.get_home_dir(), '.cache', 'uvr'),
                               output_dir=os.path.join('output', model))
         separator.load_model(model_filename=model)
         output_files = separator.separate([
-            '../../demo_jpn_single.wav',
-            # 'BOW_AND_ARROW.flac',
-            # 'clover_wish.flac',
-            # 'Credit_Theme.flac',
-            # 'gang.mp3',
-            # 'I_Really.flac',
-            # 'innocent_arrogance.flac',
-            # 'more_than_words.flac',
+            'output/noreverb.wav'
+            # '../../material/demo.wav',
+            # '../../material/BOW_AND_ARROW.flac',
+            # '../../material/clover_wish.flac',
+            # '../../material/Credit_Theme.flac',
+            # '../../material/I_Really.flac',
+            # '../../material/more_than_words.flac',
         ])
     except Exception as e:
         print(f'Failed to load model: {model}\nError: {e}')
-    finally:
+    # finally:
         print('Done')

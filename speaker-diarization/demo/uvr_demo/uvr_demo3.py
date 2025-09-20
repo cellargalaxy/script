@@ -22,6 +22,7 @@ models = [
     # 'mel_band_roformer_instrumental_fullness_noise_v4_gabox.ckpt',
 
     # 效果都不好
+    # 没有一个是能把RipX里识别出的那种噪声较好去掉的，甚至会加上更多
 ]
 for model in models:
     separator = None
@@ -29,7 +30,7 @@ for model in models:
         separator = Separator(model_file_dir=os.path.join(util.get_home_dir(), '.cache', 'uvr'),
                               output_dir=os.path.join('output', model))
         separator.load_model(model_filename=model)
-        output_files = separator.separate(['vocals.wav'])
+        output_files = separator.separate(['../../material/noreverb.wav'])
     except Exception as e:
         print(f'Failed to load model: {model}\nError: {e}')
     finally:
