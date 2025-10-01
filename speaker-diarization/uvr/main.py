@@ -1,8 +1,5 @@
 import os
 
-bin_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bin")
-os.environ["PATH"] = bin_dir + os.pathsep + os.environ.get("PATH", "")
-
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
 os.environ['http_proxy'] = 'http://192.168.123.7:10808'
 os.environ['https_proxy'] = 'http://192.168.123.7:10808'
@@ -45,7 +42,7 @@ def exec_batch(video_paths):
 
 
 video_paths = [
-    '../material/music/love_2000.flac',
+    '../material/music/lanlianhua.flac',
 ]
 
 exec_batch(video_paths)
