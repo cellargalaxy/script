@@ -1,8 +1,5 @@
 import os
 
-bin_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bin")
-os.environ["PATH"] = bin_dir + os.pathsep + os.environ.get("PATH", "")
-
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
 os.environ['http_proxy'] = 'http://192.168.123.7:10808'
 os.environ['https_proxy'] = 'http://192.168.123.7:10808'
@@ -68,36 +65,12 @@ def exec_batch(video_paths):
         try:
             exec(manager)
         except Exception as e:
-            logger.error("exec_batch,err: %s", e)
+            logger.error("exec_batch failed.", exc_info=True)
             util.input_timeout("异常，回车继续: ", 60)
 
 
 video_paths = [
-    '../material/holo/S01E01.mkv',
-    '../material/holo/S01E02.mkv',
-    '../material/holo/S01E03.mkv',
-    '../material/holo/S01E04.mkv',
-    '../material/holo/S01E05.mkv',
-    '../material/holo/S01E06.mkv',
-    '../material/holo/S01E07.mkv',
-    '../material/holo/S01E08.mkv',
-    '../material/holo/S01E09.mkv',
-    '../material/holo/S01E10.mkv',
-    '../material/holo/S01E11.mkv',
-    '../material/holo/S01E12.mkv',
-    '../material/holo/S01E13.mkv',
-    '../material/holo/S01E14.mkv',
-    '../material/holo/S01E15.mkv',
-    '../material/holo/S01E16.mkv',
-    '../material/holo/S01E17.mkv',
-    '../material/holo/S01E18.mkv',
-    '../material/holo/S01E19.mkv',
-    '../material/holo/S01E20.mkv',
-    '../material/holo/S01E21.mkv',
-    '../material/holo/S01E22.mkv',
-    '../material/holo/S01E23.mkv',
-    '../material/holo/S01E24.mkv',
-    '../material/holo/S01E25.mkv',
+    '../material/demo.mkv',
 ]
 
 exec_batch(video_paths)

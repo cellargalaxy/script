@@ -24,8 +24,3 @@ venv
 jpegoptim
 jpegoptim-1.5.5-x64-linux.zip
 llm_assistant/model
-*.flac
-core
-json1.json
-json2.json
-*.txt
