@@ -6,12 +6,16 @@ read -p "请输入最小语音长度(秒): " min_len
 
 # 检查文件夹是否存在
 if [[ ! -d "$folder" ]]; then
-    echo "❌ 文件夹不存在: $folder"
+    echo "[ERR ] 文件夹不存在: $folder"
     exit 1
 fi
 
 # 初始化总时长
 total_duration=0
+
+echo "开始扫描文件夹: $folder"
+echo "最小语音长度: ${min_len} 秒"
+echo "-----------------------------------"
 
 # 遍历文件夹下的所有文件
 for file in "$folder"/*; do
@@ -24,7 +28,7 @@ for file in "$folder"/*; do
 
     # 如果时长获取失败，跳过
     if [[ -z "$duration" ]]; then
-        echo "⚠️ 无法获取时长: $file"
+        printf "[SKIP] 无法获取时长: %-40s\n" "$(basename "$file")"
         continue
     fi
 
@@ -32,15 +36,15 @@ for file in "$folder"/*; do
     duration_int=$(printf "%.0f" "$duration")
 
     if (( duration_int < min_len )); then
-        echo "🗑️ 删除: $file (时长 ${duration_int}s < ${min_len}s)"
+        printf "[DEL ] 删除: %-40s (时长 %4ds < %4ds)\n" "$(basename "$file")" "$duration_int" "$min_len"
         rm -f "$file"
     else
-        echo "✅ 保留: $file (时长 ${duration_int}s)"
+        printf "[KEEP] 保留: %-40s (时长 %4ds)\n" "$(basename "$file")" "$duration_int"
         total_duration=$((total_duration + duration_int))
     fi
 done
 
 echo "-----------------------------------"
-echo "保留下来的文件总时长: ${total_duration} 秒"
+printf "保留下来的文件总时长: %d 秒\n" "$total_duration"
 echo "脚本将在 60 秒后退出..."
 sleep 60
