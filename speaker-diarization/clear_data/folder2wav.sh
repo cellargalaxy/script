@@ -11,6 +11,9 @@ check_dependencies() {
     fi
 }
 
+# 全局变量: 用户选择的采样率 (为空则保持原采样率)
+SELECTED_SR=""
+
 # -----------------------------------------------------------------------------
 # 功能: 将单个音频文件以最高质量转换为 WAV 格式
 # 入参 1: 输入文件路径
@@ -45,9 +48,14 @@ convert_to_wav() {
         ;;
     esac
 
-    # 3. 使用 ffmpeg 进行转换
-    echo "  -> 正在转换: $(basename "$input_file") (格式: $sample_fmt, 编码器: $codec)"
-    ffmpeg -i "$input_file" -acodec "$codec" "$output_file" -hide_banner -loglevel error
+    # 3. 构造 ffmpeg 命令参数
+    if [ -n "$SELECTED_SR" ]; then
+        echo "  -> 正在转换: $(basename "$input_file") (格式: $sample_fmt, 编码器: $codec, 采样率: $SELECTED_SR)"
+        ffmpeg -i "$input_file" -acodec "$codec" -ar "$SELECTED_SR" "$output_file" -hide_banner -loglevel error
+    else
+        echo "  -> 正在转换: $(basename "$input_file") (格式: $sample_fmt, 编码器: $codec, 采样率: 保持原始)"
+        ffmpeg -i "$input_file" -acodec "$codec" "$output_file" -hide_banner -loglevel error
+    fi
 }
 
 # -----------------------------------------------------------------------------
@@ -128,6 +136,20 @@ main() {
 
     # 获取输出文件夹路径 (选填)
     read -p "请输入输出文件夹的路径 (直接回车则自动创建): " output_dir
+
+    # 采样率选择
+    echo ""
+    echo "请选择采样率 (回车保持原始采样率):"
+    echo "1) 16000 Hz"
+    echo "2) 44100 Hz"
+    echo "3) 48000 Hz"
+    read -p "请输入选项编号 (1/2/3): " sr_choice
+    case "$sr_choice" in
+        1) SELECTED_SR=16000 ;;
+        2) SELECTED_SR=44100 ;;
+        3) SELECTED_SR=48000 ;;
+        *) SELECTED_SR="" ;;
+    esac
 
     echo "" # 换行
 
