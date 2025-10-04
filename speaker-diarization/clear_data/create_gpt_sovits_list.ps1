@@ -11,7 +11,7 @@ if (-not (Test-Path -Path $FolderPath -PathType Container)) {
 $FolderName = (Split-Path -Path $FolderPath -Leaf)
 
 # 3. Select language type
-$LanguageOptions = @("JA", "ZH")
+$LanguageOptions = @("JA", "ZH", "EN")
 [int]$Choice = -1
 
 do {
