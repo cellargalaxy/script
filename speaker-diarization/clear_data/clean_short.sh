@@ -1,5 +1,12 @@
 #!/bin/bash
 
+: <<'SCRIPT_INFO'
+使用ffprobe与ffmpeg，写一个shell脚本
+使用read输入两个参数，文件夹路径与最小语音长度（秒）
+文件夹路径下有多个语音/视频文件，删除语音长度小于最小语音长度的文件
+统计并打印保留下来的文件的总语音长度，sleep一分钟后才退出
+SCRIPT_INFO
+
 # 输入两个参数：文件夹路径 和 最小语音长度（秒）
 read -p "请输入文件夹路径: " folder
 read -p "请输入最小语音长度(秒): " min_len
