@@ -70,8 +70,11 @@ batch_convert_folder() {
 
     # 1. 确定输出文件夹路径
     if [ -z "$output_dir_arg" ]; then
-        # 如果未提供输出目录，则自动生成一个
-        output_dir="${input_dir}_wav"
+        # 获取输入目录的上级目录
+        local parent_dir
+        parent_dir=$(dirname "$input_dir")
+        # 输出目录固定为上级目录下的 wav
+        output_dir="${parent_dir}/wav"
         echo "未指定输出文件夹，将使用默认路径: $output_dir"
     else
         output_dir="$output_dir_arg"
