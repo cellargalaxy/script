@@ -1,4 +1,3 @@
-$pythonScript = @"
 """
 写一个python脚本，只用标准库，无外部依赖
 1. 脚本启动后，手动在终端输入两个参数
@@ -57,9 +56,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-"@
-$scriptPath = "$env:TEMP\temp_script.py"
-Set-Content -Path $scriptPath -Value $pythonScript
-python $scriptPath
-Remove-Item $scriptPath  # 清理临时文件
