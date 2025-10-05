@@ -43,11 +43,11 @@ def main():
         print("输入路径无效或不是真实文件夹。")
         return
 
-    print("请输入输出文件夹路径（选填，默认与输入文件夹同级，名称为short）：")
+    print("请输入输出文件夹路径（选填，默认与输入文件夹同级，名称为data_short）：")
     output_dir = input().strip()
     if not output_dir:
         parent = os.path.dirname(os.path.abspath(input_dir))
-        output_dir = os.path.join(parent, "short")
+        output_dir = os.path.join(parent, "data_short")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
 
