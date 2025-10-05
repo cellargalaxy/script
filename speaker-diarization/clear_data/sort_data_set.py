@@ -1,16 +1,17 @@
 """
 写一个python脚本，只用标准库，无外部依赖
 1. input输入一个文件夹路径，例如d:/demo
-1.1 文件夹下可能会有多个子文件夹，例如raw/train/test等等
+1.1 文件夹下可能会有多个以「data_」开头的子文件夹，例如data_raw/data_train/data_test等等
 2. 在文件夹下，输出一个csv文件，文件名称与文件夹相同，例如d:/demo/demo.csv，如果该csv文件已存在，则覆盖原数据
 3. csv文件有两列
 3.1 第一列表头是name，存储的是文件名称
 3.2 第二列表头是sort，存储的是文件所在的子文件夹名称，同一个文件可能会在多个子文件夹下，多个子文件夹名称使用英文分号分隔
 4. 遍历demo下面的全部子文件夹，获得文件名称与子文件夹名称，填写到csv中
 4.1 同一个文件名称只有一行数据，第二列使用英文分号分隔记录多个子文件夹名称
-4.2 对第二列的子文件夹名称进行去除并排序
-4.3 保存csv文件
-4.4 遍历过程中打印执行情况
+4.2 csv文件以第一列升序排序
+4.3 对第二列的子文件夹名称进行去除并排序
+4.4 保存csv文件
+4.5 遍历过程中打印执行情况
 5. 最后点击任意键退出脚本
 """
 
@@ -30,8 +31,12 @@ def main():
 
     print(f"正在遍历文件夹: {folder}")
     file_to_folders = {}
-    subfolders = [f for f in os.listdir(folder) if os.path.isdir(os.path.join(folder, f))]
-    print(f"发现子文件夹: {subfolders}")
+    # 只处理以"data_"开头的子文件夹
+    subfolders = [
+        f for f in os.listdir(folder)
+        if os.path.isdir(os.path.join(folder, f)) and f.startswith("data_")
+    ]
+    print(f"发现以'data_'开头的子文件夹: {subfolders}")
 
     for subfolder in subfolders:
         subfolder_path = os.path.join(folder, subfolder)
@@ -47,6 +52,9 @@ def main():
     for file, folders in file_to_folders.items():
         sorted_folders = sorted(set(folders))
         rows.append([file, ";".join(sorted_folders)])
+
+    # 按第一列（文件名）升序排序
+    rows.sort(key=lambda x: x[0])
 
     print(f"正在写入CSV文件: {csv_path}")
     with open(csv_path, "w", newline='', encoding="utf-8") as csvfile:
