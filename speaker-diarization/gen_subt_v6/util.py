@@ -88,6 +88,8 @@ def get_device_type():
 
 
 def print_device_info():
+    path_env = os.environ.get('PATH')
+    logger.info(f"PATH: {path_env}")
     device_type = get_device_type()
     logger.info(f"device_type: {device_type}")
     device_info = get_device_info()
@@ -157,6 +159,14 @@ def get_ancestor_dir(file_path):
     """
     file_dir = os.path.dirname(file_path)
     return file_dir
+
+
+def json_dumps(obj):
+    return json.dumps(obj, ensure_ascii=False)
+
+
+def json_loads(content):
+    return json.loads(content)
 
 
 def save_as_json(obj, save_path):

@@ -2,14 +2,14 @@ sudo apt install -y libc++1 # ten-vad需安装
 
 conda install cudnn cuda-version=12 -c nvidia
 
-pip install GPUtil==1.4.0
-pip install inputimeout==1.0.4
-pip install torch==2.8.0
-pip install numpy==2.2.6
-pip install pysubs2==1.8.0
-pip install pydub==0.25.1
+pip install GPUtil
+pip install inputimeout
+pip install --upgrade torch==2.6.0+cu126 torchvision==0.21.0+cu126 torchaudio==2.6.0+cu126 --index-url https://download.pytorch.org/whl/cu126
+pip install numpy
+pip install pysubs2
+pip install pydub
 pip install -U --force-reinstall -v git+https://github.com/TEN-framework/ten-vad.git
 pip install pyannote.audio==3.4.0
-pip install faster-whisper==1.2.0
-pip install "audio-separator[gpu]"==0.39.0
-pip install pyloudnorm==0.1.1
+pip install faster-whisper
+pip install "audio-separator[gpu]"
+pip install pyloudnorm
