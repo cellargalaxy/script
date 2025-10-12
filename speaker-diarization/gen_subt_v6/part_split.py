@@ -1,5 +1,4 @@
 import util
-import json
 import os
 from pydub import AudioSegment
 import util_subt
@@ -33,11 +32,11 @@ def part_split(audio_path, part_divide_path, output_dir):
 
 
 def exec(manager):
-    logger.info("part_split,enter: %s", json.dumps(manager))
+    logger.info("part_split,enter: %s", util.json_dumps(manager))
     audio_path = manager.get('audio_path')
     part_divide_path = manager.get('part_divide_path')
     output_dir = os.path.join(manager.get('output_dir'), "part_split")
     part_split_path = part_split(audio_path, part_divide_path, output_dir)
     manager['part_split_path'] = part_split_path
-    logger.info("part_split,leave: %s", json.dumps(manager))
+    logger.info("part_split,leave: %s", util.json_dumps(manager))
     util.exec_gc()

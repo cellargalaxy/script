@@ -1,7 +1,6 @@
 import util
 import util_subt
 import os
-import json
 from collections import Counter
 import segment_detect_faster_whisper
 
@@ -64,11 +63,11 @@ def gen_and_join(part_split_path, output_dir, auth_token):
 
 
 def exec(manager):
-    logger.info("segment_detect,enter: %s", json.dumps(manager))
+    logger.info("segment_detect,enter: %s", util.json_dumps(manager))
     part_split_path = manager.get('part_split_path')
     auth_token = manager.get('auth_token')
     output_dir = os.path.join(manager.get('output_dir'), "segment_detect")
     json_path = gen_and_join(part_split_path, output_dir, auth_token)
     manager['segment_detect_path'] = json_path
-    logger.info("segment_detect,leave: %s", json.dumps(manager))
+    logger.info("segment_detect,leave: %s", util.json_dumps(manager))
     segment_detect_faster_whisper.exec_gc()

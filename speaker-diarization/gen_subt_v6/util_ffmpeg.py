@@ -1,4 +1,3 @@
-import json
 import util
 
 logger = util.get_logger()
@@ -15,7 +14,7 @@ def extract_audio_track(video_path, index, audio_path):
         '-y',
         audio_path
     ]
-    logger.info("提取视频文件音轨,cmd: %s", json.dumps(cmd))
+    logger.info("提取视频文件音轨,cmd: %s", util.json_dumps(cmd))
     return_code = util.popen_cmd(cmd)
     if return_code != 0:
         logger.error("提取视频文件音轨，异常")
@@ -32,7 +31,7 @@ def merge_audio_channel(input_path, output_path):
         '-y',
         output_path
     ]
-    logger.info("合并音频声道,cmd: %s", json.dumps(cmd))
+    logger.info("合并音频声道,cmd: %s", util.json_dumps(cmd))
     return_code = util.popen_cmd(cmd)
     if return_code != 0:
         logger.error("合并音频声道，异常")

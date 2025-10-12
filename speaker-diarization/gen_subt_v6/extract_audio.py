@@ -1,5 +1,4 @@
 import util_ffprobe
-import json
 import util
 import time
 import util_ffmpeg
@@ -12,7 +11,7 @@ def extract_audio(video_path, audio_path, audio_track_index=0):
     if util.path_exist(audio_path):
         return
     audio_tracks = util_ffprobe.get_audio_track_info(video_path)
-    logger.info("提取音轨，音轨列表: %s", json.dumps(audio_tracks))
+    logger.info("提取音轨，音轨列表: %s", util.json_dumps(audio_tracks))
     if len(audio_tracks) == 0:
         logger.error("提取音轨，音轨为空")
         raise ValueError("提取音轨，音轨为空")
@@ -31,12 +30,12 @@ def extract_audio(video_path, audio_path, audio_track_index=0):
 
 
 def exec(manager):
-    logger.info("extract_audio,enter: %s", json.dumps(manager))
+    logger.info("extract_audio,enter: %s", util.json_dumps(manager))
     video_path = manager.get('video_path')
     audio_track_index = manager.get('audio_track_index', 0)
     audio_path = os.path.join(manager.get('output_dir'), "extract_audio", "wav.wav")
     extract_audio(video_path, audio_path, audio_track_index=audio_track_index)
     manager['extract_audio_path'] = audio_path
     manager['audio_path'] = audio_path
-    logger.info("extract_audio,leave: %s", json.dumps(manager))
+    logger.info("extract_audio,leave: %s", util.json_dumps(manager))
     util.exec_gc()

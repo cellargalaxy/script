@@ -1,5 +1,4 @@
 import util
-import json
 import util_subt
 import os
 import part_detect_pyannote
@@ -19,11 +18,11 @@ def part_detect(audio_path, output_dir, auth_token):
 
 
 def exec(manager):
-    logger.info("part_detect,enter: %s", json.dumps(manager))
+    logger.info("part_detect,enter: %s", util.json_dumps(manager))
     audio_path = manager.get('audio_path')
     auth_token = manager.get('auth_token')
     output_dir = os.path.join(manager.get('output_dir'), "part_detect")
     part_detect_path = part_detect(audio_path, output_dir, auth_token)
     manager['part_detect_path'] = part_detect_path
-    logger.info("part_detect,leave: %s", json.dumps(manager))
+    logger.info("part_detect,leave: %s", util.json_dumps(manager))
     util.exec_gc()

@@ -1,6 +1,5 @@
 import os
 import util
-import json
 
 logger = util.get_logger()
 
@@ -32,7 +31,7 @@ def speaker_segment(segment_paths, output_dir, min_speech_duration_ms=1000):
 
 
 def exec(manager):
-    logger.info("speaker_segment,enter: %s", json.dumps(manager))
+    logger.info("speaker_segment,enter: %s", util.json_dumps(manager))
     segment_paths = manager.get('segment_paths', [])
     segment_path = manager.get('segment_split_path', None)
     if segment_path:
@@ -40,5 +39,5 @@ def exec(manager):
     output_dir = os.path.join(manager.get('output_dir'), "speaker_segment")
     speaker_segment_path = speaker_segment(segment_paths, output_dir)
     manager['speaker_segment_path'] = speaker_segment_path
-    logger.info("speaker_segment,leave: %s", json.dumps(manager))
+    logger.info("speaker_segment,leave: %s", util.json_dumps(manager))
     util.exec_gc()

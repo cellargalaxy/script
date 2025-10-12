@@ -2,7 +2,6 @@ import speaker_detect
 import speaker_divide
 import speaker_join
 import util
-import json
 import os
 
 logger = util.get_logger()
@@ -16,11 +15,11 @@ def speaker_neigh(speak_path, output_dir, auth_token):
 
 
 def exec(manager):
-    logger.info("speaker_neigh,enter: %s", json.dumps(manager))
+    logger.info("speaker_neigh,enter: %s", util.json_dumps(manager))
     speaker_join_path = manager.get('speaker_join_path')
     auth_token = manager.get('auth_token')
     output_dir = os.path.join(manager.get('output_dir'), "speaker_neigh")
     speaker_neigh_path = speaker_neigh(speaker_join_path, output_dir, auth_token)
     manager['speaker_neigh_path'] = speaker_neigh_path
-    logger.info("speaker_neigh,leave: %s", json.dumps(manager))
+    logger.info("speaker_neigh,leave: %s", util.json_dumps(manager))
     util.exec_gc()

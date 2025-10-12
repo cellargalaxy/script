@@ -1,5 +1,4 @@
 import util
-import json
 import util_subt
 import util_vad
 import os
@@ -113,11 +112,11 @@ def segment_divide(audio_path, segment_detect_path, output_dir):
 
 
 def exec(manager):
-    logger.info("segment_divide,enter: %s", json.dumps(manager))
+    logger.info("segment_divide,enter: %s", util.json_dumps(manager))
     audio_path = manager.get('audio_path')
     segment_detect_path = manager.get('segment_detect_path')
     output_dir = os.path.join(manager.get('output_dir'), "segment_divide")
     segment_divide_path = segment_divide(audio_path, segment_detect_path, output_dir)
     manager['segment_divide_path'] = segment_divide_path
-    logger.info("segment_divide,leave: %s", json.dumps(manager))
+    logger.info("segment_divide,leave: %s", util.json_dumps(manager))
     util.exec_gc()

@@ -1,4 +1,3 @@
-import json
 import util
 
 logger = util.get_logger()
@@ -17,12 +16,12 @@ def get_audio_track_info(video_path):
         '-of', 'json',
         video_path
     ]
-    logger.info("查询视频文件音轨,cmd: %s", json.dumps(cmd))
+    logger.info("查询视频文件音轨,cmd: %s", util.json_dumps(cmd))
     stdout, return_code = util.run_cmd(cmd)
     if return_code != 0:
         logger.error("查询视频文件音轨，异常")
         raise ValueError("查询视频文件音轨，异常")
-    info = json.loads(stdout)
-    logger.info("查询视频文件音轨,info: %s", json.dumps(info))
+    info = util.json_loads(stdout)
+    logger.info("查询视频文件音轨,info: %s", util.json_dumps(info))
     audio_streams = info.get('streams', [])
     return audio_streams

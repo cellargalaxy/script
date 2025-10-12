@@ -188,7 +188,7 @@ def read_file(file_path, default_value=''):
 
 def read_file_to_obj(file_path, default_value=''):
     content = read_file(file_path, default_value=default_value)
-    obj = json.loads(content)
+    obj = json_loads(content)
     return obj
 
 

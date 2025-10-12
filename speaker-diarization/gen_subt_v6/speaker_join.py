@@ -1,6 +1,5 @@
 import os
 import util
-import json
 from pydub import AudioSegment
 
 logger = util.get_logger()
@@ -41,10 +40,10 @@ def speaker_join(speak_path, output_dir):
 
 
 def exec(manager):
-    logger.info("speaker_join,enter: %s", json.dumps(manager))
+    logger.info("speaker_join,enter: %s", util.json_dumps(manager))
     speaker_segment_path = manager.get('speaker_segment_path')
     output_dir = os.path.join(manager.get('output_dir'), "speaker_join")
     speaker_join_path = speaker_join(speaker_segment_path, output_dir)
     manager['speaker_join_path'] = speaker_join_path
-    logger.info("speaker_join,leave: %s", json.dumps(manager))
+    logger.info("speaker_join,leave: %s", util.json_dumps(manager))
     util.exec_gc()

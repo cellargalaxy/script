@@ -1,4 +1,3 @@
-import json
 import util
 import util_ffmpeg
 import os
@@ -13,11 +12,11 @@ def merge_channel(input_path, output_path):
 
 
 def exec(manager):
-    logger.info("merge_channel,enter: %s", json.dumps(manager))
+    logger.info("merge_channel,enter: %s", util.json_dumps(manager))
     input_path = manager.get('audio_path')
     output_path = os.path.join(manager.get('output_dir'), "merge_channel", "wav.wav")
     merge_channel(input_path, output_path)
     manager['merge_channel_path'] = output_path
     manager['audio_path'] = output_path
-    logger.info("merge_channel,leave: %s", json.dumps(manager))
+    logger.info("merge_channel,leave: %s", util.json_dumps(manager))
     util.exec_gc()

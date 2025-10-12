@@ -3,7 +3,6 @@ import numpy as np
 import soundfile as sf
 import pyloudnorm as pyln
 import util
-import json
 
 logger = util.get_logger()
 
@@ -87,10 +86,10 @@ def loudness_match(speaker_path, output_dir):
 
 
 def exec(manager):
-    logger.info("loudness_match,enter: %s", json.dumps(manager))
+    logger.info("loudness_match,enter: %s", util.json_dumps(manager))
     speaker_export_path = manager.get('speaker_export_path')
     output_dir = os.path.join(manager.get('output_dir'), "loudness_match")
     loudness_match_path = loudness_match(speaker_export_path, output_dir)
     manager['loudness_match_path'] = loudness_match_path
-    logger.info("loudness_match,leave: %s", json.dumps(manager))
+    logger.info("loudness_match,leave: %s", util.json_dumps(manager))
     util.exec_gc()
