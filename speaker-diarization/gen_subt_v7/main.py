@@ -7,7 +7,7 @@ os.environ['no_proxy'] = 'localhost,127.0.0.1,::1,192.168.123.7,mirrors.ustc.edu
 
 import util
 import init
-import extract_audio
+import separate_audio
 
 logger = util.get_logger()
 
