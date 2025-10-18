@@ -44,18 +44,18 @@ def loudness_normalization(input_path, output_path, target_lufs=-23.0):
 
     # 4. 检查峰值，防止削波
     # 获取应用增益后的峰值
-    peak_amplitude = np.max(np.abs(loudness_normalized_audio))
+    peak = np.max(np.abs(loudness_normalized_audio))
 
-    logger.info(f"{input_path},原始响度:{loudness:.2f},目标响度:{target_lufs:.2f},归一化后峰值:{peak_amplitude:.4f}")
+    logger.info(f"响度归一化,{input_path},原始响度:{loudness:.2f},目标响度:{target_lufs:.2f},归一化后峰值:{peak:.4f}")
 
     # 如果峰值超过1.0，说明可能会发生削波。
     # 在这种情况下，可以选择进行峰值归一化，将最大峰值压缩到1.0。
     # 这会稍微改变整体响度，但在防止失真方面是必要的。
-    if peak_amplitude > 1.0:
-        loudness_normalized_audio = loudness_normalized_audio / peak_amplitude
+    if peak > 1.0:
+        loudness_normalized_audio = loudness_normalized_audio / peak
         # 重新检查峰值
         new_peak = np.max(np.abs(loudness_normalized_audio))
-        logger.warn(f"{input_path},削波峰值:{new_peak:.4f}")
+        logger.warn(f"响度归一化,{input_path},削波峰值:{new_peak:.4f}")
 
     # 5. 写入新文件
     # 使用sf.write写入文件。它会自动处理从float到原始整数格式的转换。
