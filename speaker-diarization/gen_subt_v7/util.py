@@ -4,10 +4,9 @@ import logging
 import shlex
 import os
 import platform
-import gc
 import shutil
-from inputimeout import inputimeout
 import json
+import sys
 
 
 def get_logger(name='main', fmt='%(asctime)s %(levelname)-5s %(filename)s:%(lineno)d - %(message)s'):
@@ -62,40 +61,52 @@ def run_cmd(cmd):
     return result.stdout, result.returncode
 
 
-def get_device_info():
-    import GPUtil
-    import torch
-
+def get_sys_info():
     info = {}
-    info['CPU'] = platform.processor() or platform.uname().processor
-    gpus = GPUtil.getGPUs()
-    if gpus:
-        gpu = gpus[0]
-        info['GPU'] = gpu.name
-        info['CUDA Available'] = torch.cuda.is_available()
-        info['CUDA Version'] = torch.version.cuda
-        info['GPU Memory (MB)'] = f"{gpu.memoryTotal} MB"
-    else:
-        info['GPU'] = 'No GPU detected'
-        info['CUDA Available'] = False
-        info['CUDA Version'] = None
-        info['GPU Memory (MB)'] = 'N/A'
+    info['Python版本'] = sys.version
+    info['Python路径'] = sys.executable
+    info['操作系统'] = f"{platform.system()} {platform.release()} ({platform.version()})"
+    info['环境变量'] = os.environ.get('PATH')
+    info['CPU'] = f"{platform.processor() or platform.uname().processor} ({platform.machine()})"
+
+    try:
+        import torch
+        info['PyTorch版本'] = torch.__version__
+        info['CUDA是否可用'] = torch.cuda.is_available()
+        info['CUDA版本'] = torch.version.cuda
+        for i in range(torch.cuda.device_count()):
+            props = torch.cuda.get_device_properties(i)
+            total_memory_gb = round(props.total_memory / (1024 ** 3), 2)
+            info['GPU'] = f"{props.name} 总显存 {total_memory_gb} GB"
+            break
+    except Exception as e:
+        logger.error("未安装依赖torch", e)
+        info['PyTorch版本'] = "torch未安装"
+        info['CUDA是否可用'] = False
+        info['CUDA版本'] = 'N/A'
+        info['GPU'] = 'N/A'
+
     return info
 
 
-def get_device_type():
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    return device
-
-
-def print_device_info():
-    path_env = os.environ.get('PATH')
-    logger.info(f"PATH: {path_env}")
-    device_type = get_device_type()
-    logger.info(f"device_type: {device_type}")
-    device_info = get_device_info()
-    for key, value in device_info.items():
+def print_sys_info():
+    sys_info = get_sys_info()
+    for key, value in sys_info.items():
         logger.info(f"{key}: {value}")
+
+
+print_sys_info()
+
+
+def get_device_type():
+    device = 'cpu'
+    try:
+        import torch
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    except Exception as e:
+        logger.error("未安装依赖torch", e)
+        pass
+    return device
 
 
 def get_compute_type():
@@ -170,14 +181,24 @@ def json_loads(content):
     return json.loads(content)
 
 
-def save_as_json(obj, save_path):
-    save_file(json.dumps(obj, ensure_ascii=False, indent=2), save_path)
-
-
 def save_file(content, file_path):
     mkdir(file_path)
     with open(file_path, 'w', encoding='utf-8') as file:
         file.write(content)
+
+
+def save_as_json(obj, save_path):
+    save_file(json.dumps(obj, ensure_ascii=False, indent=2), save_path)
+
+
+def path_exist(path):
+    return os.path.exists(path)
+
+
+def path_isfile(path):
+    if not path_exist(path):
+        return False
+    return os.path.isfile(path)
 
 
 def read_file(file_path, default_value=''):
@@ -193,20 +214,9 @@ def read_file_to_obj(file_path, default_value=''):
     return obj
 
 
-def path_exist(path):
-    return os.path.exists(path)
-
-
-def path_isfile(path):
-    if not path_exist(path):
-        return False
-    return os.path.isfile(path)
-
-
-def exec_gc():
-    torch.cuda.empty_cache()
-    torch.cuda.ipc_collect()
-    gc.collect()
+def move_file(from_path, to_path):
+    mkdir(to_path)
+    shutil.move(from_path, to_path)
 
 
 def copy_file(from_path, to_path):
@@ -237,27 +247,12 @@ def get_script_path():
     return script_dir
 
 
-def in_notebook() -> bool:
-    try:
-        import google.colab
-        return True
-    except ImportError:
-        pass
-    try:
-        from IPython import get_ipython
-        shell = get_ipython().__class__.__name__
-        return shell == 'ZMQInteractiveShell'
-    except (NameError, ImportError):
-        pass
-    return False
-
-
 def input_timeout(prompt, timeout, default=None):
-    if in_notebook():
-        return default
     try:
+        import inputimeout
         text = inputimeout(prompt=prompt, timeout=timeout)
-    except Exception:
+    except Exception as e:
+        logger.error("未安装依赖inputimeout", e)
         return default
     else:
         return text
