@@ -19,6 +19,8 @@ def exec(manager):
     extract_stem.exec(manager)
     import extract_simple
     extract_simple.exec(manager)
+    import extract_loudness
+    extract_loudness.exec(manager)
 
 
 def exec_batch(video_paths):

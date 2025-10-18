@@ -15,8 +15,9 @@ def extract_simple(input_path, output_dir):
 
 def exec(manager):
     logger.info("extract_simple,enter: %s", util.json_dumps(manager))
-    audio_path = manager.get('extract_stem_path')
+    audio_path = manager.get('audio_path')
     output_dir = os.path.join(manager.get('output_dir'), "extract_simple")
-    audio_path = extract_simple(audio_path, output_dir)
-    manager['extract_simple_path'] = audio_path
+    output_path = extract_simple(audio_path, output_dir)
+    manager['extract_simple_path'] = output_path
+    manager['audio_path'] = output_path
     logger.info("extract_simple,leave: %s", util.json_dumps(manager))

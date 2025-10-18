@@ -36,6 +36,7 @@ def exec(manager):
     logger.info("extract_audio,enter: %s", util.json_dumps(manager))
     video_path = manager.get('video_path')
     output_dir = os.path.join(manager.get('output_dir'), "extract_audio")
-    audio_path = extract_audio(video_path, output_dir)
-    manager['extract_audio_path'] = audio_path
+    output_path = extract_audio(video_path, output_dir)
+    manager['extract_audio_path'] = output_path
+    manager['audio_path'] = output_path
     logger.info("extract_audio,leave: %s", util.json_dumps(manager))
