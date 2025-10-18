@@ -28,7 +28,7 @@ def separate_audio(video_path, output_dir):
             logger.error("分离音轨，音轨选择错误")
             continue
         break
-    util_ffmpeg.separate_audio_track(video_path, track_index, audio_path)
+    util_ffmpeg.extract_audio_track(video_path, track_index, audio_path)
     return audio_path
 
 
@@ -37,6 +37,5 @@ def exec(manager):
     video_path = manager.get('video_path')
     output_dir = os.path.join(manager.get('output_dir'), "separate_audio")
     audio_path = separate_audio(video_path, output_dir)
-    manager['separate_audio_path'] = audio_path
     manager['audio_path'] = audio_path
     logger.info("separate_audio,leave: %s", util.json_dumps(manager))

@@ -8,13 +8,15 @@ os.environ['no_proxy'] = 'localhost,127.0.0.1,::1,192.168.123.7,mirrors.ustc.edu
 import util
 import init
 import separate_audio
+import separate_stem
 
 logger = util.get_logger()
 
 
 def exec(manager):
     init.exec(manager)
-    extract_audio.exec(manager)
+    separate_audio.exec(manager)
+    separate_stem.exec(manager)
 
 
 def exec_batch(video_paths):
