@@ -7,7 +7,7 @@ import os
 logger = util.get_logger()
 
 
-def separate_audio(video_path, output_dir):
+def extract_audio(video_path, output_dir):
     audio_path = os.path.join(output_dir, "wav.wav")
     if util.path_exist(audio_path):
         return audio_path
@@ -33,9 +33,9 @@ def separate_audio(video_path, output_dir):
 
 
 def exec(manager):
-    logger.info("separate_audio,enter: %s", util.json_dumps(manager))
+    logger.info("extract_audio,enter: %s", util.json_dumps(manager))
     video_path = manager.get('video_path')
-    output_dir = os.path.join(manager.get('output_dir'), "separate_audio")
-    audio_path = separate_audio(video_path, output_dir)
-    manager['audio_path'] = audio_path
-    logger.info("separate_audio,leave: %s", util.json_dumps(manager))
+    output_dir = os.path.join(manager.get('output_dir'), "extract_audio")
+    audio_path = extract_audio(video_path, output_dir)
+    manager['extract_audio_path'] = audio_path
+    logger.info("extract_audio,leave: %s", util.json_dumps(manager))

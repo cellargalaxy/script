@@ -6,17 +6,19 @@ os.environ['https_proxy'] = 'http://192.168.123.7:10808'
 os.environ['no_proxy'] = 'localhost,127.0.0.1,::1,192.168.123.7,mirrors.ustc.edu.cn,hf-mirror.com'
 
 import util
-import init
-import separate_audio
-import separate_stem
 
 logger = util.get_logger()
 
 
 def exec(manager):
+    import init
     init.exec(manager)
-    separate_audio.exec(manager)
-    separate_stem.exec(manager)
+    import extract_audio
+    extract_audio.exec(manager)
+    import extract_stem
+    extract_stem.exec(manager)
+    import extract_simple
+    extract_simple.exec(manager)
 
 
 def exec_batch(video_paths):
