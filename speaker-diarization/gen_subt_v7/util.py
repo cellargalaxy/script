@@ -57,7 +57,7 @@ def popen_cmd(cmd):
 def run_cmd(cmd):
     exec_cmd = "cd {} && {}".format(os.getcwd(), shlex.join(cmd))
     logger.info("执行命令: %s", exec_cmd)
-    result = subprocess.run(exec_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    result = subprocess.run(exec_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     return result.stdout, result.returncode
 
 
@@ -79,8 +79,8 @@ def get_sys_info():
             total_memory_gb = round(props.total_memory / (1024 ** 3), 2)
             info['GPU'] = f"{props.name} 总显存 {total_memory_gb} GB"
             break
-    except Exception as e:
-        logger.error("未安装依赖torch", e)
+    except ImportError as e:
+        logger.error("未安装依赖torch", exc_info=True)
         info['PyTorch版本'] = "torch未安装"
         info['CUDA是否可用'] = False
         info['CUDA版本'] = 'N/A'
@@ -95,16 +95,13 @@ def print_sys_info():
         logger.info(f"{key}: {value}")
 
 
-print_sys_info()
-
-
 def get_device_type():
     device = 'cpu'
     try:
         import torch
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    except Exception as e:
-        logger.error("未安装依赖torch", e)
+    except ImportError as e:
+        logger.error("未安装依赖torch", exc_info=True)
         pass
     return device
 
@@ -251,8 +248,10 @@ def input_timeout(prompt, timeout, default=None):
     try:
         import inputimeout
         text = inputimeout(prompt=prompt, timeout=timeout)
+    except ImportError:
+        logger.error("未安装依赖inputimeout", exc_info=True)
+        return default
     except Exception as e:
-        logger.error("未安装依赖inputimeout", e)
         return default
     else:
         return text
