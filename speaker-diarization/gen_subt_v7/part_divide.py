@@ -27,7 +27,7 @@ def sum_segments_duration(segments):
     return duration
 
 
-def unit_segments(segments, min_speech_ms=1000 * 60 * 3, min_silence_ms=300):
+def unit_segments(segments, min_speech_ms=1000 * 10, min_silence_ms=300):
     if len(segments) <= 1:
         groups = []
         groups.append(segments)
@@ -35,12 +35,16 @@ def unit_segments(segments, min_speech_ms=1000 * 60 * 3, min_silence_ms=300):
 
     silences = []
     for i, segment in enumerate(segments):
+        if i == 0 or i == len(segments) - 1:
+            continue
         if segments[i]['vad_type'] != 'silence':
             continue
         if segments[i]['duration_ms'] < min_silence_ms:
             continue
         silences.append(segments[i])
-    silences = sorted(silences, key=lambda x: x['duration_ms'])
+    if not util.path_exist("output/mkv/part_divide/silences.srt"):
+        tool_subt.save_segments_as_srt(silences, "output/mkv/part_divide/silences.srt")
+    silences = sorted(silences, key=lambda x: x['duration_ms'], reverse=True)
 
     for i, silence in enumerate(silences):
         index = silence['index']
@@ -64,8 +68,8 @@ def unit_segments(segments, min_speech_ms=1000 * 60 * 3, min_silence_ms=300):
 def part_divide(part_detect_path, output_dir):
     json_path = os.path.join(output_dir, 'part_divide.json')
     srt_path = os.path.join(output_dir, 'part_divide.srt')
-    if util.path_exist(json_path):
-        return json_path
+    # if util.path_exist(json_path):
+    #     return json_path
 
     segments = util.read_file_to_obj(part_detect_path)
     for i, segment in enumerate(segments):

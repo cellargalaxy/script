@@ -17,7 +17,6 @@ def diffusion_left(tags, tag):
             if tags[i - 1] == 0 and tags[i] == tag:
                 tags[i - 1] = tag
                 con = True
-                break
     return tags
 
 
@@ -31,7 +30,6 @@ def diffusion_right(tags, tag):
             if tags[i - 1] == tag and tags[i] == 0:
                 tags[i] = tag
                 con = True
-                break
     return tags
 
 
