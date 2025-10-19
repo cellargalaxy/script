@@ -27,7 +27,7 @@ def sum_segments_duration(segments):
     return duration
 
 
-def group_segments(segments, min_speech_ms=1000 * 10):
+def group_segments(segments, min_speech_ms=1000 * 20):
     segments = util.deepcopy_obj(segments)
     for i, segment in enumerate(segments):
         segments[i]['index'] = i
