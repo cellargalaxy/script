@@ -81,6 +81,9 @@ def part_detect(audio_path,
     if last_end < segments[-1]['end']:
         segments[-1]['end'] = last_end
 
+    for i, tag in enumerate(segments):
+        segments[i]['duration_ms'] = segments[i]['end'] - segments[i]['start']
+
     tool_subt.check_coherent_segments(segments)
 
     return segments
