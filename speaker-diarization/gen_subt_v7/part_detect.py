@@ -13,7 +13,7 @@ def part_detect(audio_path, output_dir):
         return json_path
     segments = part_detect_vad.part_detect(audio_path)
     util.save_as_json(segments, json_path)
-    tool_subt.save_segments_as_srt(segments, srt_path, skip_silence=False)
+    tool_subt.save_segments_as_srt(segments, srt_path)
     return json_path
 
 

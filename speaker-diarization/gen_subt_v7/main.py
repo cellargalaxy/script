@@ -23,9 +23,11 @@ def exec(manager):
     extract_loudness.exec(manager)
     import part_detect
     part_detect.exec(manager)
+    import part_divide
+    part_divide.exec(manager)
 
     import split_audio
-    split_audio.exec(manager, 'part_detect_path')
+    split_audio.exec(manager, 'part_divide_path')
 
 
 def exec_batch(video_paths):
