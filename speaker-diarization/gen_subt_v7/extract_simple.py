@@ -1,5 +1,5 @@
 import util
-import util_ffmpeg
+import tool_ffmpeg
 import os
 
 logger = util.get_logger()
@@ -9,7 +9,7 @@ def extract_simple(input_path, output_dir):
     output_path = os.path.join(output_dir, "wav.wav")
     if util.path_exist(output_path):
         return output_path
-    util_ffmpeg.simple_audio(input_path, output_path)
+    tool_ffmpeg.extract_simple_audio(input_path, output_path)
     return output_path
 
 

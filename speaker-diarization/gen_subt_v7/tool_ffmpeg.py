@@ -20,7 +20,7 @@ def extract_audio_track(video_path, index, audio_path):
         raise ValueError("提取视频文件音轨，异常")
 
 
-def simple_audio(input_path, output_path):
+def extract_simple_audio(input_path, output_path):
     util.mkdir(output_path)
     cmd = [
         'ffmpeg',

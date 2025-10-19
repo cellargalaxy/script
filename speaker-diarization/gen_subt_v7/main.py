@@ -21,6 +21,8 @@ def exec(manager):
     extract_simple.exec(manager)
     import extract_loudness
     extract_loudness.exec(manager)
+    import part_detect
+    part_detect.exec(manager)
 
 
 def exec_batch(video_paths):

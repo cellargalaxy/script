@@ -1,7 +1,7 @@
-import util_ffprobe
+import tool_ffprobe
 import util
 import time
-import util_ffmpeg
+import tool_ffmpeg
 import os
 
 logger = util.get_logger()
@@ -12,7 +12,7 @@ def extract_audio(video_path, output_dir):
     if util.path_exist(audio_path):
         return audio_path
 
-    audio_tracks = util_ffprobe.get_audio_track_info(video_path)
+    audio_tracks = tool_ffprobe.get_audio_track_info(video_path)
     if len(audio_tracks) == 0:
         logger.error("分离音轨，音轨为空")
         raise ValueError("分离音轨，音轨为空")
@@ -28,7 +28,7 @@ def extract_audio(video_path, output_dir):
             logger.error("分离音轨，音轨选择错误")
             continue
         break
-    util_ffmpeg.extract_audio_track(video_path, track_index, audio_path)
+    tool_ffmpeg.extract_audio_track(video_path, track_index, audio_path)
     return audio_path
 
 
