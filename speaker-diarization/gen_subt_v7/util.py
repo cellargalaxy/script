@@ -246,12 +246,13 @@ def get_script_path():
 
 def input_timeout(prompt, timeout, default=None):
     try:
-        import inputimeout
+        from inputimeout import inputimeout
         text = inputimeout(prompt=prompt, timeout=timeout)
     except ImportError:
         logger.error("未安装依赖inputimeout", exc_info=True)
         return default
     except Exception as e:
+        logger.error("未安装依赖inputimeout", exc_info=True)
         return default
     else:
         return text

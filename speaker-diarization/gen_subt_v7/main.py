@@ -42,6 +42,7 @@ def exec_batch(video_paths):
 
 video_paths = [
     '../material/mao.mp3',
+    '../material/demo.mkv',
 ]
 
 exec_batch(video_paths)
