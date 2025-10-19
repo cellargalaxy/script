@@ -7,6 +7,7 @@ import platform
 import shutil
 import json
 import sys
+import copy
 
 
 def get_logger(name='main', fmt='%(asctime)s %(levelname)-5s %(filename)s:%(lineno)d - %(message)s'):
@@ -256,3 +257,7 @@ def input_timeout(prompt, timeout, default=None):
         return default
     else:
         return text
+
+
+def deepcopy_obj(obj):
+    return copy.deepcopy(obj)
