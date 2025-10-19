@@ -24,6 +24,9 @@ def exec(manager):
     import part_detect
     part_detect.exec(manager)
 
+    import split_audio
+    split_audio.exec(manager, 'part_detect_path')
+
 
 def exec_batch(video_paths):
     for i, video_path in enumerate(video_paths):

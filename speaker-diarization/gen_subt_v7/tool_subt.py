@@ -179,12 +179,14 @@ def save_segments_as_srt(segments, save_path, skip_silence=False):
     for i, segment in enumerate(segments):
         start = segment['start'] / 1000.0
         end = segment['end'] / 1000.0
-        text = segment.get('text', '')
-        if not text and segment.get('vad_type', None):
-            text = f"[{segment.get('vad_type', None)}] {segment['start']}->{segment['end']}"
-        if not text and segment.get('speaker', None):
-            text = f"[{segment.get('speaker', None)}] {segment['start']}->{segment['end']}"
-        if skip_silence and segment.get('vad_type', None) == 'silence':
+        text = ''
+        if segment.get('vad_type', ''):
+            text = f"{segment['start']}->{segment['end']} {segment.get('vad_type', '')}"
+        if segment.get('speaker', ''):
+            text = f"{segment['start']}->{segment['end']} {segment.get('speaker', '')}"
+        if segment.get('text', ''):
+            text = f"{segment['start']}->{segment['end']} {segment.get('text', '')}"
+        if skip_silence and segment.get('vad_type', '') == 'silence':
             continue
         obj = {'start': start, 'end': end, 'text': text}
         results.append(obj)
