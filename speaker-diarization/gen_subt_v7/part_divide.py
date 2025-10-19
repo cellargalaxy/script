@@ -63,8 +63,8 @@ def group_segments(segments, min_speech_ms=1000 * 20):
 def part_divide(part_detect_path, output_dir, min_duration=200):
     json_path = os.path.join(output_dir, 'part_divide.json')
     srt_path = os.path.join(output_dir, 'part_divide.srt')
-    # if util.path_exist(json_path):
-    #     return json_path
+    if util.path_exist(json_path):
+        return json_path
 
     segments = util.read_file_to_obj(part_detect_path)
 
