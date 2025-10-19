@@ -40,3 +40,4 @@ def exec(manager):
     manager['extract_audio_path'] = output_path
     manager['audio_path'] = output_path
     logger.info("extract_audio,leave: %s", util.json_dumps(manager))
+    util.exec_gc()

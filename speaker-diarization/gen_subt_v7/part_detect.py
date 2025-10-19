@@ -24,3 +24,4 @@ def exec(manager):
     part_detect_path = part_detect(audio_path, output_dir)
     manager['part_detect_path'] = part_detect_path
     logger.info("part_detect,leave: %s", util.json_dumps(manager))
+    util.exec_gc()

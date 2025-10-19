@@ -110,3 +110,4 @@ def exec(manager):
     part_divide_path = part_divide(part_detect_path, output_dir)
     manager['part_divide_path'] = part_divide_path
     logger.info("part_divide,leave: %s", util.json_dumps(manager))
+    util.exec_gc()

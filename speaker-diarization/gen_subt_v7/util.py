@@ -103,7 +103,6 @@ def get_device_type():
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
     except ImportError as e:
         logger.error("未安装依赖torch", exc_info=True)
-        pass
     return device
 
 
@@ -114,6 +113,14 @@ def get_compute_type():
     else:
         return 'int8'
 
+def exec_gc():
+    try:
+        import torch
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
+    except ImportError as e:
+        logger.error("未安装依赖torch", exc_info=True)
+    gc.collect()
 
 def get_file_ext(file_path):
     """
