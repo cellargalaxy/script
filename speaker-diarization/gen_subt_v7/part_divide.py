@@ -27,7 +27,7 @@ def sum_segments_duration(segments):
     return duration
 
 
-def unit_segments(segments, min_speech_ms=1000 * 10, min_silence_ms=300):
+def unit_segments(segments, min_speech_ms=1000 * 10):
     if len(segments) <= 1:
         groups = []
         groups.append(segments)
@@ -38,8 +38,6 @@ def unit_segments(segments, min_speech_ms=1000 * 10, min_silence_ms=300):
         if i == 0 or i == len(segments) - 1:
             continue
         if segments[i]['vad_type'] != 'silence':
-            continue
-        if segments[i]['duration_ms'] < min_silence_ms:
             continue
         silences.append(segments[i])
     if not util.path_exist("output/mkv/part_divide/silences.srt"):
@@ -52,8 +50,8 @@ def unit_segments(segments, min_speech_ms=1000 * 10, min_silence_ms=300):
         left_duration = sum_segments_duration(left)
         right_duration = sum_segments_duration(right)
         if min_speech_ms <= left_duration and min_speech_ms <= right_duration:
-            left_groups = unit_segments(left, min_speech_ms, min_silence_ms)
-            right_groups = unit_segments(right, min_speech_ms, min_silence_ms)
+            left_groups = unit_segments(left, min_speech_ms)
+            right_groups = unit_segments(right, min_speech_ms)
             groups = []
             groups.extend(left_groups)
             groups.append(middle)
@@ -65,13 +63,25 @@ def unit_segments(segments, min_speech_ms=1000 * 10, min_silence_ms=300):
     return groups
 
 
-def part_divide(part_detect_path, output_dir):
+def part_divide(part_detect_path, output_dir, min_ms=200):
     json_path = os.path.join(output_dir, 'part_divide.json')
     srt_path = os.path.join(output_dir, 'part_divide.srt')
     # if util.path_exist(json_path):
     #     return json_path
 
     segments = util.read_file_to_obj(part_detect_path)
+
+    for i, segment in enumerate(segments):
+        if segments[i]['vad_type'] == 'silence' and segments[i]['duration_ms'] < min_ms:
+            segments[i]['vad_type'] = 'speech'
+    segments = tool_subt.unit_segments(segments, 'vad_type')
+    for i, segment in enumerate(segments):
+        if segments[i]['vad_type'] == 'speech' and segments[i]['duration_ms'] < min_ms:
+            segments[i]['vad_type'] = 'silence'
+    segments = tool_subt.unit_segments(segments, 'vad_type')
+    util.save_as_json(segments, os.path.join(output_dir, 'unit_mini.json'))
+    tool_subt.save_segments_as_srt(segments, os.path.join(output_dir, 'unit_mini.srt'), skip_silence=True)
+
     for i, segment in enumerate(segments):
         segments[i]['index'] = i
     groups = unit_segments(segments)

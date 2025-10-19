@@ -7,29 +7,17 @@ import tool_subt
 logger = util.get_logger()
 
 
-def diffusion_left(tags, tag):
-    con = True
-    while con:
-        con = False
-        for i, _ in enumerate(tags):
-            if i == 0:
-                continue
-            if tags[i - 1] == 0 and tags[i] == tag:
-                tags[i - 1] = tag
-                con = True
-    return tags
+def diffusion(tags, tag):
+    for i, _ in enumerate(tags):
+        if i == 0:
+            continue
+        if tags[i - 1] == tag and tags[i] == 0:
+            tags[i] = tag
 
+    for i in range(len(tags) - 2, -1, -1):
+        if tags[i] == 0 and tags[i + 1] == tag:
+            tags[i] = tag
 
-def diffusion_right(tags, tag):
-    con = True
-    while con:
-        con = False
-        for i, _ in enumerate(tags):
-            if i == 0:
-                continue
-            if tags[i - 1] == tag and tags[i] == 0:
-                tags[i] = tag
-                con = True
     return tags
 
 
@@ -54,10 +42,8 @@ def part_detect(audio_path,
             tags.append(1)
         else:
             tags.append(0)
-    tags = diffusion_left(tags, 1)
-    tags = diffusion_right(tags, 1)
-    tags = diffusion_left(tags, -1)
-    tags = diffusion_right(tags, -1)
+    tags = diffusion(tags, 1)
+    tags = diffusion(tags, -1)
 
     segments = []
     for i, tag in enumerate(tags):
@@ -78,10 +64,16 @@ def part_detect(audio_path,
 
     if last_end < segments[-1]['end']:
         segments[-1]['end'] = last_end
+    if segments[-1]['end'] < last_end:
+        pre_end = segments[-1]['end']
+        segments.append({'start': pre_end, 'end': last_end, 'vad_type': 'silence'})
+
+    segments = tool_subt.fix_overlap_segments(segments)
+    segments = tool_subt.unit_segments(segments, 'vad_type')
+    tool_subt.check_coherent_segments(segments)
 
     for i, segment in enumerate(segments):
-        segments[i]['duration_ms'] = segments[i]['end'] - segments[i]['start']
-
-    tool_subt.check_coherent_segments(segments)
+        segments[i]['index'] = i
+        segments[i]['duration'] = segments[i]['end'] - segments[i]['start']
 
     return segments

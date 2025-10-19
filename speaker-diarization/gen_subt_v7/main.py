@@ -27,8 +27,8 @@ def exec(manager):
     part_divide.exec(manager)
 
     import split_audio
-    split_audio.exec(manager, 'part_detect_path')
-    split_audio.exec(manager, 'part_divide_path')
+    # split_audio.exec(manager, 'part_detect_path')
+    # split_audio.exec(manager, 'part_divide_path')
 
 
 def exec_batch(video_paths):
@@ -44,9 +44,9 @@ def exec_batch(video_paths):
 
 
 video_paths = [
-    # '../material/mao.mp3',
+    '../material/mao.mp3',
     # '../material/demo.mkv',
-    '../material/mkv.mkv',
+    # '../material/mkv.mkv',
 ]
 
 exec_batch(video_paths)
