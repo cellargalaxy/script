@@ -11,13 +11,13 @@ def split_audio(audio_path, json_path, output_dir):
     audio = AudioSegment.from_wav(audio_path)
     segments = util.read_file_to_obj(json_path)
     for i, segment in enumerate(segments):
-        file_name = f"{i:03d}.wav"
+        file_name = f"{i:05d}.wav"
         if segment.get('vad_type', ''):
-            file_name = f"{i:03d}-{segment.get('vad_type', '')}.wav"
+            file_name = f"{i:05d}-{segment.get('vad_type', '')}.wav"
         if segment.get('speaker', ''):
-            file_name = f"{i:03d}-{segment.get('speaker', '')}.wav"
+            file_name = f"{i:05d}-{segment.get('speaker', '')}.wav"
         if segment.get('text', ''):
-            file_name = f"{i:03d}-{segment.get('text', '')}.wav"
+            file_name = f"{i:05d}-{segment.get('text', '')}.wav"
         segments[i]['file_name'] = file_name
         cut_path = os.path.join(output_dir, file_name)
         cut = audio[segment['start']:segment['end']]

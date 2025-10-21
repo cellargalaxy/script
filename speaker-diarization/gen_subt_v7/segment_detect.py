@@ -39,7 +39,7 @@ def segment_detect(audio_path, part_divide_path, output_dir):
 
     util.save_as_json(results, json_path)
     tool_subt.save_segments_as_srt(results, srt_path)
-    return results
+    return json_path
 
 
 def exec(manager):

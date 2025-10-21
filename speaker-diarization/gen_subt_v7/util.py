@@ -8,6 +8,7 @@ import shutil
 import json
 import sys
 import copy
+import gc
 
 
 def get_logger(name='main', fmt='%(asctime)s %(levelname)-5s %(filename)s:%(lineno)d - %(message)s'):
@@ -113,6 +114,7 @@ def get_compute_type():
     else:
         return 'int8'
 
+
 def exec_gc():
     try:
         import torch
@@ -121,6 +123,7 @@ def exec_gc():
     except ImportError as e:
         logger.error("未安装依赖torch", exc_info=True)
     gc.collect()
+
 
 def get_file_ext(file_path):
     """
