@@ -109,30 +109,36 @@ def check_discrete_segments(segments):
     for i, segment in enumerate(segments):
         start = segments[i].get('start', -1)
         if not isinstance(start, int) and not isinstance(start, float):
-            logger.error("检查segments，start类型非法: %s, segment:%s, %s", i, util.json_dumps(segment),
+            logger.error("检查segments，start类型非法: %s, segment:%s, %s", i,
+                         util.json_dumps(segment),
                          util.json_dumps(segments))
             raise ValueError("检查segments，start类型非法")
         if start < 0:
-            logger.error("检查segments，start非法: %s, segment:%s, %s", i, util.json_dumps(segment),
+            logger.error("检查segments，start非法: %s, segment:%s, %s", i,
+                         util.json_dumps(segment),
                          util.json_dumps(segments))
             raise ValueError("检查segments，start非法")
         end = segments[i].get('end', -1)
         if not isinstance(end, int) and not isinstance(end, float):
-            logger.error("检查segments，end类型非法: %s, segment:%s, %s", i, util.json_dumps(segment),
+            logger.error("检查segments，end类型非法: %s, segment:%s, %s", i,
+                         util.json_dumps(segment),
                          util.json_dumps(segments))
             raise ValueError("检查segments，end类型非法")
         if end < 0:
-            logger.error("检查segments，end非法: %s, segment:%s, %s", i, util.json_dumps(segment),
+            logger.error("检查segments，end非法: %s, segment:%s, %s", i,
+                         util.json_dumps(segment),
                          util.json_dumps(segments))
             raise ValueError("检查segments，end非法")
         if end <= start:
-            logger.error("检查segments，start与end非法: %s, segment:%s, %s", i, util.json_dumps(segment),
+            logger.error("检查segments，start与end非法: %s, segment:%s, %s", i,
+                         util.json_dumps(segment),
                          util.json_dumps(segments))
             raise ValueError("检查segments，start与end非法")
         if i > 0:
             pre_end = segments[i - 1]['end']
             if start < pre_end:
-                logger.error("检查segments，pre_end与start非法: %s, segment:%s, %s", i, util.json_dumps(segment),
+                logger.error("检查segments，pre_end与start非法: %s, segment:%s, %s", i,
+                             util.json_dumps(segment),
                              util.json_dumps(segments))
                 raise ValueError("检查segments，pre_end与start非法")
 
