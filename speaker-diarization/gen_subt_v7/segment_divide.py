@@ -9,42 +9,22 @@ import tool_subt
 logger = util.get_logger()
 
 
-def calculate_overlap(seg1: dict, seg2: dict) -> int:
-    """
-    计算两个时间段的重叠长度。
-    Args:
-        seg1: 格式为 {"start": int, "end": int} 的字典。
-        seg2: 格式为 {"start": int, "end": int} 的字典。
-    Returns:
-        重叠部分的长度，如果没有重叠则返回 0。
-    """
-    overlap_start = max(seg1["start"], seg2["start"])
-    overlap_end = min(seg1["end"], seg2["end"])
-    if overlap_start < overlap_end:
-        return overlap_end - overlap_start
-    else:
-        return 0
+def find_first_start(segments, start, end):
+    for i, segment in enumerate(segments):
+        start_overlap = max(start, segment['start'])
+        end_overlap = min(end, segment['end'])
+        if start_overlap <= end_overlap:
+            return start_overlap
+    return None
 
 
-def find_overlap_segment(segment: dict, segments: list[dict]) -> dict | None:
-    """
-    在 segments 列表中寻找与 segment 重叠最大的时间段。
-    只有当重叠长度超过 segment 自身长度的一半时，才认为有效。
-    Args:
-        segment: 参考时间段，格式为 {"start": int, "end": int, "duration": int}。
-        segments: 待搜索的时间段列表。
-    Returns:
-        重叠最大的时间段字典，如果没有有效重叠的则返回 None。
-    """
-    overlap_threshold = segment["duration"] / 2
-    max_overlap = 0
-    max_overlap_segment = None
-    for current_segment in segments:
-        overlap = calculate_overlap(segment, current_segment)
-        if max_overlap < overlap and overlap_threshold < overlap:
-            max_overlap = overlap
-            max_overlap_segment = current_segment
-    return max_overlap_segment
+def find_first_end(segments, start, end):
+    for i, segment in enumerate(segments):
+        start_overlap = max(start, segment['start'])
+        end_overlap = min(end, segment['end'])
+        if start_overlap <= end_overlap:
+            return end_overlap
+    return None
 
 
 def segment_divide(part_detect_path, segment_detect_path, output_dir):
@@ -56,25 +36,42 @@ def segment_divide(part_detect_path, segment_detect_path, output_dir):
     parts = util.read_file_to_obj(part_detect_path)
     segments = util.read_file_to_obj(segment_detect_path)
 
-    speechs = []
+    silences = []
     for i, part in enumerate(parts):
-        if parts[i]['vad_type'] != 'speech':
+        if part['vad_type'] != 'silence':
             continue
-        segment = find_overlap_segment(parts[i], segments)
-        if segment:
-            parts[i]['segment_index'] = segment['index']
-            parts[i]['text'] = segment['text']
-            speechs.append(parts[i])
-    speechs = tool_subt.unit_segments(speechs, 'segment_index')
-    for i, speech in enumerate(speechs):
-        speechs[i].pop('segment_index')
+        silences.append(part)
 
-    speechs = tool_subt.fix_overlap_segments(speechs)
-    speechs = tool_subt.init_segments(speechs)
-    tool_subt.check_discrete_segments(speechs)
+    for i, segment in enumerate(segments):
+        if i == 0:
+            continue
 
-    util.save_as_json(speechs, json_path)
-    tool_subt.save_segments_as_srt(speechs, srt_path)
+        back = min(500, int(segments[i]['duration'] / 2))
+
+        pre_end = segments[i - 1]['end']
+        start = segments[i]['start'] + back
+        find_start = pre_end
+        find_end = min(pre_end + 1000, start)
+        ms = find_first_start(silences, find_start, find_end)
+        if ms:
+            segments[i - 1]['end'] = ms
+
+        pre_end = segments[i - 1]['end']
+        start = segments[i]['start'] + back
+        find_start = max(start - 1000 - back, pre_end)
+        find_end = start
+        ms = find_first_end(silences, find_start, find_end)
+        if ms:
+            segments[i]['start'] = ms
+        if segments[i]['start'] < segments[i - 1]['end']:
+            segments[i]['start'] = segments[i - 1]['end']
+
+    segments = tool_subt.fix_overlap_segments(segments)
+    segments = tool_subt.init_segments(segments)
+    tool_subt.check_discrete_segments(segments)
+
+    util.save_as_json(segments, json_path)
+    tool_subt.save_segments_as_srt(segments, srt_path)
     return json_path
 
 
