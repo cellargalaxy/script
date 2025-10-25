@@ -28,12 +28,9 @@ def transcribe(model, audio):
             end = last_end
         segments.append({"start": start, "end": end, "text": result.text})
 
+    segments = tool_subt.init_segments(segments)
     segments = tool_subt.fix_overlap_segments(segments)
     segments = tool_subt.clipp_segments(segments, last_end)
     tool_subt.check_discrete_segments(segments)
-
-    for i, segment in enumerate(segments):
-        segments[i]['index'] = i
-        segments[i]['duration'] = segments[i]['end'] - segments[i]['start']
 
     return segments

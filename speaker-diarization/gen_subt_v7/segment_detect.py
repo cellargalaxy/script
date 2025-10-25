@@ -29,13 +29,10 @@ def segment_detect(audio_path, part_divide_path, output_dir):
         segs = tool_subt.shift_segments_time(segs, segment['start'])
         results.extend(segs)
 
+    results = tool_subt.init_segments(results)
     results = tool_subt.fix_overlap_segments(results)
     results = tool_subt.clipp_segments(results, last_end)
     tool_subt.check_discrete_segments(results)
-
-    for i, segment in enumerate(results):
-        results[i]['index'] = i
-        results[i]['duration'] = results[i]['end'] - results[i]['start']
 
     util.save_as_json(results, json_path)
     tool_subt.save_segments_as_srt(results, srt_path)

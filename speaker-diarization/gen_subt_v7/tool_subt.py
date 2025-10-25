@@ -5,6 +5,11 @@ import math
 
 logger = util.get_logger()
 
+def init_segments(segments):
+    for i, segment in enumerate(segments):
+        segments[i]['index'] = i
+        segments[i]['duration'] = segments[i]['end'] - segments[i]['start']
+    return segments
 
 def fix_overlap_segments(segments):
     for i, segment in enumerate(segments):
@@ -188,13 +193,13 @@ def save_segments_as_srt(segments, save_path, skip_silence=False):
             index = segment.get('index', 0)
         start = segment['start'] / 1000.0
         end = segment['end'] / 1000.0
-        text = f"{index:05d} {segment['start']}>{segment['end']}"
+        text = f"{index:04d} {segment['start']}>{segment['end']}"
         if segment.get('vad_type', ''):
-            text = f"{index:05d} {segment['start']}>{segment['end']} {segment.get('vad_type', '')}"
+            text = f"{index:04d} {segment['start']}>{segment['end']} {segment.get('vad_type', '')}"
         if segment.get('speaker', ''):
-            text = f"{index:05d} {segment['start']}>{segment['end']} {segment.get('speaker', '')}"
+            text = f"{index:04d} {segment['start']}>{segment['end']} {segment.get('speaker', '')}"
         if segment.get('text', ''):
-            text = f"{index:05d} {segment['start']}>{segment['end']} {segment.get('text', '')}"
+            text = f"{index:04d} {segment['start']}>{segment['end']} {segment.get('text', '')}"
         if skip_silence and segment.get('vad_type', '') == 'silence':
             continue
         obj = {'start': start, 'end': end, 'text': text}

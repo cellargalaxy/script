@@ -29,8 +29,7 @@ def sum_segments_duration(segments):
 
 def group_segments(segments, min_speech_ms=1000 * 20):
     segments = util.deepcopy_obj(segments)
-    for i, segment in enumerate(segments):
-        segments[i]['index'] = i
+    segments = tool_subt.init_segments(segments)
 
     silences = []
     for i, segment in enumerate(segments):
@@ -90,13 +89,10 @@ def part_divide(part_detect_path, output_dir, min_duration=200):
                 result['vad_type'] = 'speech'
         results.append(result)
 
+    results = tool_subt.init_segments(results)
     results = tool_subt.fix_overlap_segments(results)
     results = tool_subt.unit_segments(results, 'vad_type')
     tool_subt.check_coherent_segments(results)
-
-    for i, segment in enumerate(results):
-        results[i]['index'] = i
-        results[i]['duration'] = results[i]['end'] - results[i]['start']
 
     util.save_as_json(results, json_path)
     tool_subt.save_segments_as_srt(results, srt_path)

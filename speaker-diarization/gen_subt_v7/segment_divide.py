@@ -45,12 +45,9 @@ def segment_divide(part_detect_path, segment_detect_path, output_dir):
             segments[i - 1]['end'] = silence['start']
             segments[i]['start'] = silence['end']
 
+    segments = tool_subt.init_segments(segments)
     segments = tool_subt.fix_overlap_segments(segments)
     tool_subt.check_discrete_segments(segments)
-
-    for i, segment in enumerate(segments):
-        segments[i]['index'] = i
-        segments[i]['duration'] = segments[i]['end'] - segments[i]['start']
 
     util.save_as_json(segments, json_path)
     tool_subt.save_segments_as_srt(segments, srt_path)

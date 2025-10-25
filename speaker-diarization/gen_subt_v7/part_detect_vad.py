@@ -68,12 +68,9 @@ def part_detect(audio_path,
         pre_end = segments[-1]['end']
         segments.append({'start': pre_end, 'end': last_end, 'vad_type': 'silence'})
 
+    segments = tool_subt.init_segments(segments)
     segments = tool_subt.fix_overlap_segments(segments)
     segments = tool_subt.unit_segments(segments, 'vad_type')
     tool_subt.check_coherent_segments(segments)
-
-    for i, segment in enumerate(segments):
-        segments[i]['index'] = i
-        segments[i]['duration'] = segments[i]['end'] - segments[i]['start']
 
     return segments
