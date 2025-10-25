@@ -4,15 +4,17 @@ import logging
 import shlex
 import os
 import platform
-import torch
-import GPUtil
+import shutil
+import json
+import sys
+import copy
 import gc
 
 
-def get_logger(name='main', fmt='%(asctime)s %(levelname)-8s %(message)s'):
+def get_logger(name='main', fmt='%(asctime)s %(levelname)-5s %(filename)s:%(lineno)d - %(message)s'):
     logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
     if not logger.handlers:
+        logger.setLevel(logging.INFO)
         handler = logging.StreamHandler()
         formatter = logging.Formatter(
             fmt=fmt,
@@ -35,15 +37,6 @@ def mkdir(path):
         obj.mkdir(parents=True, exist_ok=True)
 
 
-cmd_logger = logging.getLogger("simple_logger")
-handler_exec = logging.StreamHandler()
-formatter_exec = logging.Formatter('%(message)s')
-handler_exec.setFormatter(formatter_exec)
-cmd_logger.addHandler(handler_exec)
-cmd_logger.setLevel(logging.INFO)
-cmd_logger.propagate = False
-
-
 def popen_cmd(cmd):
     exec_cmd = "cd {} && {}".format(os.getcwd(), shlex.join(cmd))
     logger.info("执行命令: %s", exec_cmd)
@@ -57,45 +50,60 @@ def popen_cmd(cmd):
     )
     with process.stdout:
         for line in iter(process.stdout.readline, ''):
-            cmd_logger.debug("%s", line)
+            logger.debug("%s", line)
     return_code = process.wait()
-    logging.info("执行命令，退出：%s", return_code)
+    logger.info("执行命令，退出：%s", return_code)
     return return_code
 
 
 def run_cmd(cmd):
     exec_cmd = "cd {} && {}".format(os.getcwd(), shlex.join(cmd))
     logger.info("执行命令: %s", exec_cmd)
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    result = subprocess.run(exec_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     return result.stdout, result.returncode
 
 
-def get_device_info():
+def get_sys_info():
     info = {}
-    info['CPU'] = platform.processor() or platform.uname().processor
-    gpus = GPUtil.getGPUs()
-    if gpus:
-        gpu = gpus[0]
-        info['GPU'] = gpu.name
-        info['CUDA Available'] = torch.cuda.is_available()
-        info['CUDA Version'] = torch.version.cuda
-        info['GPU Memory (MB)'] = f"{gpu.memoryTotal} MB"
-    else:
-        info['GPU'] = 'No GPU detected'
-        info['CUDA Available'] = False
-        info['CUDA Version'] = None
-        info['GPU Memory (MB)'] = 'N/A'
+    info['Python版本'] = sys.version
+    info['Python路径'] = sys.executable
+    info['操作系统'] = f"{platform.system()} {platform.release()} ({platform.version()})"
+    info['环境变量'] = os.environ.get('PATH')
+    info['CPU'] = f"{platform.processor() or platform.uname().processor} ({platform.machine()})"
+
+    try:
+        import torch
+        info['PyTorch版本'] = torch.__version__
+        info['CUDA是否可用'] = torch.cuda.is_available()
+        info['CUDA版本'] = torch.version.cuda
+        for i in range(torch.cuda.device_count()):
+            props = torch.cuda.get_device_properties(i)
+            total_memory_gb = round(props.total_memory / (1024 ** 3), 2)
+            info['GPU'] = f"{props.name} 总显存 {total_memory_gb} GB"
+            break
+    except ImportError as e:
+        logger.error("未安装依赖torch", exc_info=True)
+        info['PyTorch版本'] = "torch未安装"
+        info['CUDA是否可用'] = False
+        info['CUDA版本'] = 'N/A'
+        info['GPU'] = 'N/A'
+
     return info
 
 
-def print_device_info():
-    device_info = get_device_info()
-    for key, value in device_info.items():
+def print_sys_info():
+    sys_info = get_sys_info()
+    for key, value in sys_info.items():
         logger.info(f"{key}: {value}")
 
 
 def get_device_type():
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = 'cpu'
+    try:
+        import torch
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    except ImportError as e:
+        logger.error("未安装依赖torch", exc_info=True)
     return device
 
 
@@ -107,19 +115,78 @@ def get_compute_type():
         return 'int8'
 
 
+def exec_gc():
+    try:
+        import torch
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
+    except ImportError as e:
+        logger.error("未安装依赖torch", exc_info=True)
+    gc.collect()
+
+
 def get_file_ext(file_path):
+    """
+    '/aaa/bbb/ccc' -> ''
+    '/aaa/bbb/ccc.txt' -> 'txt'
+    :param file_path:
+    :return:
+    """
     ext = Path(file_path).suffix[1:]
     return ext
 
 
 def get_file_name(file_path):
+    """
+    '/aaa/bbb/ccc' -> 'ccc'
+    '/aaa/bbb/ccc.txt' -> 'ccc'
+    :param file_path:
+    :return:
+    """
     name = os.path.splitext(os.path.basename(file_path))[0]
     return name
 
 
-def get_file_dir(file_path):
+def get_file_basename(file_path):
+    """
+    '/aaa/bbb/ccc' -> 'ccc'
+    '/aaa/bbb/ccc.txt' -> 'ccc.txt'
+    :param file_path:
+    :return:
+    """
+    name = os.path.basename(file_path)
+    return name
+
+
+def get_parent_dir(file_path):
+    """
+    '/aaa/bbb/ccc' -> 'bbb'
+    '/aaa/bbb/ccc.txt' -> 'bbb'
+    :param file_path:
+    :return:
+    """
+    parent = os.path.dirname(file_path)
+    parent_dir = os.path.basename(parent)
+    return parent_dir
+
+
+def get_ancestor_dir(file_path):
+    """
+    '/aaa/bbb/ccc' -> '/aaa/bbb'
+    '/aaa/bbb/ccc.txt' -> '/aaa/bbb'
+    :param file_path:
+    :return:
+    """
     file_dir = os.path.dirname(file_path)
     return file_dir
+
+
+def json_dumps(obj):
+    return json.dumps(obj, ensure_ascii=False)
+
+
+def json_loads(content):
+    return json.loads(content)
 
 
 def save_file(content, file_path):
@@ -128,11 +195,8 @@ def save_file(content, file_path):
         file.write(content)
 
 
-def read_file(file_path, default_value=''):
-    if not path_isfile(file_path):
-        return default_value
-    with open(file_path, 'r') as file:
-        return file.read()
+def save_as_json(obj, save_path):
+    save_file(json.dumps(obj, ensure_ascii=False, indent=2), save_path)
 
 
 def path_exist(path):
@@ -145,10 +209,65 @@ def path_isfile(path):
     return os.path.isfile(path)
 
 
-def exec_gc():
-    torch.cuda.empty_cache()
-    gc.collect()
+def read_file(file_path, default_value=''):
+    if not path_isfile(file_path):
+        return default_value
+    with open(file_path, 'r') as file:
+        return file.read()
+
+
+def read_file_to_obj(file_path, default_value=''):
+    content = read_file(file_path, default_value=default_value)
+    obj = json_loads(content)
+    return obj
+
+
+def move_file(from_path, to_path):
+    mkdir(to_path)
+    shutil.move(from_path, to_path)
+
+
+def copy_file(from_path, to_path):
+    mkdir(to_path)
+    shutil.copy(from_path, to_path)
+
+
+def delete_path(path):
+    path = Path(path)
+    if path.is_file():
+        path.unlink()
+    elif path.is_dir():
+        shutil.rmtree(path)
+
 
 def listdir(path):
     file_names = sorted(os.listdir(path))
     return file_names
+
+
+def get_home_dir():
+    home_path = Path.home()
+    return home_path
+
+
+def get_script_path():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    return script_dir
+
+
+def input_timeout(prompt, timeout, default=None):
+    try:
+        from inputimeout import inputimeout
+        text = inputimeout(prompt=prompt, timeout=timeout)
+    except ImportError:
+        logger.error("未安装依赖inputimeout", exc_info=True)
+        return default
+    except Exception as e:
+        logger.error("未安装依赖inputimeout", exc_info=True)
+        return default
+    else:
+        return text
+
+
+def deepcopy_obj(obj):
+    return copy.deepcopy(obj)
