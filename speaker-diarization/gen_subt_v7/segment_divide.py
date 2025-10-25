@@ -26,26 +26,25 @@ def calculate_overlap(seg1: dict, seg2: dict) -> int:
         return 0
 
 
-def find_max_overlap_segment(segment: dict, segments: list[dict]) -> dict | None:
+def find_overlap_segment(segment: dict, segments: list[dict]) -> dict | None:
     """
     在 segments 列表中寻找与 segment 重叠最大的时间段。
+    只有当重叠长度超过 segment 自身长度的一半时，才认为有效。
     Args:
-        segment: 参考时间段，格式为 {"start": int, "end": int}。
+        segment: 参考时间段，格式为 {"start": int, "end": int, "duration": int}。
         segments: 待搜索的时间段列表。
     Returns:
-        重叠最大的时间段字典，如果没有重叠的则返回 None。
+        重叠最大的时间段字典，如果没有有效重叠的则返回 None。
     """
+    overlap_threshold = segment["duration"] / 2
     max_overlap = 0
     max_overlap_segment = None
     for current_segment in segments:
         overlap = calculate_overlap(segment, current_segment)
-        if max_overlap < overlap:
+        if max_overlap < overlap and overlap_threshold < overlap:
             max_overlap = overlap
             max_overlap_segment = current_segment
-    if 0 < max_overlap:
-        return max_overlap_segment
-    else:
-        return None
+    return max_overlap_segment
 
 
 def segment_divide(part_detect_path, segment_detect_path, output_dir):
@@ -57,37 +56,25 @@ def segment_divide(part_detect_path, segment_detect_path, output_dir):
     parts = util.read_file_to_obj(part_detect_path)
     segments = util.read_file_to_obj(segment_detect_path)
 
+    speechs = []
     for i, part in enumerate(parts):
         if parts[i]['vad_type'] != 'speech':
             continue
-        segment = find_max_overlap_segment(parts[i], segments)
+        segment = find_overlap_segment(parts[i], segments)
         if segment:
             parts[i]['segment_index'] = segment['index']
             parts[i]['text'] = segment['text']
-        else:
-            parts[i]['vad_type'] = 'silence'
-            parts[i]['text'] = ''
-    parts = tool_subt.unit_segments(parts, 'vad_type')
-    for i, part in enumerate(parts):
-        parts[i]['segment_index'] = -(i + 1)
-        if i == 0 or i == len(parts) - 1:
-            continue
-        if parts[i]['vad_type'] != 'silence':
-            continue
-        if parts[i - 1]['segment_index'] == parts[i + 1]['segment_index']:
-            parts[i]['segment_index'] = parts[i - 1]['segment_index']
-    parts = tool_subt.unit_segments(parts, 'segment_index')
+            speechs.append(parts[i])
+    speechs = tool_subt.unit_segments(speechs, 'segment_index')
+    for i, speech in enumerate(speechs):
+        speechs[i].pop('segment_index')
 
-    for i, part in enumerate(parts):
-        parts[i].pop("vad_type")
-        parts[i].pop("segment_index")
+    speechs = tool_subt.init_segments(speechs)
+    speechs = tool_subt.fix_overlap_segments(speechs)
+    tool_subt.check_discrete_segments(speechs)
 
-    parts = tool_subt.init_segments(parts)
-    parts = tool_subt.fix_overlap_segments(parts)
-    tool_subt.check_discrete_segments(parts)
-
-    util.save_as_json(parts, json_path)
-    tool_subt.save_segments_as_srt(parts, srt_path)
+    util.save_as_json(speechs, json_path)
+    tool_subt.save_segments_as_srt(speechs, srt_path)
     return json_path
 
 
