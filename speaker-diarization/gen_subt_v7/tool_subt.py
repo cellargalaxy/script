@@ -183,15 +183,18 @@ def subt2segments(subt):
 def save_segments_as_srt(segments, save_path, skip_silence=False):
     results = []
     for i, segment in enumerate(segments):
+        index = i
+        if segment.get('index', 0):
+            index = segment.get('index', 0)
         start = segment['start'] / 1000.0
         end = segment['end'] / 1000.0
-        text = ''
+        text = f"{index:05d} {segment['start']}>{segment['end']}"
         if segment.get('vad_type', ''):
-            text = f"{segment['start']}>{segment['end']} {segment.get('vad_type', '')}"
+            text = f"{index:05d} {segment['start']}>{segment['end']} {segment.get('vad_type', '')}"
         if segment.get('speaker', ''):
-            text = f"{segment['start']}>{segment['end']} {segment.get('speaker', '')}"
+            text = f"{index:05d} {segment['start']}>{segment['end']} {segment.get('speaker', '')}"
         if segment.get('text', ''):
-            text = f"{segment['start']}>{segment['end']} {segment.get('text', '')}"
+            text = f"{index:05d} {segment['start']}>{segment['end']} {segment.get('text', '')}"
         if skip_silence and segment.get('vad_type', '') == 'silence':
             continue
         obj = {'start': start, 'end': end, 'text': text}
