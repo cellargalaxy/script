@@ -69,8 +69,8 @@ def segment_divide(part_detect_path, segment_detect_path, output_dir):
     for i, speech in enumerate(speechs):
         speechs[i].pop('segment_index')
 
-    speechs = tool_subt.init_segments(speechs)
     speechs = tool_subt.fix_overlap_segments(speechs)
+    speechs = tool_subt.init_segments(speechs)
     tool_subt.check_discrete_segments(speechs)
 
     util.save_as_json(speechs, json_path)

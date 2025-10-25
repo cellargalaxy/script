@@ -39,9 +39,3 @@ def exec(manager, path_key):
     output_dir = os.path.join(manager.get('output_dir'), 'split_audio')
     split_audio(audio_path, json_path, output_dir, path_key)
     logger.info("split_audio,leave: %s", util.json_dumps(manager))
-
-
-
-# audio = AudioSegment.from_wav('/workspace/script/speaker-diarization/gen_subt_v7/output/demo/extract_loudness/wav.wav')
-# cut = audio[25560:38460]
-# cut.export('/workspace/script/speaker-diarization/material/test.wav', format='wav')

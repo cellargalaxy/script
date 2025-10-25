@@ -89,9 +89,9 @@ def part_divide(part_detect_path, output_dir, min_duration=200):
                 result['vad_type'] = 'speech'
         results.append(result)
 
-    results = tool_subt.init_segments(results)
     results = tool_subt.fix_overlap_segments(results)
     results = tool_subt.unit_segments(results, 'vad_type')
+    results = tool_subt.init_segments(results)
     tool_subt.check_coherent_segments(results)
 
     util.save_as_json(results, json_path)
