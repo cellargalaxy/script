@@ -7,6 +7,7 @@ logger = util.get_logger()
 
 def split_audio(audio_path, json_path, output_dir, path_key):
     wav_dir = os.path.join(output_dir, path_key)
+    wav_dir = str(wav_dir)
     util.delete_path(wav_dir)
     util.mkdir(wav_dir)
     audio = AudioSegment.from_wav(audio_path)
@@ -24,6 +25,7 @@ def split_audio(audio_path, json_path, output_dir, path_key):
             file_name = f"{index:04d}-{segment.get('text', '')}.wav"
         segments[i]['file_name'] = file_name
         cut_path = os.path.join(wav_dir, file_name)
+        cut_path = util.truncate_path(cut_path)
         cut = audio[segment['start']:segment['end']]
         cut.export(cut_path, format='wav')
     json_path = os.path.join(output_dir, f'{path_key}.json')

@@ -9,6 +9,7 @@ import json
 import sys
 import copy
 import gc
+import math
 
 
 def get_logger(name='main', fmt='%(asctime)s %(levelname)-5s %(filename)s:%(lineno)d - %(message)s'):
@@ -253,6 +254,32 @@ def get_home_dir():
 def get_script_path():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     return script_dir
+
+
+def truncate_path(path, max_length=255):
+    if not path:
+        return path
+    ancestor_dir = get_ancestor_dir(path)
+    file_name = get_file_name(path)
+    file_ext = get_file_ext(path)
+    file_name = truncate_string(file_name, max_length - len(file_ext.encode('utf-8')) - 4)  # 减4留点余地
+    path = os.path.join(ancestor_dir, file_name, file_ext)
+    return path
+
+
+def truncate_string(text, max_length):
+    if not text:
+        return text
+    data = text.encode('utf-8')
+    if len(data) <= max_length:
+        return text
+    data = data[:max_length]
+    try:
+        text = data.decode('utf-8', 'ignore')  # 使用ignore无视被中间截断的字
+        return text
+    except UnicodeDecodeError:
+        max_char = math.floor(max_length / 3)
+        return text[:max_char]
 
 
 def input_timeout(prompt, timeout, default=None):
