@@ -1,4 +1,7 @@
 import math
+
+from requests import delete
+
 import util
 import os
 import tool_subt
@@ -6,17 +9,43 @@ import tool_subt
 logger = util.get_logger()
 
 
-def match_silence(start, end, silences, max_ms=1000):
-    timestamp = math.floor((start + end) / 2.0)
-    silence = {'timestamp': -max_ms * 10}
-    for i, segment in enumerate(silences):
-        distance_i = abs(timestamp - segment['timestamp'])
-        distance_j = abs(timestamp - silence['timestamp'])
-        if distance_i <= distance_j:
-            silence = segment
-    if abs(timestamp - silence['timestamp']) <= max_ms:
-        return silence
-    return None
+def calculate_overlap(seg1: dict, seg2: dict) -> int:
+    """
+    计算两个时间段的重叠长度。
+    Args:
+        seg1: 格式为 {"start": int, "end": int} 的字典。
+        seg2: 格式为 {"start": int, "end": int} 的字典。
+    Returns:
+        重叠部分的长度，如果没有重叠则返回 0。
+    """
+    overlap_start = max(seg1["start"], seg2["start"])
+    overlap_end = min(seg1["end"], seg2["end"])
+    if overlap_start < overlap_end:
+        return overlap_end - overlap_start
+    else:
+        return 0
+
+
+def find_max_overlap_segment(segment: dict, segments: list[dict]) -> dict | None:
+    """
+    在 segments 列表中寻找与 segment 重叠最大的时间段。
+    Args:
+        segment: 参考时间段，格式为 {"start": int, "end": int}。
+        segments: 待搜索的时间段列表。
+    Returns:
+        重叠最大的时间段字典，如果没有重叠的则返回 None。
+    """
+    max_overlap = 0
+    max_overlap_segment = None
+    for current_segment in segments:
+        overlap = calculate_overlap(segment, current_segment)
+        if max_overlap < overlap:
+            max_overlap = overlap
+            max_overlap_segment = current_segment
+    if 0 < max_overlap:
+        return max_overlap_segment
+    else:
+        return None
 
 
 def segment_divide(part_detect_path, segment_detect_path, output_dir):
@@ -28,29 +57,37 @@ def segment_divide(part_detect_path, segment_detect_path, output_dir):
     parts = util.read_file_to_obj(part_detect_path)
     segments = util.read_file_to_obj(segment_detect_path)
 
-    silences = []
-    for i, segment in enumerate(parts):
-        if segment['vad_type'] != 'silence':
+    for i, part in enumerate(parts):
+        if parts[i]['vad_type'] != 'speech':
             continue
-        segment['timestamp'] = math.floor((segment['start'] + segment['end']) / 2.0)
-        silences.append(segment)
-
-    for i, segment in enumerate(segments):
-        if i == 0:
+        segment = find_max_overlap_segment(parts[i], segments)
+        if segment:
+            parts[i]['segment_index'] = segment['index']
+            parts[i]['text'] = segment['text']
+        else:
+            parts[i]['vad_type'] = 'silence'
+            parts[i]['text'] = ''
+    parts = tool_subt.unit_segments(parts, 'vad_type')
+    for i, part in enumerate(parts):
+        parts[i]['segment_index'] = -(i + 1)
+        if i == 0 or i == len(parts) - 1:
             continue
-        pre_end = segments[i - 1]['end']
-        start = segments[i]['start']
-        silence = match_silence(pre_end, start, silences)
-        if silence:
-            segments[i - 1]['end'] = silence['start']
-            segments[i]['start'] = silence['end']
+        if parts[i]['vad_type'] != 'silence':
+            continue
+        if parts[i - 1]['segment_index'] == parts[i + 1]['segment_index']:
+            parts[i]['segment_index'] = parts[i - 1]['segment_index']
+    parts = tool_subt.unit_segments(parts, 'segment_index')
 
-    segments = tool_subt.init_segments(segments)
-    segments = tool_subt.fix_overlap_segments(segments)
-    tool_subt.check_discrete_segments(segments)
+    for i, part in enumerate(parts):
+        parts[i].pop("vad_type")
+        parts[i].pop("segment_index")
 
-    util.save_as_json(segments, json_path)
-    tool_subt.save_segments_as_srt(segments, srt_path)
+    parts = tool_subt.init_segments(parts)
+    parts = tool_subt.fix_overlap_segments(parts)
+    tool_subt.check_discrete_segments(parts)
+
+    util.save_as_json(parts, json_path)
+    tool_subt.save_segments_as_srt(parts, srt_path)
     return json_path
 
 
