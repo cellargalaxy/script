@@ -263,7 +263,9 @@ def truncate_path(path, max_length=255):
     file_name = get_file_name(path)
     file_ext = get_file_ext(path)
     file_name = truncate_string(file_name, max_length - len(file_ext.encode('utf-8')) - 4)  # 减4留点余地
-    path = os.path.join(ancestor_dir, file_name, file_ext)
+    path = os.path.join(ancestor_dir, file_name)
+    if file_ext:
+        path = os.path.join(ancestor_dir, f"{file_name}.{file_ext}")
     return path
 
 
