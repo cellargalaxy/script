@@ -1,10 +1,8 @@
-import math
-
-from requests import delete
-
 import util
 import os
 import tool_subt
+from pydub import AudioSegment
+import part_detect_vad
 
 logger = util.get_logger()
 
@@ -27,7 +25,7 @@ def find_first_end(segments, start, end):
     return None
 
 
-def segment_divide(part_detect_path, segment_detect_path, output_dir):
+def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir):
     json_path = os.path.join(output_dir, 'segment_divide.json')
     srt_path = os.path.join(output_dir, 'segment_divide.srt')
     if util.path_exist(json_path):
@@ -66,6 +64,17 @@ def segment_divide(part_detect_path, segment_detect_path, output_dir):
         if segments[i]['start'] < segments[i - 1]['end']:
             segments[i]['start'] = segments[i - 1]['end']
 
+    audio = AudioSegment.from_wav(audio_path)
+    for i, segment in enumerate(segments):
+        cut = audio[segments[i]['start']:segments[i]['end']]
+        segs = part_detect_vad.part_detect_by_data(cut)
+        if len(segs) < 2:
+            continue
+        if segs[0]['vad_type'] == 'silence':
+            segments[i]['start'] = segments[i]['start'] + max(segs[0]['duration'] - 500, 0)
+        if segs[-1]['vad_type'] == 'silence':
+            segments[i]['end'] = segments[i]['end'] - max(segs[-1]['duration'] - 500, 0)
+
     segments = tool_subt.fix_overlap_segments(segments)
     segments = tool_subt.init_segments(segments)
     tool_subt.check_discrete_segments(segments)
@@ -77,10 +86,11 @@ def segment_divide(part_detect_path, segment_detect_path, output_dir):
 
 def exec(manager):
     logger.info("segment_divide,enter: %s", util.json_dumps(manager))
+    audio_path = manager.get('audio_path')
     part_detect_path = manager.get('part_detect_path')
     segment_detect_path = manager.get('segment_detect_path')
     output_dir = os.path.join(manager.get('output_dir'), "segment_divide")
-    json_path = segment_divide(part_detect_path, segment_detect_path, output_dir)
+    json_path = segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir)
     manager['segment_divide_path'] = json_path
     logger.info("segment_divide,leave: %s", util.json_dumps(manager))
     util.exec_gc()

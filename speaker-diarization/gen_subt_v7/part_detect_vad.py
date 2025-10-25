@@ -22,14 +22,13 @@ def diffusion(tags, tag):
     return tags
 
 
-def part_detect(audio_path,
-                frame_rate=50,
-                speech_threshold=0.8,
-                silence_threshold=0.2,
-                volume_threshold=-80,
-                silence_ms_threshold=100,
-                ):
-    audio = AudioSegment.from_wav(audio_path)
+def part_detect_by_data(audio,
+                        frame_rate=50,
+                        speech_threshold=0.8,
+                        silence_threshold=0.2,
+                        volume_threshold=-80,
+                        silence_ms_threshold=100,
+                        ):
     last_end = len(audio)
 
     confidences = tool_ten_vad.vad_confidence(audio, frame_rate)
@@ -56,6 +55,9 @@ def part_detect(audio_path,
 
     tags = diffusion(tags, 1)
     tags = diffusion(tags, -1)
+    for i, tag in enumerate(tags):
+        if tags[i] == 0:
+            tags[i] = 1
 
     segments = []
     for i, tag in enumerate(tags):
@@ -92,4 +94,22 @@ def part_detect(audio_path,
     segments = tool_subt.init_segments(segments)
     tool_subt.check_coherent_segments(segments)
 
+    return segments
+
+
+def part_detect(audio_path,
+                frame_rate=50,
+                speech_threshold=0.8,
+                silence_threshold=0.2,
+                volume_threshold=-80,
+                silence_ms_threshold=100,
+                ):
+    audio = AudioSegment.from_wav(audio_path)
+    segments = part_detect_by_data(audio,
+                                   frame_rate=frame_rate,
+                                   speech_threshold=speech_threshold,
+                                   silence_threshold=silence_threshold,
+                                   volume_threshold=volume_threshold,
+                                   silence_ms_threshold=silence_ms_threshold,
+                                   )
     return segments
