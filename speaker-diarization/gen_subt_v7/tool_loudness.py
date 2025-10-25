@@ -62,3 +62,15 @@ def loudness_normalization(input_path, output_path, target_lufs=-23.0):
     util.mkdir(output_path)
     info = sf.info(input_path)
     sf.write(output_path, loudness_normalized_audio, rate, subtype=info.subtype)
+
+
+def get_loudness(audio, frame_rate=50):
+    frame_simple = int(1000 / frame_rate)
+    volumes = []
+    for i in range(0, len(audio), frame_simple):
+        frame_data = audio[i:i + frame_simple]
+        if len(frame_data) < 1:
+            continue
+        dbfs = frame_data.dBFS
+        volumes.append(dbfs)
+    return volumes
