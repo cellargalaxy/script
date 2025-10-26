@@ -5,4 +5,5 @@ pip install pyloudnorm
 sudo apt install -y libc++1 && pip install -U --force-reinstall -v git+https://github.com/TEN-framework/ten-vad.git
 pip install pysubs2
 pip install faster-whisper
+pip install pyannote.audio==3.4.0
 pip install speechbrain
