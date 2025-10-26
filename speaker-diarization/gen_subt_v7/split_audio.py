@@ -35,7 +35,7 @@ def split_audio(audio_path, json_path, output_dir, path_key, min_duration=None):
 
 def exec(manager, path_key, min_duration=None):
     logger.info("split_audio,enter: %s", util.json_dumps(manager))
-    audio_path = manager.get('audio_path')
+    audio_path = manager.get('extract_loudness_path')
     json_path = manager.get(path_key)
     output_dir = os.path.join(manager.get('output_dir'), 'split_audio')
     split_audio(audio_path, json_path, output_dir, path_key, min_duration)

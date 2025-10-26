@@ -12,28 +12,38 @@ logger = util.get_logger()
 
 def exec(manager):
     import split_audio
+
     import init
     init.exec(manager)
+
     import extract_audio
     extract_audio.exec(manager)
-    import extract_stem
-    extract_stem.exec(manager)
-    import extract_simple
-    extract_simple.exec(manager)
+
     import extract_loudness
     extract_loudness.exec(manager)
+
+    import extract_stem
+    extract_stem.exec(manager)
+
+    import extract_simple
+    extract_simple.exec(manager)
+
     import part_detect
     part_detect.exec(manager)
-    split_audio.exec(manager, 'part_detect_path')
+    # split_audio.exec(manager, 'part_detect_path')
+
     import part_divide
     part_divide.exec(manager)
-    split_audio.exec(manager, 'part_divide_path')
+    # split_audio.exec(manager, 'part_divide_path')
+
     import segment_detect
     segment_detect.exec(manager)
-    split_audio.exec(manager, 'segment_detect_path')
+    # split_audio.exec(manager, 'segment_detect_path')
+
     import segment_divide
     segment_divide.exec(manager)
-    split_audio.exec(manager, 'segment_divide_path')
+    # split_audio.exec(manager, 'segment_divide_path')
+
     import speaker_detect
     speaker_detect.exec(manager)
     split_audio.exec(manager, 'speaker_detect_path')
@@ -53,8 +63,8 @@ def exec_batch(video_paths):
 
 video_paths = [
     # '../material/mao.mp3',
-    # '../material/demo.mkv',
-    '../material/mkv.mkv',
+    '../material/demo.mkv',
+    # '../material/mkv.mkv',
 ]
 
 exec_batch(video_paths)
