@@ -58,14 +58,20 @@ def extract_stem(audio_path, output_dir):
     if util.path_exist(output_path):
         return output_path
 
+    path_map = {}
+
     vocal_path, bgm_path = extract_vocal(audio_path, output_dir)
     util.copy_file(bgm_path, os.path.join(output_dir, 'bgm.wav'))
+    path_map['extract_stem_bgm_path'] = os.path.join(output_dir, 'bgm.wav')
 
     main_vocal_path, harmony_path = extract_main_vocal(vocal_path, output_dir)
     util.copy_file(harmony_path, os.path.join(output_dir, 'harmony.wav'))
+    path_map['extract_stem_harmony_path'] = os.path.join(output_dir, 'harmony.wav')
 
     noreverb_path, reverb_path = extract_dereverb(main_vocal_path, output_dir)
-    util.copy_file(noreverb_path, os.path.join(output_dir, 'noreverb.wav'))
     util.copy_file(reverb_path, os.path.join(output_dir, 'reverb.wav'))
+    util.copy_file(noreverb_path, os.path.join(output_dir, 'noreverb.wav'))
+    path_map['extract_stem_reverb_path'] = os.path.join(output_dir, 'reverb.wav')
+    path_map['extract_stem_noreverb_path'] = os.path.join(output_dir, 'noreverb.wav')
 
-    return output_path
+    return path_map
