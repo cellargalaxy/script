@@ -74,18 +74,21 @@ def speaker_detect(audio_path, segment_divide_path, output_dir, min_duration=200
     max_clusters = max(max_clusters, 4)
     max_clusters = min(max_clusters, 64)
     clusters = clustering.cluster(embeddings=embeddings, min_clusters=1, max_clusters=max_clusters)
+    speakers = []
+    for i, cluster in enumerate(clusters):
+        speakers.append(int(cluster))
 
-    if len(embedding_list) != len(clusters):
-        logger.error(f"句子与说话人长度不一致, embedding_list: {len(embedding_list)}, clusters: {len(clusters)}")
-        raise ValueError(f"句子与说话人长度不一致, embedding_list: {len(embedding_list)}, clusters: {len(clusters)}")
+    if len(embedding_list) != len(speakers):
+        logger.error(f"句子与说话人长度不一致, embedding_list: {len(embedding_list)}, speakers: {len(speakers)}")
+        raise ValueError(f"句子与说话人长度不一致, embedding_list: {len(embedding_list)}, speakers: {len(speakers)}")
 
-    clusters = rank_arr(clusters)
-    cluster_iterator = iter(clusters)
+    speakers = rank_arr(speakers)
+    speakers_iterator = iter(speakers)
     for i, segment in enumerate(segments):
         if segments[i].get('speaker', '') == 'other':
             continue
-        cluster = next(cluster_iterator)
-        segments[i]['speaker'] = f'speaker{cluster:02d}'
+        speakers = next(speakers_iterator)
+        segments[i]['speaker'] = f'speaker{speakers:02d}'
 
     util.save_as_json(segments, json_path)
     tool_subt.save_segments_as_srt(segments, srt_path)
