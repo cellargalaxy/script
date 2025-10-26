@@ -28,7 +28,7 @@ def extract_main_vocal(audio_path, output_dir):
     if util.path_exist(vocals_path) and util.path_exist(instrumental_path):
         return vocals_path, instrumental_path
     separator = Separator(model_file_dir=model_file_dir, output_dir=output_dir)
-    separator.load_model(model_filename='mel_band_roformer_karaoke_gabox.ckpt')
+    separator.load_model(model_filename='mel_band_roformer_karaoke_becruily.ckpt')
     output_names = {
         "Vocals": "vocals",
         "Instrumental": "instrumental",

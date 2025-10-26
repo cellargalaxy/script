@@ -72,11 +72,24 @@ models = [
     # "melband_roformer_inst_v2.ckpt",  # 和声完全没有被去掉
     # "melband_roformer_instvox_duality_v2.ckpt",  # 和声完全没有被去掉
 
+    # "htdemucs_ft.yaml",  # 和声完全没有被去掉
+    # "htdemucs.yaml",  # 和声完全没有被去掉
+    # "hdemucs_mmi.yaml",  # 和声完全没有被去掉
+    # "htdemucs_6s.yaml",  # 和声完全没有被去掉
+    # "model_bs_roformer_ep_317_sdr_12.9755.ckpt",  # 和声完全没有被去掉
+    # "model_bs_roformer_ep_937_sdr_10.5309.ckpt",  # 和声完全没有被去掉
+    # "melband_roformer_big_beta6.ckpt",  # 和声完全没有被去掉
+    # "melband_roformer_big_beta6x.ckpt",  # 和声完全没有被去掉
+    # "melband_roformer_inst_v1_plus.ckpt",  # 和声完全没有被去掉
+    # "melband_roformer_inst_v1e.ckpt",  # 和声完全没有被去掉
+    # "melband_roformer_inst_v1e_plus.ckpt",  # 和声完全没有被去掉
+    # "melband_roformer_inst_v1.ckpt",  # 和声完全没有被去掉
+
     # "mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt",  # 好
     # "mel_band_roformer_karaoke_gabox.ckpt",  # 好
     # "mel_band_roformer_karaoke_becruily.ckpt",  # 好
 
-    "mel_band_roformer_karaoke_gabox.ckpt",
+    "mel_band_roformer_karaoke_becruily.ckpt",
 ]
 for model in models:
     separator = None
@@ -86,7 +99,8 @@ for model in models:
                               output_dir=os.path.join('output', model))
         separator.load_model(model_filename=model)
         output_files = separator.separate([
-            'output/noreverb.wav'
+            '/workspace/script/speaker-diarization/material/mao.mp3',
+            # '/workspace/script/speaker-diarization/material/demo.mkv',
             # '../../material/demo.wav',
             # '../../material/BOW_AND_ARROW.flac',
             # '../../material/clover_wish.flac',
@@ -96,5 +110,5 @@ for model in models:
         ])
     except Exception as e:
         print(f'Failed to load model: {model}\nError: {e}')
-    # finally:
+        # finally:
         print('Done')
