@@ -6,11 +6,52 @@ from pyannote.audio.pipelines.clustering import AgglomerativeClustering
 import math
 import numpy as np
 import tool_subt
+from collections import Counter
 
 logger = util.get_logger()
 
 
-def speaker_detect(audio_path, segment_divide_path, output_dir):
+def rank_arr(arr):
+    """
+    将输入整数数组中的元素按其出现频率进行降序排名，
+    频率最高的数字分配为 0，次高为 1，以此类推。
+    Args:
+        arr: 待处理的整数列表。
+    Returns:
+        一个新的列表，其中原始值已被替换为它们的频率排名。
+    """
+    if not arr:
+        return []
+
+    # 1. 统计频率
+    # Counter 得到一个字典 {数字: 出现次数}
+    counts = Counter(arr)
+
+    # 2. 确定排名
+    # 将 items 转换为 (出现次数, 数字) 元组列表
+    # 排序规则：
+    # - 首先按出现次数 (x[1]) 降序排列 (使用 -x[1])
+    # - 其次按数字本身 (x[0]) 升序排列 (保证频率相同时的稳定性)
+    # sorted_items 示例: [(-3, 10), (-2, 5), (-1, 20)]
+    sorted_items = sorted(
+        counts.items(),
+        key=lambda x: (-x[1], x[0])
+    )
+
+    # 3. 构建映射表 (旧值 -> 新排名)
+    # 排名从 0 开始
+    # rank_map 示例: {10: 0, 5: 1, 20: 2}
+    rank_map = {}
+    for rank, (value, count) in enumerate(sorted_items):
+        rank_map[value] = rank
+
+    # 4. 遍历原始数组，分配新值
+    result = [rank_map[value] for value in arr]
+
+    return result
+
+
+def speaker_detect(audio_path, segment_divide_path, output_dir, min_duration=2000):
     json_path = os.path.join(output_dir, 'speaker_detect.json')
     srt_path = os.path.join(output_dir, 'speaker_detect.srt')
     if util.path_exist(json_path):
@@ -20,7 +61,10 @@ def speaker_detect(audio_path, segment_divide_path, output_dir):
     segments = util.read_file_to_obj(segment_divide_path)
     embedding_list = []
     for i, segment in enumerate(segments):
-        cut = audio[segment['start']:segment['end']]
+        if segments[i]['duration'] < min_duration:
+            segments[i]['speaker'] = 'other'
+            continue
+        cut = audio[segments[i]['start']:segments[i]['end']]
         embedding = speaker_detect_speechbrain.extract_embedding(cut)
         embedding_list.append(embedding)
     embeddings = np.array(embedding_list)
@@ -31,12 +75,17 @@ def speaker_detect(audio_path, segment_divide_path, output_dir):
     max_clusters = min(max_clusters, 64)
     clusters = clustering.cluster(embeddings=embeddings, min_clusters=1, max_clusters=max_clusters)
 
-    if len(segments) != len(clusters):
-        logger.error(f"句子与说话人长度不一致, segments: {len(segments)}, clusters: {len(clusters)}")
-        raise ValueError(f"句子与说话人长度不一致, segments: {len(segments)}, clusters: {len(clusters)}")
+    if len(embedding_list) != len(clusters):
+        logger.error(f"句子与说话人长度不一致, embedding_list: {len(embedding_list)}, clusters: {len(clusters)}")
+        raise ValueError(f"句子与说话人长度不一致, embedding_list: {len(embedding_list)}, clusters: {len(clusters)}")
 
+    clusters = rank_arr(clusters)
+    cluster_iterator = iter(clusters)
     for i, segment in enumerate(segments):
-        segments[i]['speaker'] = clusters[i]
+        if segments[i].get('speaker', '') == 'other':
+            continue
+        cluster = next(cluster_iterator)
+        segments[i]['speaker'] = f'speaker{cluster:02d}'
 
     util.save_as_json(segments, json_path)
     tool_subt.save_segments_as_srt(segments, srt_path)
@@ -48,6 +97,7 @@ def exec(manager):
     audio_path = manager.get('audio_path')
     segment_divide_path = manager.get('segment_divide_path')
     output_dir = os.path.join(manager.get('output_dir'), 'speaker_detect')
-    speaker_detect(audio_path, segment_divide_path, output_dir)
+    json_path = speaker_detect(audio_path, segment_divide_path, output_dir)
+    manager['speaker_detect_path'] = json_path
     logger.info("speaker_detect,leave: %s", util.json_dumps(manager))
     speaker_detect_speechbrain.exec_gc()
