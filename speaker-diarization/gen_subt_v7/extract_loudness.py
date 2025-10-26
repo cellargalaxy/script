@@ -5,19 +5,16 @@ import tool_loudness
 logger = util.get_logger()
 
 
-def loudness(input_path, output_dir):
-    output_path = os.path.join(output_dir, util.get_file_basename(input_path))
-    if util.path_exist(output_path):
-        return output_path
-    tool_loudness.loudness_normalization(input_path, output_path)
-    return output_path
-
-
 def extract_loudness(input_path_map, output_dir):
     output_path_map = {}
-    for key, path in input_path_map.items():
-        output_path = loudness(path, output_dir)
+    for key, input_path in input_path_map.items():
         key = key.replace('extract_stem', 'extract_loudness')
+        file_name = util.get_file_basename(input_path)
+        file_name = file_name.replace('extract_stem', 'extract_loudness')
+        output_path = os.path.join(output_dir, file_name)
+        if util.path_exist(output_path):
+            continue
+        tool_loudness.loudness_normalization(input_path, output_path)
         output_path_map[key] = output_path
     return output_path_map
 
