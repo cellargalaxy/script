@@ -7,7 +7,6 @@ logger = util.get_logger()
 
 def split_audio(audio_path, json_path, output_dir, path_key, min_duration=None):
     wav_dir = os.path.join(output_dir, path_key)
-    wav_dir = str(wav_dir)
     util.delete_path(wav_dir)
     util.mkdir(wav_dir)
     audio = AudioSegment.from_wav(audio_path)
@@ -22,7 +21,7 @@ def split_audio(audio_path, json_path, output_dir, path_key, min_duration=None):
         if segment.get('vad_type', ''):
             file_name = f"{index:04d}-{segment.get('vad_type', '')}.wav"
         if segment.get('speaker', ''):
-            file_name = f"{index:04d}-{segment.get('speaker', '')}.wav"
+            wav_dir = os.path.join(wav_dir, segment.get('speaker', ''))
         if segment.get('text', ''):
             file_name = f"{index:04d}-{segment.get('text', '')}.wav"
         segments[i]['file_name'] = file_name

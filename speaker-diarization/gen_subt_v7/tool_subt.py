@@ -1,15 +1,16 @@
 import util
-import tool_whisperx
 import pysubs2
 import math
 
 logger = util.get_logger()
+
 
 def init_segments(segments):
     for i, segment in enumerate(segments):
         segments[i]['index'] = i
         segments[i]['duration'] = segments[i]['end'] - segments[i]['start']
     return segments
+
 
 def fix_overlap_segments(segments):
     for i, segment in enumerate(segments):
@@ -148,40 +149,10 @@ def check_discrete_segments(segments):
                 raise ValueError("检查segments，pre_end与start非法")
 
 
-def shift_subt_time(subt, duration_ms):
-    duration = duration_ms / 1000.0
-
-    segments = subt.get('segments', [])
-    for i, segment in enumerate(segments):
-        segments[i]['start'] = segments[i]['start'] + duration
-        segments[i]['end'] = segments[i]['end'] + duration
-        words = segments[i].get('words', [])
-        for j, word in enumerate(words):
-            words[j]['start'] = words[j]['start'] + duration
-            words[j]['end'] = words[j]['end'] + duration
-        if len(words) > 0:
-            segments[i]['words'] = words
-    subt['segments'] = segments
-
-    return subt
-
-
 def shift_segments_time(segments, duration_ms):
     for i, segment in enumerate(segments):
         segments[i]['start'] = segments[i]['start'] + duration_ms
         segments[i]['end'] = segments[i]['end'] + duration_ms
-    return segments
-
-
-def subt2segments(subt):
-    segments = subt.get('segments', [])
-    for i, segment in enumerate(segments):
-        segments[i].pop('words', None)
-        segments[i]['start'] = round(segments[i]['start'] * 1000)
-        if segments[i]['start'] < 0:
-            segments[i]['start'] = 0
-        segments[i]['end'] = round(segments[i]['end'] * 1000)
-    segments = fix_overlap_segments(segments)
     return segments
 
 
@@ -195,11 +166,11 @@ def save_segments_as_srt(segments, save_path, skip_silence=False):
         end = segment['end'] / 1000.0
         text = f"{index:04d} {segment['start']}>{segment['end']}"
         if segment.get('vad_type', ''):
-            text = f"{index:04d} {segment['start']}>{segment['end']} {segment.get('vad_type', '')}"
+            text = f"{text} {segment.get('vad_type', '')}"
         if segment.get('speaker', ''):
-            text = f"{index:04d} {segment['start']}>{segment['end']} {segment.get('speaker', '')}"
+            text = f"{text} {segment.get('speaker', '')}"
         if segment.get('text', ''):
-            text = f"{index:04d} {segment['start']}>{segment['end']} {segment.get('text', '')}"
+            text = f"{text} {segment.get('text', '')}"
         if skip_silence and segment.get('vad_type', '') == 'silence':
             continue
         obj = {'start': start, 'end': end, 'text': text}
@@ -207,19 +178,3 @@ def save_segments_as_srt(segments, save_path, skip_silence=False):
     util.mkdir(save_path)
     subs = pysubs2.load_from_whisper(results)
     subs.save(save_path)
-
-
-def save_subt_as_srt(subt, save_path):
-    highlight_words = False
-    segments = subt['segments']
-    for i, segment in enumerate(segments):
-        if segment.get('words', []):
-            highlight_words = True
-    save_dir = util.get_ancestor_dir(save_path)
-    util.mkdir(save_dir)
-    writer = tool_whisperx.get_writer("srt", save_dir)
-    writer(
-        subt,
-        util.get_file_basename(save_path),
-        {"max_line_width": None, "max_line_count": None, "highlight_words": highlight_words},
-    )
