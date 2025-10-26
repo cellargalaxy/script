@@ -66,6 +66,8 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
 
     audio = AudioSegment.from_wav(audio_path)
     for i, segment in enumerate(segments):
+        if segments[i]['end'] - segments[i]['start'] < 200:
+            continue
         cut = audio[segments[i]['start']:segments[i]['end']]
         segs = part_detect_vad.part_detect_by_data(cut)
         if len(segs) < 2:
