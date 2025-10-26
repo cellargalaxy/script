@@ -55,22 +55,22 @@ def extract_dereverb(audio_path, output_dir):
 
 def extract_stem(audio_path, output_dir):
     path_map = {
-        'extract_stem_bgm_path': os.path.join(output_dir, 'bgm.wav'),
-        'extract_stem_harmony_path': os.path.join(output_dir, 'harmony.wav'),
-        'extract_stem_reverb_path': os.path.join(output_dir, 'reverb.wav'),
-        'extract_stem_noreverb_path': os.path.join(output_dir, 'noreverb.wav'),
+        'bgm_path': os.path.join(output_dir, 'bgm.wav'),
+        'harmony_path': os.path.join(output_dir, 'harmony.wav'),
+        'reverb_path': os.path.join(output_dir, 'reverb.wav'),
+        'noreverb_path': os.path.join(output_dir, 'noreverb.wav'),
     }
-    if util.path_exist(path_map['extract_stem_noreverb_path']):
+    if util.path_exist(path_map['noreverb_path']):
         return path_map
 
     vocal_path, bgm_path = extract_vocal(audio_path, output_dir)
-    util.copy_file(bgm_path, path_map['extract_stem_bgm_path'])
+    util.copy_file(bgm_path, path_map['bgm_path'])
 
     main_vocal_path, harmony_path = extract_main_vocal(vocal_path, output_dir)
-    util.copy_file(harmony_path, path_map['extract_stem_harmony_path'])
+    util.copy_file(harmony_path, path_map['harmony_path'])
 
     noreverb_path, reverb_path = extract_dereverb(main_vocal_path, output_dir)
-    util.copy_file(reverb_path, path_map['extract_stem_reverb_path'])
-    util.copy_file(noreverb_path, path_map['extract_stem_noreverb_path'])
+    util.copy_file(reverb_path, path_map['reverb_path'])
+    util.copy_file(noreverb_path, path_map['noreverb_path'])
 
     return path_map
