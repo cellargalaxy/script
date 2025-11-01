@@ -20,7 +20,7 @@ def exec(manager):
     extract_audio.exec(manager)
 
     import extract_stem
-    extract_stem.exec(manager)
+    extract_stem.exec(manager, ["vocal", "main_vocal", "dereverb"])
 
     import extract_loudness
     extract_loudness.exec(manager)
@@ -62,8 +62,19 @@ def exec_batch(video_paths):
 
 
 video_paths = [
-    '../material/demo.mkv',
-    # '../material/mkv.mkv',
+    # '../material/panty.mkv',
+    # '../material/panty/[Nekomoe kissaten&LoliHouse] New PANTY & STOCKING with GARTERBELT - 01 [WebRip 1080p HEVC-10bit AACx2 ASSx2].mkv',
+    # '../material/panty/[Nekomoe kissaten&LoliHouse] New PANTY & STOCKING with GARTERBELT - 02 [WebRip 1080p HEVC-10bit AACx2 ASSx2].mkv',
+    # '../material/panty/[Nekomoe kissaten&LoliHouse] New PANTY & STOCKING with GARTERBELT - 03 [WebRip 1080p HEVC-10bit AACx2 ASSx2].mkv',
+    # '../material/panty/[Nekomoe kissaten&LoliHouse] New PANTY & STOCKING with GARTERBELT - 04 [WebRip 1080p HEVC-10bit AACx2 ASSx2].mkv',
+    # '../material/panty/[Nekomoe kissaten&LoliHouse] New PANTY & STOCKING with GARTERBELT - 05 [WebRip 1080p HEVC-10bit AACx2 ASSx2].mkv',
+    # '../material/panty/[Nekomoe kissaten&LoliHouse] New PANTY & STOCKING with GARTERBELT - 06 [WebRip 1080p HEVC-10bit AACx2 ASSx2].mkv',
+    # '../material/panty/[Nekomoe kissaten&LoliHouse] New PANTY & STOCKING with GARTERBELT - 07 [WebRip 1080p HEVC-10bit AACx2 ASSx2].mkv',
+    # '../material/panty/[Nekomoe kissaten&LoliHouse] New PANTY & STOCKING with GARTERBELT - 08 [WebRip 1080p HEVC-10bit AACx2 ASSx2].mkv',
+    # '../material/panty/[Nekomoe kissaten&LoliHouse] New PANTY & STOCKING with GARTERBELT - 09 [WebRip 1080p HEVC-10bit AACx2 ASSx2].mkv',
+    # '../material/panty/[Nekomoe kissaten&LoliHouse] New PANTY & STOCKING with GARTERBELT - 10 [WebRip 1080p HEVC-10bit AACx2 ASSx2].mkv',
+    # '../material/demo.mkv',
+    '../material/mkv.mkv',
     # '../material/youtube-live/【狼と香辛料】「賢狼ホロのわっちチャンネル」 #1　あの賢狼ホロがYouTuberデビュー⁉ [Vup1WxjRaUY].mkv',
     # '../material/youtube-live/【狼と香辛料】「賢狼ホロのわっちチャンネル」 #2　「写真で一言」でまさかの珍回答⁉ [A1LoxukWcrs].mkv',
     # '../material/youtube-live/【狼と香辛料】「賢狼ホロのわっちチャンネル」 #3 「音あてクイズ」で賢狼の本領発揮⁉ [1LbrvnMbvKY].mkv',

@@ -22,6 +22,7 @@ def exec(manager):
     output_dir = os.path.join(manager.get('output_dir'), "extract_loudness")
     output_path_map = extract_loudness(input_path_map, output_dir)
     manager['extract_loudness_path_map'] = output_path_map
-    manager['audio_path'] = output_path_map['noreverb_path']
+    manager['audio_path'] = output_path_map['audio_path']
+    manager['split_audio_path'] = output_path_map['split_audio_path']
     logger.info("extract_loudness,leave: %s", util.json_dumps(manager))
     util.exec_gc()

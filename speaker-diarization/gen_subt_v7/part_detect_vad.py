@@ -29,6 +29,10 @@ def part_detect_by_data(audio,
                         volume_threshold=-80,
                         silence_ms_threshold=100,
                         ):
+    if audio.channels != 1:
+        audio = audio.set_channels(1)
+    if audio.frame_rate != 16000:
+        audio = audio.set_frame_rate(16000)
     last_end = len(audio)
 
     confidences = tool_ten_vad.vad_confidence(audio, frame_rate)
