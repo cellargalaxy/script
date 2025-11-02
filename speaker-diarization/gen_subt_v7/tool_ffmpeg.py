@@ -8,7 +8,8 @@ def extract_audio_track(video_path, index, audio_path):
     cmd = [
         'ffmpeg',
         '-i', video_path,
-        '-map', "0:a:{}".format(index),  # 在第0个输入文件中选择第index个音轨
+        '-map', f"0:a:{index}",  # 在第0个输入文件中选择第index个音轨
+        '-ac', '2',
         '-c:a', 'pcm_s16le',
         '-y',
         audio_path
