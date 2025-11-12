@@ -71,10 +71,6 @@ def part_divide(part_detect_path, output_dir, min_duration=200):
         if segments[i]['vad_type'] == 'silence' and segments[i]['duration'] < min_duration:
             segments[i]['vad_type'] = 'speech'
     segments = tool_subt.unit_segments(segments, 'vad_type')
-    for i, segment in enumerate(segments):
-        if segments[i]['vad_type'] == 'speech' and segments[i]['duration'] < min_duration:
-            segments[i]['vad_type'] = 'silence'
-    segments = tool_subt.unit_segments(segments, 'vad_type')
     util.save_as_json(segments, os.path.join(output_dir, 'unit_mini.json'))
     tool_subt.save_segments_as_srt(segments, os.path.join(output_dir, 'unit_mini.srt'), skip_silence=True)
 
