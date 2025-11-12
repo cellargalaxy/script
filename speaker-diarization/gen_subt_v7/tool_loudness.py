@@ -65,14 +65,14 @@ def loudness_normalization(input_path, output_path, target_lufs=-23.0):
 
 
 def get_loudness(audio, frame_rate=50):
-    frame_simple = int(1000 / frame_rate)
-    total_ms = len(audio)
-    frame_cnt = total_ms // frame_simple
+    simple_rate = 1000
+    frame_simple = int(simple_rate / frame_rate)
+    frame_cnt = len(audio) // frame_simple
     volumes = []
     for i in range(frame_cnt):
         start_ms = i * frame_simple
         end_ms = (i + 1) * frame_simple
-        frame_data = audio[start_ms: end_ms]
-        dbfs = frame_data.dBFS
-        volumes.append(dbfs)
+        frame_data = audio[start_ms:end_ms]
+        volume = frame_data.dBFS
+        volumes.append(volume)
     return volumes
