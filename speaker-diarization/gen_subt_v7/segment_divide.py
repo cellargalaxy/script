@@ -1,29 +1,10 @@
-import util
 import os
 import tool_subt
-from pydub import AudioSegment
-import part_detect_vad
 import math
+import util
+from pydub import AudioSegment
 
 logger = util.get_logger()
-
-
-def find_first_start(segments, start, end):
-    for i, segment in enumerate(segments):
-        start_overlap = max(start, segment['start'])
-        end_overlap = min(end, segment['end'])
-        if start_overlap <= end_overlap:
-            return start_overlap
-    return None
-
-
-def find_first_end(segments, start, end):
-    for i, segment in enumerate(segments):
-        start_overlap = max(start, segment['start'])
-        end_overlap = min(end, segment['end'])
-        if start_overlap <= end_overlap:
-            return end_overlap
-    return None
 
 
 def box_segments(segments, start, end):
@@ -60,8 +41,12 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
     if util.path_exist(json_path):
         return json_path
 
+    audio = AudioSegment.from_wav(audio_path)
+    last_end = len(audio)
+
     parts = util.read_file_to_obj(part_detect_path)
     segments = util.read_file_to_obj(segment_detect_path)
+    segments = tool_subt.fill_segments(segments, last_end=last_end, vad_type='silene')
     tool_subt.check_discrete_segments(segments)
 
     silences = []
@@ -73,26 +58,41 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
     for i, segment in enumerate(segments):
         if i == 0:
             continue
-        left = (segments[i - 1]['end'] + segments[i - 1]['start']) / 2.0
-        left = math.ceil(left)
-        left = max(segments[i - 1]['end'] - 1000, left)
-        right = (segments[i]['end'] + segments[i]['start']) / 2.0
-        right = math.floor(right)
-        right = min(segments[i]['start'] + 1000, right)
-        gaps = box_segments(silences, left, right)
+        left_side = (segments[i - 1]['end'] + segments[i - 1]['start']) / 2.0
+        left_side = math.ceil(left_side)
+        left_side = max(segments[i - 1]['end'] - 1000, left_side)
+        right_side = (segments[i]['end'] + segments[i]['start']) / 2.0
+        right_side = math.floor(right_side)
+        right_side = min(segments[i]['start'] + 1000, right_side)
+        gaps = box_segments(silences, left_side, right_side)
         left_gap, middle_gap, right_gap = scrap_segments(gaps, segments[i]['start'])
-        middle = segments[i]['start']
+        left_cut = -1
+        if left_gap:
+            left_cut = (left_gap['end'] + left_gap['start']) / 2.0
+            left_cut = math.floor(left_cut)
+        middle_cut = -1
         if middle_gap:
-            middle = (middle_gap['end'] + middle_gap['start']) / 2.0
-            middle = math.floor(middle)
-        elif right_gap:
-            middle = (right_gap['end'] + right_gap['start']) / 2.0
-            middle = math.floor(middle)
-        elif left_gap:
-            middle = (left_gap['end'] + left_gap['start']) / 2.0
-            middle = math.floor(middle)
-        segments[i - 1]['end'] = middle
-        segments[i]['start'] = middle
+            middle_cut = (middle_gap['end'] + middle_gap['start']) / 2.0
+            middle_cut = math.floor(middle_cut)
+        right_cut = -1
+        if right_gap:
+            right_cut = (right_gap['end'] + right_gap['start']) / 2.0
+            right_cut = math.floor(right_cut)
+        if middle_cut >= 0:
+            segments[i - 1]['end'] = middle_cut
+            segments[i]['start'] = middle_cut
+        elif left_cut >= 0 and right_cut < 0:
+            segments[i - 1]['end'] = left_cut
+            segments[i]['start'] = left_cut
+        elif right_cut >= 0 and left_cut < 0:
+            segments[i - 1]['end'] = right_cut
+            segments[i]['start'] = right_cut
+        elif abs(left_cut - segments[i]['start']) < abs(right_cut - segments[i]['start']):
+            segments[i - 1]['end'] = left_cut
+            segments[i]['start'] = left_cut
+        elif abs(right_cut - segments[i]['start']) < abs(left_cut - segments[i]['start']):
+            segments[i - 1]['end'] = right_cut
+            segments[i]['start'] = right_cut
 
     segments = tool_subt.fix_overlap_segments(segments)
     segments = tool_subt.init_segments(segments)
