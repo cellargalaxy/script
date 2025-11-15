@@ -37,6 +37,23 @@ def scrap_segments(segments, time):
     return left, middle, right
 
 
+def trim_silence(segment, silences):
+    start_silence = None
+    end_silence = None
+    for i, silence in enumerate(silences):
+        if silence['start'] <= segment['start'] and segment['start'] < silence['end']:
+            start_silence = silence
+        if silence['start'] < segment['end'] and segment['end'] <= silence['end']:
+            end_silence = silence
+    if start_silence:
+        segment['start'] = start_silence['end']
+    if end_silence:
+        segment['end'] = end_silence['start']
+    if segment['end'] <= segment['start']:
+        return None
+    return segment
+
+
 def cut_segment(left_segment, right_segment, silences):
     left_side = (left_segment['end'] + left_segment['start']) / 2.0
     left_side = math.ceil(left_side)
@@ -126,7 +143,6 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
             segments[i] = segs[-1]
     results.append(segments[-1])
     segments = results
-
     for i, segment in enumerate(segments):
         if i == 0:
             continue
@@ -171,6 +187,32 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
         if segments[i].get('segment_divide_type', None):
             continue
         segments[i]['segment_divide_type'] = 'default'
+
+    # results = []
+    # for i, segment in enumerate(segments):
+    #     if segment.get('vad_type', None) == 'silene':
+    #         continue
+    #     segment = trim_silence(segment, silences)
+    #     if not segment:
+    #         continue
+    #     results.append(segment)
+    # segments = results
+    # if len(segments) > 0:
+    #     if segments[0]['start'] < 1000:
+    #         segments[0]['start'] = 0
+    #     if last_end - segments[-1]['end'] < 1000:
+    #         segments[-1]['end'] = last_end
+    # for i, segment in enumerate(segments):
+    #     if i == 0:
+    #         continue
+    #     if segments[i]['start'] - segments[i - 1]['end'] >= 1000:
+    #         continue
+    #     point = (segments[i - 1]['end'] + segments[i]['start']) / 2.0
+    #     point = math.floor(point)
+    #     segments[i - 1]['end'] = point
+    #     segments[i]['start'] = point
+    # segments = tool_subt.fill_segments(segments, last_end=last_end, vad_type='silene')
+    # tool_subt.check_coherent_segments(segments)
 
     segments = tool_subt.fix_overlap_segments(segments)
     segments = tool_subt.unit_segments(segments, 'vad_type')
