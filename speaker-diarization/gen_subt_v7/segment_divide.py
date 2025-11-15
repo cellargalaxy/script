@@ -57,6 +57,7 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
         silences.append(part)
 
     for i, segment in enumerate(segments):
+        segments[i]['segment_divide_type'] = 'default'
         if i == 0:
             continue
         left_side = (segments[i - 1]['end'] + segments[i - 1]['start']) / 2.0
@@ -80,18 +81,23 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
             right_cut = (right_gap['end'] + right_gap['start']) / 2.0
             right_cut = math.floor(right_cut)
         if middle_cut >= 0:
+            segments[i]['segment_divide_type'] = 'middle'
             segments[i - 1]['end'] = middle_cut
             segments[i]['start'] = middle_cut
         elif left_cut >= 0 and right_cut < 0:
+            segments[i]['segment_divide_type'] = 'left_only'
             segments[i - 1]['end'] = left_cut
             segments[i]['start'] = left_cut
         elif right_cut >= 0 and left_cut < 0:
+            segments[i]['segment_divide_type'] = 'right_only'
             segments[i - 1]['end'] = right_cut
             segments[i]['start'] = right_cut
         elif abs(left_cut - segments[i]['start']) < abs(right_cut - segments[i]['start']):
+            segments[i]['segment_divide_type'] = 'left_near'
             segments[i - 1]['end'] = left_cut
             segments[i]['start'] = left_cut
         elif abs(right_cut - segments[i]['start']) < abs(left_cut - segments[i]['start']):
+            segments[i]['segment_divide_type'] = 'right_near'
             segments[i - 1]['end'] = right_cut
             segments[i]['start'] = right_cut
 
