@@ -1,3 +1,4 @@
+pip install "huggingface-hub<1.0.0"
 pip install inputimeout
 pip install --upgrade torch==2.8.0+cu126 torchvision==0.23.0+cu126 torchaudio==2.8.0+cu126 --index-url https://download.pytorch.org/whl/cu126
 pip install "audio-separator[gpu]"
@@ -7,3 +8,5 @@ pip install pysubs2
 pip install faster-whisper
 pip install pyannote.audio==3.4.0
 pip install speechbrain
+
+pip freeze > requirements.txt
