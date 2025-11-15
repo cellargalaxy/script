@@ -33,7 +33,7 @@ def unit_segments(segments, type_key, type_value=None):
         pre_type = ''
         if len(results) > 0:
             pre_type = results[-1].get(type_key, '')
-        if segment[type_key] == pre_type:
+        if segment.get(type_key,None) == pre_type:
             results[-1]['end'] = segment['end']
         else:
             results.append(segment)
