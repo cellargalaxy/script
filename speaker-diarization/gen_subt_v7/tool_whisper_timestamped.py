@@ -1,6 +1,7 @@
-import math
+import whisper_timestamped as whisper
 import numpy as np
 import tool_subt
+import math
 
 
 def pydub_faster_whisper(audio):
@@ -13,17 +14,19 @@ def transcribe(model, audio):
     last_end = len(audio)
 
     samples = pydub_faster_whisper(audio)
-    results, info = model.transcribe(samples)
+    result = whisper.transcribe(model, samples)
 
-    segments = []
-    for result in results:
-        start = math.floor(result.start * 1000)
+    segments = result['segments']
+    results = []
+    for segment in segments:
+        start = math.floor(segment['start'] * 1000)
         if start < 0:
             start = 0
-        end = math.ceil(result.end * 1000)
+        end = math.ceil(segment['end'] * 1000)
         if last_end < end:
             end = last_end
-        segments.append({"start": start, "end": end, "text": result.text})
+        segment_dict = {'start': start, 'end': end, 'text': segment['text']}
+        results.append(segment_dict)
 
     segments = tool_subt.fix_overlap_segments(segments)
     segments = tool_subt.clipp_segments(segments, last_end)
