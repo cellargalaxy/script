@@ -1,7 +1,6 @@
 import util
 import os
 import segment_detect_faster_whisper
-import segment_detect_whisper_timestamped
 from pydub import AudioSegment
 import tool_subt
 
@@ -26,7 +25,7 @@ def segment_detect(audio_path, part_divide_path, output_dir):
         if segment['vad_type'] != 'speech':
             continue
         cut = audio[segment['start']:segment['end']]
-        segs = segment_detect_whisper_timestamped.transcribe(cut)
+        segs = segment_detect_faster_whisper.transcribe(cut)
         segs = tool_subt.shift_segments_time(segs, segment['start'])
         results.extend(segs)
 

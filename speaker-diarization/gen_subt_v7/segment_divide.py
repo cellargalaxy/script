@@ -13,10 +13,11 @@ def box_segments(segments, start, end):
     for i, segment in enumerate(segments):
         if start <= segment['end'] and segment['start'] <= end:
             result.append(segment)
+    tool_subt.check_discrete_segments(result)
     if len(result) > 0 and result[0]['start'] < start:
         result[0]['start'] = start
     if len(result) > 0 and end < result[-1]['end']:
-        result[-1]['end'] = end
+        result[-1]['end'] = end + 1
     tool_subt.check_discrete_segments(result)
     return result
 
