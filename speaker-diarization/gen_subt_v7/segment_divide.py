@@ -188,15 +188,10 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
             continue
         segments[i]['segment_divide_type'] = 'default'
 
-    results = []
-    for i, segment in enumerate(segments):
-        if segment.get('vad_type', None) == 'silene':
-            continue
-        results.append(segment)
-    segments = results
-
     # results = []
     # for i, segment in enumerate(segments):
+    #     if segment.get('vad_type', None) == 'silene':
+    #         continue
     #     segment = trim_silence(segment, silences)
     #     if not segment:
     #         continue
@@ -219,10 +214,17 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
     # segments = tool_subt.fill_segments(segments, last_end=last_end, vad_type='silene')
     # tool_subt.check_coherent_segments(segments)
 
+    results = []
+    for i, segment in enumerate(segments):
+        if segment.get('vad_type', None) == 'silene':
+            continue
+        results.append(segment)
+    segments = results
+
     segments = tool_subt.fix_overlap_segments(segments)
     segments = tool_subt.unit_segments(segments, 'vad_type')
     segments = tool_subt.init_segments(segments)
-    tool_subt.check_coherent_segments(segments)
+    tool_subt.check_discrete_segments(segments)
 
     util.save_as_json(segments, json_path)
     tool_subt.save_segments_as_srt(segments, srt_path)
