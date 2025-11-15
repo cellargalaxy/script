@@ -12,13 +12,13 @@ def box_segments(segments, start, end):
     segments = util.deepcopy_obj(segments)
     result = []
     for i, segment in enumerate(segments):
-        if start <= segment['end'] and segment['start'] <= end:
+        if start < segment['end'] and segment['start'] < end:
             result.append(segment)
     tool_subt.check_discrete_segments(result)
     if len(result) > 0 and result[0]['start'] < start:
         result[0]['start'] = start
     if len(result) > 0 and end < result[-1]['end']:
-        result[-1]['end'] = end + 1
+        result[-1]['end'] = end
     tool_subt.check_discrete_segments(result)
     return result
 
@@ -35,23 +35,6 @@ def scrap_segments(segments, time):
         if not right and time < segment['start']:
             right = segment
     return left, middle, right
-
-
-def trim_silence(segment, silences):
-    start_silence = None
-    end_silence = None
-    for i, silence in enumerate(silences):
-        if silence['start'] <= segment['start'] and segment['start'] < silence['end']:
-            start_silence = silence
-        if silence['start'] < segment['end'] and segment['end'] <= silence['end']:
-            end_silence = silence
-    if start_silence:
-        segment['start'] = start_silence['end']
-    if end_silence:
-        segment['end'] = end_silence['start']
-    if segment['end'] <= segment['start']:
-        return None
-    return segment
 
 
 def cut_segment(left_segment, right_segment, silences):
@@ -76,6 +59,23 @@ def cut_segment(left_segment, right_segment, silences):
         right_cut = (right_gap['end'] + right_gap['start']) / 2.0
         right_cut = math.floor(right_cut)
     return left_cut, middle_cut, right_cut
+
+
+def trim_silence(segment, silences):
+    start_silence = None
+    end_silence = None
+    for i, silence in enumerate(silences):
+        if silence['start'] <= segment['start'] and segment['start'] < silence['end']:
+            start_silence = silence
+        if silence['start'] < segment['end'] and segment['end'] <= silence['end']:
+            end_silence = silence
+    if start_silence:
+        segment['start'] = start_silence['end']
+    if end_silence:
+        segment['end'] = end_silence['start']
+    if segment['end'] <= segment['start']:
+        return None
+    return segment
 
 
 def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir):
