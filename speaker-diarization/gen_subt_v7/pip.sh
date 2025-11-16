@@ -8,6 +8,7 @@ pip install pysubs2
 pip install faster-whisper
 pip install pyannote.audio==3.4.0
 pip install speechbrain
+pip install whisperx
 
 pip freeze > requirements.txt
 pip install -r requirements.txt

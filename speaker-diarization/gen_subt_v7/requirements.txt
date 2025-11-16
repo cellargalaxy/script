@@ -9,12 +9,12 @@ async-timeout==5.0.1
 attrs==25.4.0
 audio-separator==0.39.1
 audioread==3.1.0
-av==16.0.1
+av==15.1.0
 beartype==0.18.5
 certifi==2025.11.12
 cffi==2.0.0
 charset-normalizer==3.4.4
-click==8.3.0
+click==8.3.1
 coloredlogs==15.0.1
 colorlog==6.10.1
 contourpy==1.3.2
@@ -59,8 +59,9 @@ mpmath==1.3.0
 msgpack==1.1.2
 multidict==6.7.0
 networkx==3.3
+nltk==3.9.2
 numba==0.62.1
-numpy==2.1.2
+numpy==2.0.2
 nvidia-cublas-cu12==12.6.4.1
 nvidia-cuda-cupti-cu12==12.6.80
 nvidia-cuda-nvrtc-cu12==12.6.77
@@ -82,7 +83,7 @@ onnxruntime==1.23.2
 onnxruntime-gpu==1.23.2
 optuna==4.6.0
 packaging==25.0
-pandas==2.3.3
+pandas==2.2.3
 pillow==11.3.0
 platformdirs==4.5.0
 pooch==1.8.2
@@ -105,12 +106,14 @@ pytorch-lightning==2.5.6
 pytorch-metric-learning==2.9.0
 pytz==2025.2
 PyYAML==6.0.3
+regex==2025.11.3
 requests==2.32.5
 resampy==0.4.3
 rich==14.2.0
 rotary-embedding-torch==0.6.5
 ruamel.yaml==0.18.16
-ruamel.yaml.clib==0.2.14
+ruamel.yaml.clib==0.2.15
+safetensors==0.6.2
 samplerate==0.1.0
 scikit-learn==1.7.2
 scipy==1.15.3
@@ -125,7 +128,7 @@ speechbrain==1.0.3
 SQLAlchemy==2.0.44
 sympy==1.14.0
 tabulate==0.9.0
-ten_vad @ git+https://github.com/TEN-framework/ten-vad.git@feea2659037ed41f2cb8e5002fd1a31fe013f81a
+ten_vad @ git+https://github.com/TEN-framework/ten-vad.git@5a202156a8c9bdc3fb63a9efb7b42566603fdbf6
 tensorboardX==2.6.4
 threadpoolctl==3.6.0
 tokenizers==0.22.1
@@ -137,9 +140,11 @@ torchaudio==2.8.0+cu126
 torchmetrics==1.8.2
 torchvision==0.23.0+cu126
 tqdm==4.67.1
+transformers==4.57.1
 triton==3.4.0
 typer==0.20.0
 typing_extensions==4.15.0
 tzdata==2025.2
 urllib3==2.5.0
+whisperx==3.7.4
 yarl==1.22.0
