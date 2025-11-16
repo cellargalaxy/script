@@ -131,7 +131,6 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
     tool_subt.check_coherent_segments(segments)
 
     results = []
-    languages = []
     for i, segment in enumerate(segments):
         if i == 0:
             continue
@@ -139,9 +138,7 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
             results.append(segments[i - 1])
         else:
             cut = audio[segments[i - 1]['start']:segments[i]['end']]
-            segs, language = segment_detect_faster_whisper.transcribe(cut)
-            languages.append(language)
-            language = util.get_list_most(languages)
+            segs, language = segment_detect_faster_whisper.transcribe(cut, language=segments[i]['language'])
             segs, language = segment_detect_align_whisperx.transcribe(cut, segs, language)
             segs = tool_subt.shift_segments_time(segs, segments[i - 1]['start'])
             if not segs:

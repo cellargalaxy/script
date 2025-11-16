@@ -9,11 +9,11 @@ def pydub_faster_whisper(audio):
     return samples
 
 
-def transcribe(model, audio):
+def transcribe(model, audio, language=None):
     last_end = len(audio)
 
     samples = pydub_faster_whisper(audio)
-    results, info = model.transcribe(samples)
+    results, info = model.transcribe(samples, language=language)
 
     segments = []
     for result in results:
@@ -25,9 +25,14 @@ def transcribe(model, audio):
             end = last_end
         segments.append({"start": start, "end": end, "text": result.text})
 
+    if not language:
+        language = info.language
+    for i, segment in enumerate(segments):
+        segments[i]['language'] = language
+
     segments = tool_subt.fix_overlap_segments(segments)
     segments = tool_subt.clipp_segments(segments, last_end)
     segments = tool_subt.init_segments(segments)
     tool_subt.check_discrete_segments(segments)
 
-    return segments, info.language
+    return segments, language

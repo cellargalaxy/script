@@ -32,6 +32,8 @@ def segment_detect(audio_path, part_divide_path, output_dir):
         results.extend(segs)
         languages.append(language)
     language = util.get_list_most(languages)
+    for i, segment in enumerate(segments):
+        segments[i]['language'] = language
 
     results, language = segment_detect_align_whisperx.transcribe(audio, results, language)
 
