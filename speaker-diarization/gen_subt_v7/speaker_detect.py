@@ -1,6 +1,6 @@
 import util
 import os
-import speaker_detect_speechbrain
+import speaker_detect_pyannote_wespeaker
 from pydub import AudioSegment
 from pyannote.audio.pipelines.clustering import AgglomerativeClustering
 import math
@@ -69,7 +69,7 @@ def speaker_detect(audio_path, segment_divide_path, output_dir, min_duration=200
         if segments[i].get('speaker', None) == 'other':
             continue
         cut = audio[segments[i]['start']:segments[i]['end']]
-        embedding = speaker_detect_speechbrain.extract_embedding(cut)
+        embedding = speaker_detect_pyannote_wespeaker.extract_embedding(cut)
         embedding_list.append(embedding)
     embeddings = np.array(embedding_list)
 
@@ -108,4 +108,4 @@ def exec(manager):
     json_path = speaker_detect(audio_path, segment_divide_path, output_dir)
     manager['speaker_detect_path'] = json_path
     logger.info("speaker_detect,leave: %s", util.json_dumps(manager))
-    speaker_detect_speechbrain.exec_gc()
+    speaker_detect_pyannote_wespeaker.exec_gc()
