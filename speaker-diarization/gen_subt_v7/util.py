@@ -10,6 +10,7 @@ import sys
 import copy
 import gc
 import math
+from collections import Counter
 
 
 def get_logger(name='main', fmt='%(asctime)s %(levelname)-5s %(filename)s:%(lineno)d - %(message)s'):
@@ -300,3 +301,13 @@ def input_timeout(prompt, timeout, default=None):
 
 def deepcopy_obj(obj):
     return copy.deepcopy(obj)
+
+
+def get_list_most(array):
+    if not array:
+        return None
+    counts = Counter(array)
+    max_count = max(counts.values())
+    most = [element for element, count in counts.items() if count == max_count]
+    most.sort()
+    return most[0]

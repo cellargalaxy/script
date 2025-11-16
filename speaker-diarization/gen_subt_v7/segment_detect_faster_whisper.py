@@ -23,5 +23,5 @@ def exec_gc():
 
 def transcribe(audio):
     model = get_model()
-    segments = tool_faster_whisper.transcribe(model, audio)
-    return segments
+    segments, language = tool_faster_whisper.transcribe(model, audio)
+    return segments, language

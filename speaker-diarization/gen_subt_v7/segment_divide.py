@@ -7,6 +7,8 @@ import segment_detect_faster_whisper
 
 logger = util.get_logger()
 
+back_ms = 500
+
 
 def box_segments(segments, start, end):
     segments = util.deepcopy_obj(segments)
@@ -40,10 +42,10 @@ def scrap_segments(segments, time):
 def cut_segment(left_segment, right_segment, silences):
     left_side = (left_segment['end'] + left_segment['start']) / 2.0
     left_side = math.ceil(left_side)
-    left_side = max(left_segment['end'] - 1000, left_side)
+    left_side = max(left_segment['end'] - back_ms, left_side)
     right_side = (right_segment['end'] + right_segment['start']) / 2.0
     right_side = math.floor(right_side)
-    right_side = min(right_segment['start'] + 1000, right_side)
+    right_side = min(right_segment['start'] + back_ms, right_side)
     gaps = box_segments(silences, left_side, right_side)
     left_gap, middle_gap, right_gap = scrap_segments(gaps, right_segment['start'])
     left_cut = -1
@@ -100,9 +102,9 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
     for i, segment in enumerate(segments):
         if i == 0:
             continue
-        if segments[i]['start'] - segments[i - 1]['end'] >= 2000:
+        if segments[i]['start'] - segments[i - 1]['end'] >= 2 * back_ms:
             continue
-        point = (segments[i - 1]['end'] + segments[i]['start']) / 2.0
+        point = (segments[i]['start'] + segments[i - 1]['end']) / 2.0
         point = math.floor(point)
         segments[i - 1]['end'] = point
         segments[i]['start'] = point
@@ -114,74 +116,74 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
             continue
         left_cut, middle_cut, right_cut = cut_segment(segments[i - 1], segments[i], silences)
         if middle_cut >= 0:
-            segments[i]['segment_divide_type'] = 'middle'
             segments[i - 1]['end'] = middle_cut
             segments[i]['start'] = middle_cut
-        elif left_cut >= 0 and right_cut < 0:
-            segments[i]['segment_divide_type'] = 'left_only'
-            segments[i - 1]['end'] = left_cut
-            segments[i]['start'] = left_cut
-        elif right_cut >= 0 and left_cut < 0:
-            segments[i]['segment_divide_type'] = 'right_only'
-            segments[i - 1]['end'] = right_cut
-            segments[i]['start'] = right_cut
-    tool_subt.check_coherent_segments(segments)
-
-    results = []
-    for i, segment in enumerate(segments):
-        if i == 0:
-            continue
-        if segments[i].get('segment_divide_type', None):
-            results.append(segments[i - 1])
-        else:
-            cut = audio[segments[i - 1]['start']:segments[i]['end']]
-            segs = segment_detect_faster_whisper.transcribe(cut)
-            segs = tool_subt.shift_segments_time(segs, segments[i - 1]['start'])
-            if not segs:
-                segs = [segments[i]]
-            results.extend(segs[:-1])
-            segments[i] = segs[-1]
-    results.append(segments[-1])
-    segments = results
-    for i, segment in enumerate(segments):
-        if i == 0:
-            continue
-        if segments[i]['start'] - segments[i - 1]['end'] >= 2000:
-            continue
-        point = (segments[i - 1]['end'] + segments[i]['start']) / 2.0
-        point = math.floor(point)
-        segments[i - 1]['end'] = point
-        segments[i]['start'] = point
-    segments = tool_subt.fill_segments(segments, last_end=last_end, vad_type='silene')
-    tool_subt.check_coherent_segments(segments)
-
-    for i, segment in enumerate(segments):
-        if i == 0:
-            continue
-        if segments[i].get('segment_divide_type', None):
-            continue
-        left_cut, middle_cut, right_cut = cut_segment(segments[i - 1], segments[i], silences)
-        if middle_cut >= 0:
             segments[i]['segment_divide_type'] = 'middle'
-            segments[i - 1]['end'] = middle_cut
-            segments[i]['start'] = middle_cut
         elif left_cut >= 0 and right_cut < 0:
+            segments[i - 1]['end'] = left_cut
+            segments[i]['start'] = left_cut
             segments[i]['segment_divide_type'] = 'left_only'
-            segments[i - 1]['end'] = left_cut
-            segments[i]['start'] = left_cut
         elif right_cut >= 0 and left_cut < 0:
+            segments[i - 1]['end'] = right_cut
+            segments[i]['start'] = right_cut
             segments[i]['segment_divide_type'] = 'right_only'
-            segments[i - 1]['end'] = right_cut
-            segments[i]['start'] = right_cut
-        elif abs(left_cut - segments[i]['start']) < abs(right_cut - segments[i]['start']):
-            segments[i]['segment_divide_type'] = 'left_near'
-            segments[i - 1]['end'] = left_cut
-            segments[i]['start'] = left_cut
-        elif abs(right_cut - segments[i]['start']) < abs(left_cut - segments[i]['start']):
-            segments[i]['segment_divide_type'] = 'right_near'
-            segments[i - 1]['end'] = right_cut
-            segments[i]['start'] = right_cut
     tool_subt.check_coherent_segments(segments)
+
+    # results = []
+    # for i, segment in enumerate(segments):
+    #     if i == 0:
+    #         continue
+    #     if segments[i].get('segment_divide_type', None):
+    #         results.append(segments[i - 1])
+    #     else:
+    #         cut = audio[segments[i - 1]['start']:segments[i]['end']]
+    #         segs, language  = segment_detect_faster_whisper.transcribe(cut)
+    #         segs = tool_subt.shift_segments_time(segs, segments[i - 1]['start'])
+    #         if not segs:
+    #             segs = [segments[i]]
+    #         results.extend(segs[:-1])
+    #         segments[i] = segs[-1]
+    # results.append(segments[-1])
+    # segments = results
+    # for i, segment in enumerate(segments):
+    #     if i == 0:
+    #         continue
+    #     if segments[i]['start'] - segments[i - 1]['end'] >= 2 * back_ms:
+    #         continue
+    #     point = (segments[i - 1]['end'] + segments[i]['start']) / 2.0
+    #     point = math.floor(point)
+    #     segments[i - 1]['end'] = point
+    #     segments[i]['start'] = point
+    # segments = tool_subt.fill_segments(segments, last_end=last_end, vad_type='silene')
+    # tool_subt.check_coherent_segments(segments)
+
+    # for i, segment in enumerate(segments):
+    #     if i == 0:
+    #         continue
+    #     if segments[i].get('segment_divide_type', None):
+    #         continue
+    #     left_cut, middle_cut, right_cut = cut_segment(segments[i - 1], segments[i], silences)
+    #     if middle_cut >= 0:
+    #         segments[i]['segment_divide_type'] = 'middle'
+    #         segments[i - 1]['end'] = middle_cut
+    #         segments[i]['start'] = middle_cut
+    #     elif left_cut >= 0 and right_cut < 0:
+    #         segments[i]['segment_divide_type'] = 'left_only'
+    #         segments[i - 1]['end'] = left_cut
+    #         segments[i]['start'] = left_cut
+    #     elif right_cut >= 0 and left_cut < 0:
+    #         segments[i]['segment_divide_type'] = 'right_only'
+    #         segments[i - 1]['end'] = right_cut
+    #         segments[i]['start'] = right_cut
+    #     elif abs(left_cut - segments[i]['start']) < abs(right_cut - segments[i]['start']):
+    #         segments[i]['segment_divide_type'] = 'left_near'
+    #         segments[i - 1]['end'] = left_cut
+    #         segments[i]['start'] = left_cut
+    #     elif abs(right_cut - segments[i]['start']) < abs(left_cut - segments[i]['start']):
+    #         segments[i]['segment_divide_type'] = 'right_near'
+    #         segments[i - 1]['end'] = right_cut
+    #         segments[i]['start'] = right_cut
+    # tool_subt.check_coherent_segments(segments)
 
     for i, segment in enumerate(segments):
         if segments[i].get('segment_divide_type', None):

@@ -3,6 +3,7 @@ import os
 import segment_detect_faster_whisper
 from pydub import AudioSegment
 import tool_subt
+import tool_align_whisperx
 
 logger = util.get_logger()
 
@@ -21,13 +22,18 @@ def segment_detect(audio_path, part_divide_path, output_dir):
     segments = util.read_file_to_obj(part_divide_path)
 
     results = []
+    languages = []
     for i, segment in enumerate(segments):
         if segment['vad_type'] != 'speech':
             continue
         cut = audio[segment['start']:segment['end']]
-        segs = segment_detect_faster_whisper.transcribe(cut)
+        segs, language = segment_detect_faster_whisper.transcribe(cut)
         segs = tool_subt.shift_segments_time(segs, segment['start'])
         results.extend(segs)
+        languages.append(language)
+    language = util.get_list_most(languages)
+
+    results, language = tool_align_whisperx.transcribe(audio, results, language)
 
     results = tool_subt.fix_overlap_segments(results)
     results = tool_subt.clipp_segments(results, last_end)

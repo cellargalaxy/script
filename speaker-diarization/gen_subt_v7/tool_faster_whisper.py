@@ -30,4 +30,4 @@ def transcribe(model, audio):
     segments = tool_subt.init_segments(segments)
     tool_subt.check_discrete_segments(segments)
 
-    return segments
+    return segments, info.language
