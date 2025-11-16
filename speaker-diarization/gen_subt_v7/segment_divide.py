@@ -100,6 +100,13 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
 
     segments = util.read_file_to_obj(segment_detect_path)
 
+    languages = []
+    for i, segment in enumerate(segments):
+        language = segments[i].get('language', None)
+        if language:
+            languages.append(language)
+    language = util.get_list_most(languages)
+
     for i, segment in enumerate(segments):
         if i == 0:
             continue
@@ -138,9 +145,8 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
             results.append(segments[i - 1])
         else:
             cut = audio[segments[i - 1]['start']:segments[i]['end']]
-            language = segments[i - 1].get('language', None) or segments[i].get('language', None)
-            segs, language = segment_detect_faster_whisper.transcribe(cut, language=language)
-            segs, language = segment_detect_align_whisperx.transcribe(cut, segs, language)
+            segs, _ = segment_detect_faster_whisper.transcribe(cut, language)
+            segs, _ = segment_detect_align_whisperx.transcribe(cut, segs, language)
             segs = tool_subt.shift_segments_time(segs, segments[i - 1]['start'])
             if not segs:
                 segs = [segments[i]]
@@ -225,6 +231,8 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
             continue
         results.append(segment)
     segments = results
+    for i, segment in enumerate(segments):
+        segments[i]['language'] = language
 
     segments = tool_subt.fix_overlap_segments(segments)
     segments = tool_subt.unit_segments(segments, 'vad_type')
