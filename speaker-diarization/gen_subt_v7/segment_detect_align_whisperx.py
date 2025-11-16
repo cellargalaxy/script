@@ -22,10 +22,6 @@ def get_model(language):
 
 
 def exec_gc():
-    global model_map
-    global metadata_map
-    model_map = {}
-    metadata_map = {}
     util.exec_gc()
 
 
