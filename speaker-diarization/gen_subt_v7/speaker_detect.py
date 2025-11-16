@@ -59,20 +59,25 @@ def speaker_detect(audio_path, segment_divide_path, output_dir, min_duration=200
 
     audio = AudioSegment.from_wav(audio_path)
     segments = util.read_file_to_obj(segment_divide_path)
-    embedding_list = []
     for i, segment in enumerate(segments):
         if segments[i]['duration'] < min_duration:
             segments[i]['speaker'] = 'other'
+            continue
+
+    embedding_list = []
+    for i, segment in enumerate(segments):
+        if segments[i].get('speaker', None) == 'other':
             continue
         cut = audio[segments[i]['start']:segments[i]['end']]
         embedding = speaker_detect_speechbrain.extract_embedding(cut)
         embedding_list.append(embedding)
     embeddings = np.array(embedding_list)
 
+    # threshold越小簇越多
     clustering = AgglomerativeClustering().instantiate({"method": "average", "min_cluster_size": 0, "threshold": 0.5})
     max_clusters = math.ceil(len(embedding_list) / 2.0)
     max_clusters = max(max_clusters, 4)
-    max_clusters = min(max_clusters, 64)
+    max_clusters = min(max_clusters, 32)
     clusters = clustering.cluster(embeddings=embeddings, min_clusters=1, max_clusters=max_clusters)
     speakers = []
     for i, cluster in enumerate(clusters):
@@ -85,7 +90,7 @@ def speaker_detect(audio_path, segment_divide_path, output_dir, min_duration=200
     speakers = rank_arr(speakers)
     speakers_iterator = iter(speakers)
     for i, segment in enumerate(segments):
-        if segments[i].get('speaker', '') == 'other':
+        if segments[i].get('speaker', None) == 'other':
             continue
         speakers = next(speakers_iterator)
         segments[i]['speaker'] = f'speaker{speakers:02d}'
