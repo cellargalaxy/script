@@ -31,5 +31,5 @@ def exec_gc():
 
 def transcribe(audio, segments, language):
     model, metadata = get_model(language)
-    segments, language = tool_align_whisperx.transcribe(model, metadata, audio, segments)
+    segments = tool_align_whisperx.transcribe(model, metadata, audio, segments)
     return segments, language
