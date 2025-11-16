@@ -11,7 +11,7 @@ def pydub_faster_whisper(audio):
     return samples
 
 
-def transcribe(audio, segments, language):
+def transcribe(model, metadata, audio, segments):
     last_end = len(audio)
     samples = pydub_faster_whisper(audio)
 
@@ -21,11 +21,7 @@ def transcribe(audio, segments, language):
         segments[i]['end'] /= 1000.0
 
     device = util.get_device_type()
-    align_model, metadata = whisperx.load_align_model(language_code=language, device=device)
-    align_result = whisperx.align(segments, align_model, metadata, samples, device, return_char_alignments=False)
-    del align_model
-    del metadata
-    util.exec_gc()
+    align_result = whisperx.align(segments, model, metadata, samples, device, return_char_alignments=False)
 
     segments = []
     for i, result in enumerate(align_result['segments']):
@@ -42,4 +38,4 @@ def transcribe(audio, segments, language):
     segments = tool_subt.init_segments(segments)
     tool_subt.check_discrete_segments(segments)
 
-    return segments, language
+    return segments

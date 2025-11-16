@@ -3,7 +3,7 @@ import os
 import segment_detect_faster_whisper
 from pydub import AudioSegment
 import tool_subt
-import tool_align_whisperx
+import segment_detect_align_whisperx
 
 logger = util.get_logger()
 
@@ -33,7 +33,7 @@ def segment_detect(audio_path, part_divide_path, output_dir):
         languages.append(language)
     language = util.get_list_most(languages)
 
-    results, language = tool_align_whisperx.transcribe(audio, results, language)
+    results, language = segment_detect_align_whisperx.transcribe(audio, results, language)
 
     results = tool_subt.fix_overlap_segments(results)
     results = tool_subt.clipp_segments(results, last_end)
@@ -54,3 +54,4 @@ def exec(manager):
     manager['segment_detect_path'] = json_path
     logger.info("segment_detect,leave: %s", util.json_dumps(manager))
     segment_detect_faster_whisper.exec_gc()
+    segment_detect_align_whisperx.exec_gc()
