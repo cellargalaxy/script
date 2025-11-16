@@ -138,7 +138,8 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
             results.append(segments[i - 1])
         else:
             cut = audio[segments[i - 1]['start']:segments[i]['end']]
-            segs, language = segment_detect_faster_whisper.transcribe(cut, language=segments[i]['language'])
+            language = segments[i - 1].get('language', None) or segments[i].get('language', None)
+            segs, language = segment_detect_faster_whisper.transcribe(cut, language=language)
             segs, language = segment_detect_align_whisperx.transcribe(cut, segs, language)
             segs = tool_subt.shift_segments_time(segs, segments[i - 1]['start'])
             if not segs:
