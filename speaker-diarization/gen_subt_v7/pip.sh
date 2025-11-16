@@ -10,3 +10,4 @@ pip install pyannote.audio==3.4.0
 pip install speechbrain
 
 pip freeze > requirements.txt
+pip install -r requirements.txt
