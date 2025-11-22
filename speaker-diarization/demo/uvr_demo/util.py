@@ -4,18 +4,19 @@ import logging
 import shlex
 import os
 import platform
-import torch
-import GPUtil
-import gc
 import shutil
-from inputimeout import inputimeout
 import json
+import sys
+import copy
+import gc
+import math
+from collections import Counter
 
 
 def get_logger(name='main', fmt='%(asctime)s %(levelname)-5s %(filename)s:%(lineno)d - %(message)s'):
     logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
     if not logger.handlers:
+        logger.setLevel(logging.INFO)
         handler = logging.StreamHandler()
         formatter = logging.Formatter(
             fmt=fmt,
@@ -60,39 +61,52 @@ def popen_cmd(cmd):
 def run_cmd(cmd):
     exec_cmd = "cd {} && {}".format(os.getcwd(), shlex.join(cmd))
     logger.info("执行命令: %s", exec_cmd)
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    result = subprocess.run(exec_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     return result.stdout, result.returncode
 
 
-def get_device_info():
+def get_sys_info():
     info = {}
-    info['CPU'] = platform.processor() or platform.uname().processor
-    gpus = GPUtil.getGPUs()
-    if gpus:
-        gpu = gpus[0]
-        info['GPU'] = gpu.name
-        info['CUDA Available'] = torch.cuda.is_available()
-        info['CUDA Version'] = torch.version.cuda
-        info['GPU Memory (MB)'] = f"{gpu.memoryTotal} MB"
-    else:
-        info['GPU'] = 'No GPU detected'
-        info['CUDA Available'] = False
-        info['CUDA Version'] = None
-        info['GPU Memory (MB)'] = 'N/A'
+    info['Python版本'] = sys.version
+    info['Python路径'] = sys.executable
+    info['操作系统'] = f"{platform.system()} {platform.release()} ({platform.version()})"
+    info['环境变量'] = os.environ.get('PATH')
+    info['CPU'] = f"{platform.processor() or platform.uname().processor} ({platform.machine()})"
+
+    try:
+        import torch
+        info['PyTorch版本'] = torch.__version__
+        info['CUDA是否可用'] = torch.cuda.is_available()
+        info['CUDA版本'] = torch.version.cuda
+        for i in range(torch.cuda.device_count()):
+            props = torch.cuda.get_device_properties(i)
+            total_memory_gb = round(props.total_memory / (1024 ** 3), 2)
+            info['GPU'] = f"{props.name} 总显存 {total_memory_gb} GB"
+            break
+    except ImportError as e:
+        logger.error("未安装依赖torch", exc_info=True)
+        info['PyTorch版本'] = "torch未安装"
+        info['CUDA是否可用'] = False
+        info['CUDA版本'] = 'N/A'
+        info['GPU'] = 'N/A'
+
     return info
 
 
-def get_device_type():
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    return device
-
-
-def print_device_info():
-    device_type = get_device_type()
-    logger.info(f"device_type: {device_type}")
-    device_info = get_device_info()
-    for key, value in device_info.items():
+def print_sys_info():
+    sys_info = get_sys_info()
+    for key, value in sys_info.items():
         logger.info(f"{key}: {value}")
+
+
+def get_device_type():
+    device = 'cpu'
+    try:
+        import torch
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    except ImportError as e:
+        logger.error("未安装依赖torch", exc_info=True)
+    return device
 
 
 def get_compute_type():
@@ -101,6 +115,16 @@ def get_compute_type():
         return 'float16'
     else:
         return 'int8'
+
+
+def exec_gc():
+    try:
+        import torch
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
+    except ImportError as e:
+        logger.error("未安装依赖torch", exc_info=True)
+    gc.collect()
 
 
 def get_file_ext(file_path):
@@ -159,8 +183,12 @@ def get_ancestor_dir(file_path):
     return file_dir
 
 
-def save_as_json(obj, save_path):
-    save_file(json.dumps(obj), save_path)
+def json_dumps(obj):
+    return json.dumps(obj, ensure_ascii=False)
+
+
+def json_loads(content):
+    return json.loads(content)
 
 
 def save_file(content, file_path):
@@ -169,11 +197,8 @@ def save_file(content, file_path):
         file.write(content)
 
 
-def read_file(file_path, default_value=''):
-    if not path_isfile(file_path):
-        return default_value
-    with open(file_path, 'r') as file:
-        return file.read()
+def save_as_json(obj, save_path):
+    save_file(json.dumps(obj, ensure_ascii=False, indent=2), save_path)
 
 
 def path_exist(path):
@@ -186,10 +211,22 @@ def path_isfile(path):
     return os.path.isfile(path)
 
 
-def exec_gc():
-    torch.cuda.empty_cache()
-    torch.cuda.ipc_collect()
-    gc.collect()
+def read_file(file_path, default_value=''):
+    if not path_isfile(file_path):
+        return default_value
+    with open(file_path, 'r') as file:
+        return file.read()
+
+
+def read_file_to_obj(file_path, default_value=''):
+    content = read_file(file_path, default_value=default_value)
+    obj = json_loads(content)
+    return obj
+
+
+def move_file(from_path, to_path):
+    mkdir(to_path)
+    shutil.move(from_path, to_path)
 
 
 def copy_file(from_path, to_path):
@@ -220,27 +257,57 @@ def get_script_path():
     return script_dir
 
 
-def in_notebook() -> bool:
+def truncate_path(path, max_length=255):
+    if not path:
+        return path
+    ancestor_dir = get_ancestor_dir(path)
+    file_name = get_file_name(path)
+    file_ext = get_file_ext(path)
+    file_name = truncate_string(file_name, max_length - len(file_ext.encode('utf-8')) - 4)  # 减4留点余地
+    file_basename = file_name
+    if file_ext:
+        file_basename = f"{file_name}.{file_ext}"
+    path = os.path.join(ancestor_dir, file_basename)
+    return path
+
+
+def truncate_string(text, max_length):
+    if not text:
+        return text
+    data = text.encode('utf-8')
+    if len(data) <= max_length:
+        return text
+    data = data[:max_length]
     try:
-        import google.colab
-        return True
-    except ImportError:
-        pass
-    try:
-        from IPython import get_ipython
-        shell = get_ipython().__class__.__name__
-        return shell == 'ZMQInteractiveShell'
-    except (NameError, ImportError):
-        pass
-    return False
+        text = data.decode('utf-8', 'ignore')  # 使用ignore无视被中间截断的字
+        return text
+    except UnicodeDecodeError:
+        max_char = math.floor(max_length / 3)
+        return text[:max_char]
 
 
 def input_timeout(prompt, timeout, default=None):
-    if in_notebook():
-        return default
     try:
+        from inputimeout import inputimeout
         text = inputimeout(prompt=prompt, timeout=timeout)
-    except Exception:
+    except ImportError:
+        logger.error("未安装依赖inputimeout", exc_info=True)
+        return default
+    except Exception as e:
         return default
     else:
         return text
+
+
+def deepcopy_obj(obj):
+    return copy.deepcopy(obj)
+
+
+def get_list_most(array):
+    if not array:
+        return None
+    counts = Counter(array)
+    max_count = max(counts.values())
+    most = [element for element, count in counts.items() if count == max_count]
+    most.sort()
+    return most[0]
