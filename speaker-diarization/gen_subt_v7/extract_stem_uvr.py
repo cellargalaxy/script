@@ -106,5 +106,10 @@ def extract_dereverb(model_name, audio_path, output_dir):
         "Noreverb": "noreverb",
         "Reverb": "reverb",
     }
+    if model_name in ['MDX23C-De-Reverb-aufr33-jarredou.ckpt']:
+        output_names = {
+            "dry": "noreverb",
+            "No dry": "reverb",
+        }
     separator.separate([audio_path], output_names)
     return noreverb_path, reverb_path
