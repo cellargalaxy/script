@@ -1,3 +1,9 @@
+conda env list
+conda remove -n gen_subt_v7 --all
+conda create -n gen_subt_v7 python=3.10
+conda activate gen_subt_v7
+conda deactivate
+
 pip install "huggingface-hub<1.0.0"
 pip install inputimeout
 pip install --upgrade torch==2.8.0+cu126 torchvision==0.23.0+cu126 torchaudio==2.8.0+cu126 --index-url https://download.pytorch.org/whl/cu126
