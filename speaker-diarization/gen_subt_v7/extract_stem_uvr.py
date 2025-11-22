@@ -86,8 +86,8 @@ def extract_dereverb(audio_path, output_dir):
     if util.path_exist(noreverb_path) and util.path_exist(reverb_path):
         return noreverb_path, reverb_path
     separator = Separator(model_file_dir=model_file_dir, output_dir=output_dir)
-    # separator.load_model(model_filename='dereverb_mel_band_roformer_mono_anvuew.ckpt')
-    separator.load_model(model_filename='MDX23C-De-Reverb-aufr33-jarredou.ckpt')
+    separator.load_model(model_filename='dereverb_mel_band_roformer_mono_anvuew.ckpt')
+    # separator.load_model(model_filename='MDX23C-De-Reverb-aufr33-jarredou.ckpt')
     output_names = {
         "Noreverb": "noreverb",
         "Reverb": "reverb",
