@@ -22,9 +22,9 @@ def exec(manager):
     import extract_stem
     import extract_stem_uvr
     extract_stem.exec(manager, [
-        extract_stem_uvr.VocalHandler(),
-        extract_stem_uvr.MainVocalHandler(),
-        extract_stem_uvr.DeReverbHandler('MDX23C-De-Reverb-aufr33-jarredou.ckpt'),
+        extract_stem_uvr.VocalHandler(''),
+        extract_stem_uvr.MainVocalHandler(''),  # 5_HP-Karaoke-UVR.pth
+        extract_stem_uvr.DeReverbHandler(''),  # MDX23C-De-Reverb-aufr33-jarredou.ckpt
     ])
     return
 
@@ -79,8 +79,8 @@ video_paths = [
     # '../material/panty/[Nekomoe kissaten&LoliHouse] New PANTY & STOCKING with GARTERBELT - 08 [WebRip 1080p HEVC-10bit AACx2 ASSx2].mkv',
     # '../material/panty/[Nekomoe kissaten&LoliHouse] New PANTY & STOCKING with GARTERBELT - 09 [WebRip 1080p HEVC-10bit AACx2 ASSx2].mkv',
     # '../material/panty/[Nekomoe kissaten&LoliHouse] New PANTY & STOCKING with GARTERBELT - 10 [WebRip 1080p HEVC-10bit AACx2 ASSx2].mkv',
-    '../material/my_way.webm',
-    # '../material/mao.mp3',
+    # '../material/my_way.webm',
+    '../material/mao.mp3',
     # '../material/demo.mkv',
     # '../material/mkv.mkv',
     # '../material/holo.mkv',

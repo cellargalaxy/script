@@ -54,7 +54,6 @@ models = [
     # "Reverb_HQ_By_FoxJoy.onnx",
     # "dereverb_mel_band_roformer_anvuew_sdr_19.1729.ckpt"
     #
-    # "5_HP-Karaoke-UVR.pth", # 安装依赖：sudo apt-get install -y libsamplerate0 libsamplerate0-dev
     # "6_HP-Karaoke-UVR.pth",
     # "9_HP2-UVR.pth",  # 减淡了和声
     # "16_SP-UVR-MID-44100-2.pth",  # 减淡了和声
@@ -89,6 +88,7 @@ models = [
     # "mel_band_roformer_karaoke_gabox.ckpt",  # 好
     # "mel_band_roformer_karaoke_becruily.ckpt",  # 好
 
+    "5_HP-Karaoke-UVR.pth", # 安装依赖：sudo apt-get install -y libsamplerate0 libsamplerate0-dev
     "mel_band_roformer_karaoke_becruily.ckpt",
 ]
 for model in models:
@@ -99,7 +99,7 @@ for model in models:
                               output_dir=os.path.join('output', model))
         separator.load_model(model_filename=model)
         output_files = separator.separate([
-            '/workspace/script/speaker-diarization/material/mao.mp3',
+            '/workspace/script/speaker-diarization/gen_subt_v7/output/mao/extract_stem/vocal/vocals.wav',
             # '/workspace/script/speaker-diarization/material/demo.mkv',
             # '../../material/demo.wav',
             # '../../material/BOW_AND_ARROW.flac',
