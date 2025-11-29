@@ -1,0 +1,81 @@
+{
+  "env": {
+    "HF_ENDPOINT": "https://hf-mirror.com",
+    "http_proxy": "http://192.168.123.7:10808",
+    "https_proxy": "http://192.168.123.7:10808",
+    "no_proxy": "localhost,127.0.0.1,::1,192.168.123.7,mirrors.ustc.edu.cn,hf-mirror.com"
+  },
+  "video": [
+    "../material/what.webm"
+  ],
+  "exec": [
+    {
+      "name": "init",
+      "enable": true
+    },
+    {
+      "name": "extract_audio",
+      "enable": true
+    },
+    {
+      "name": "extract_stem",
+      "enable": true,
+      "vocal_model": "",
+      "main_vocal_model": "",
+      "de_reverb_model": ""
+    },
+    {
+      "name": "extract_loudness",
+      "enable": false
+    },
+    {
+      "name": "extract_simple",
+      "enable": false
+    },
+    {
+      "name": "part_detect",
+      "enable": false
+    },
+    {
+      "name": "split_audio",
+      "enable": false,
+      "path_key": "part_detect_path"
+    },
+    {
+      "name": "part_divide",
+      "enable": false
+    },
+    {
+      "name": "split_audio",
+      "enable": false,
+      "path_key": "part_divide_path"
+    },
+    {
+      "name": "segment_detect",
+      "enable": false
+    },
+    {
+      "name": "split_audio",
+      "enable": false,
+      "path_key": "segment_detect_path"
+    },
+    {
+      "name": "segment_divide",
+      "enable": false
+    },
+    {
+      "name": "split_audio",
+      "enable": false,
+      "path_key": "segment_divide_path"
+    },
+    {
+      "name": "speaker_detect",
+      "enable": false
+    },
+    {
+      "name": "split_audio",
+      "enable": false,
+      "path_key": "speaker_detect_path"
+    }
+  ]
+}
