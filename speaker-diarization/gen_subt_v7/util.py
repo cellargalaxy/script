@@ -40,15 +40,14 @@ def mkdir(path):
 
 
 def popen_cmd(cmd):
-    exec_cmd = "cd {} && {}".format(os.getcwd(), shlex.join(cmd))
-    logger.info("执行命令: %s", exec_cmd)
     process = subprocess.Popen(
-        exec_cmd,
-        shell=True,
+        cmd,
+        shell=False,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        bufsize=1
+        bufsize=1,
+        cwd=os.getcwd(),
     )
     with process.stdout:
         for line in iter(process.stdout.readline, ''):
@@ -59,9 +58,15 @@ def popen_cmd(cmd):
 
 
 def run_cmd(cmd):
-    exec_cmd = "cd {} && {}".format(os.getcwd(), shlex.join(cmd))
-    logger.info("执行命令: %s", exec_cmd)
-    result = subprocess.run(exec_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    result = subprocess.run(
+        cmd,
+        shell=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        bufsize=1,
+        cwd=os.getcwd(),
+    )
     return result.stdout, result.returncode
 
 
