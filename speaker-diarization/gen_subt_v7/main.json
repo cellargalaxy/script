@@ -6,7 +6,7 @@
     "no_proxy": "localhost,127.0.0.1,::1,192.168.123.7,mirrors.ustc.edu.cn,hf-mirror.com"
   },
   "video": [
-    "../material/what.webm"
+    "../material/xiang.webm"
   ],
   "exec": [
     {
@@ -20,9 +20,16 @@
     {
       "name": "extract_stem",
       "enable": true,
-      "vocal_model": "",
-      "main_vocal_model": "",
-      "de_reverb_model": ""
+      "vocal_model": [
+        "vocals_mel_band_roformer.ckpt"
+      ],
+      "main_vocal_model": [
+        "mel_band_roformer_karaoke_becruily.ckpt",
+        "5_HP-Karaoke-UVR.pth"
+      ],
+      "de_reverb_model": [
+        "dereverb_mel_band_roformer_mono_anvuew.ckpt"
+      ]
     },
     {
       "name": "extract_loudness",

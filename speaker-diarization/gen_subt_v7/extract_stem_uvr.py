@@ -43,6 +43,7 @@ def extract_vocal(model_name, audio_path, output_dir):
 class MainVocalHandler:
     def __init__(self, model_name=None):
         if not model_name:
+            # 5_HP-Karaoke-UVR.pth
             model_name = 'mel_band_roformer_karaoke_becruily.ckpt'
         self.model_name = model_name
 
@@ -78,6 +79,7 @@ def extract_main_vocal(model_name, audio_path, output_dir):
 class DeReverbHandler:
     def __init__(self, model_name=None):
         if not model_name:
+            # MDX23C-De-Reverb-aufr33-jarredou.ckpt
             model_name = 'dereverb_mel_band_roformer_mono_anvuew.ckpt'
         self.model_name = model_name
 

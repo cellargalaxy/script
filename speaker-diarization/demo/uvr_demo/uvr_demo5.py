@@ -14,7 +14,10 @@ from audio_separator.separator import Separator
 
 # 降噪
 models = [
+    # 都没什么效果
+    'UVR-DeNoise.pth',#
     'UVR-DeNoise-Lite.pth',  #
+    'denoise_mel_band_roformer_aufr33_sdr_27.9959.ckpt',#
     'denoise_mel_band_roformer_aufr33_aggr_sdr_27.9768.ckpt',  #
     'mel_band_roformer_denoise_debleed_gabox.ckpt',  #
     'mel_band_roformer_instrumental_fullness_noise_v4_gabox.ckpt',  #
@@ -22,23 +25,15 @@ models = [
 for model in models:
     separator = None
     try:
+        print(model)
         separator = Separator(model_file_dir=os.path.join(util.get_home_dir(), '.cache', 'uvr'),
                               output_dir=os.path.join('output', model))
         separator.load_model(model_filename=model)
-        output_files = separator.separate(['output/noreverb.wav'])
-        if model == 'UVR-DeNoise-Lite.pth':
-            util.delete_path('output/noreverb.wav')
-            util.copy_file(os.path.join('output',model,'noreverb_(No Noise)_UVR-DeNoise-Lite.wav'), 'output/noreverb.wav')
-        if model == 'denoise_mel_band_roformer_aufr33_aggr_sdr_27.9768.ckpt':
-            util.delete_path('output/noreverb.wav')
-            util.copy_file(os.path.join('output',model,'noreverb_(dry)_denoise_mel_band_roformer_aufr33_aggr_sdr_27.wav'), 'output/noreverb.wav')
-        if model ==  'mel_band_roformer_denoise_debleed_gabox.ckpt':
-            util.delete_path('output/noreverb.wav')
-            util.copy_file(os.path.join('output',model,'noreverb_(Instrumental)_mel_band_roformer_denoise_debleed_gabox.wav'), 'output/noreverb.wav')
-        if model ==   'mel_band_roformer_instrumental_fullness_noise_v4_gabox.ckpt':
-            util.delete_path('output/noreverb.wav')
-            util.copy_file(os.path.join('output',model,'noreverb_(Vocals)_mel_band_roformer_instrumental_fullness_noise_v4_gabox.wav'), 'output/noreverb.wav')
+        output_files = separator.separate([
+            '/workspace/script/speaker-diarization/gen_subt_v7/output/xiang/extract_stem/noreverb.wav',
+        ])
     except Exception as e:
         print(f'Failed to load model: {model}\nError: {e}')
-    finally:
+        # finally:
         print('Done')
+

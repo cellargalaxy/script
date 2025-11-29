@@ -27,14 +27,17 @@ def exec(video_path, exec_conf):
         if name == 'extract_audio':
             extract_audio.exec(manager)
         if name == 'extract_stem':
-            vocal_model = conf.get('vocal_model', None)
-            main_vocal_model = conf.get('main_vocal_model', None)
-            de_reverb_model = conf.get('de_reverb_model', None)
-            extract_stem.exec(manager, [
-                extract_stem_uvr.VocalHandler(vocal_model),
-                extract_stem_uvr.MainVocalHandler(main_vocal_model),  # 5_HP-Karaoke-UVR.pth
-                extract_stem_uvr.DeReverbHandler(de_reverb_model),  # MDX23C-De-Reverb-aufr33-jarredou.ckpt
-            ])
+            vocal_models = conf.get('vocal_model', None) or [None]
+            main_vocal_models = conf.get('main_vocal_model', None) or [None]
+            de_reverb_models = conf.get('de_reverb_model', None) or [None]
+            handlers = []
+            for j, model in enumerate(vocal_models):
+                handlers.append(extract_stem_uvr.VocalHandler(model))
+            for j, model in enumerate(main_vocal_models):
+                handlers.append(extract_stem_uvr.MainVocalHandler(model))
+            for j, model in enumerate(de_reverb_models):
+                handlers.append(extract_stem_uvr.DeReverbHandler(model))
+            extract_stem.exec(manager, handlers)
         if name == 'extract_loudness':
             extract_loudness.exec(manager)
         if name == 'extract_simple':
