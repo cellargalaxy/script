@@ -43,4 +43,8 @@ try {
     
     # 暂停命令行，等待用户按键。在 PowerShell 中，这是通过 Read-Host 实现的。
     # 也可以使用 cmd /c "pause" 但为了保持原生性，我们用 Read-Host
-    [void]$Host.UI
+    [void]$Host.UI.RawUI.ReadKey("NoEcho,IncludeKeydown")
+    
+    # 或者如果想要更像传统的 cmd 窗口暂停，可以这样做：
+    # cmd /c "pause"
+}
