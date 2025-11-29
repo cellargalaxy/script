@@ -56,7 +56,7 @@ def exec(video_path, exec_conf):
 
 
 if __name__ == '__main__':
-    json_path = os.path.join(util.get_ancestor_dir(util.get_script_path()), 'main.json')
+    json_path = os.path.join(util.get_script_path(), 'main.json')
     conf = util.read_file_to_obj(json_path)
 
     env = conf.get('video', None) or {}
