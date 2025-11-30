@@ -27,9 +27,9 @@ def exec(video_path, exec_conf):
         if name == 'extract_audio':
             extract_audio.exec(manager)
         if name == 'extract_stem':
-            vocal_models = conf.get('vocal_model', None) or [None]
-            main_vocal_models = conf.get('main_vocal_model', None) or [None]
-            de_reverb_models = conf.get('de_reverb_model', None) or [None]
+            vocal_models = conf.get('vocal_model', None) or []
+            main_vocal_models = conf.get('main_vocal_model', None) or []
+            de_reverb_models = conf.get('de_reverb_model', None) or []
             handlers = []
             for j, model in enumerate(vocal_models):
                 handlers.append(extract_stem_uvr.VocalHandler(model))
