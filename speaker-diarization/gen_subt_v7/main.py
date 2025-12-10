@@ -27,16 +27,25 @@ def exec(video_path, exec_conf):
         if name == 'extract_audio':
             extract_audio.exec(manager)
         if name == 'extract_stem':
-            vocal_models = conf.get('vocal_model', None) or []
-            main_vocal_models = conf.get('main_vocal_model', None) or []
-            de_reverb_models = conf.get('de_reverb_model', None) or []
             handlers = []
+            vocal_models = conf.get('vocal_model', None) or []
             for j, model in enumerate(vocal_models):
-                handlers.append(extract_stem_uvr.VocalHandler(model))
+                if not model.get('enable', False):
+                    continue
+                model_name = model.get('name', None)
+                handlers.append(extract_stem_uvr.VocalHandler(model_name))
+            main_vocal_models = conf.get('main_vocal_model', None) or []
             for j, model in enumerate(main_vocal_models):
-                handlers.append(extract_stem_uvr.MainVocalHandler(model))
+                if not model.get('enable', False):
+                    continue
+                model_name = model.get('name', None)
+                handlers.append(extract_stem_uvr.MainVocalHandler(model_name))
+            de_reverb_models = conf.get('de_reverb_model', None) or []
             for j, model in enumerate(de_reverb_models):
-                handlers.append(extract_stem_uvr.DeReverbHandler(model))
+                if not model.get('enable', False):
+                    continue
+                model_name = model.get('name', None)
+                handlers.append(extract_stem_uvr.DeReverbHandler(model_name))
             extract_stem.exec(manager, handlers)
         if name == 'extract_loudness':
             extract_loudness.exec(manager)
