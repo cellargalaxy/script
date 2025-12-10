@@ -13,17 +13,17 @@
     {
       "name": "extract_stem","enable": true,
       "vocal_model": [
-        {"model":"vocals_mel_band_roformer.ckpt","enable": true,"remark": ""}
+        {"name":"vocals_mel_band_roformer.ckpt","enable": true,"remark": ""}
       ],
       "main_vocal_model": [
-        {"model":"bs_roformer_karaoke_frazer_becruily.ckpt","enable": false,"remark": "观察列表"},
-        {"model":"mel_band_roformer_karaoke_gabox.ckpt","enable": false,"remark": "比karaoke_becruily柔和"},
-        {"model":"mel_band_roformer_karaoke_becruily.ckpt","enable": true,"remark": "效力最强"},
-        {"model":"5_HP-Karaoke-UVR.pth","enable": false,"remark": "与roformer搭配叠加增强"}
+        {"name":"bs_roformer_karaoke_frazer_becruily.ckpt","enable": false,"remark": "观察列表"},
+        {"name":"mel_band_roformer_karaoke_gabox.ckpt","enable": false,"remark": "比karaoke_becruily柔和"},
+        {"name":"mel_band_roformer_karaoke_becruily.ckpt","enable": true,"remark": "效力最强"},
+        {"name":"5_HP-Karaoke-UVR.pth","enable": false,"remark": "与roformer搭配叠加增强"}
       ],
       "de_reverb_model": [
-        {"model":"MDX23C-De-Reverb-aufr33-jarredou.ckpt","enable": false,"remark": "柔和"},
-        {"model":"dereverb_mel_band_roformer_mono_anvuew.ckpt","enable": true,"remark": "效力最强"}
+        {"name":"MDX23C-De-Reverb-aufr33-jarredou.ckpt","enable": false,"remark": "柔和"},
+        {"name":"dereverb_mel_band_roformer_mono_anvuew.ckpt","enable": true,"remark": "效力最强"}
       ]
     },
     {"name": "extract_loudness","enable": false},

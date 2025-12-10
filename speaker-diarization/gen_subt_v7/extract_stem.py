@@ -8,9 +8,9 @@ class Extract:
     def __init__(self, handler):
         self.handler = handler
 
-    def extract(self, audio_path, output_dir):
+    def extract(self, audio_path, output_dir, done_path):
         handler_dir = os.path.join(output_dir, self.handler.get_name())
-        master_path, slave_path = self.handler.extract(audio_path, handler_dir)
+        master_path, slave_path = self.handler.extract(audio_path, handler_dir, done_path)
         self.master_path = master_path
         self.slave_path = slave_path
         self.master_copy_path = os.path.join(output_dir, self.handler.get_master_name())
@@ -24,12 +24,13 @@ class Extract:
 
 
 def extract_stem(audio_path, handlers, output_dir):
+    done_path = os.path.join(output_dir, 'done.lock')
     path_map = {}
     extracts = []
     for i, handler in enumerate(handlers):
         extracts.append(Extract(handler))
     for i, extract in enumerate(extracts):
-        extract.extract(audio_path, output_dir)
+        extract.extract(audio_path, output_dir, done_path)
         extract.copy_slave()
         slave_copy_path = extract.slave_copy_path
         file_name = util.get_file_name(slave_copy_path)
@@ -42,6 +43,7 @@ def extract_stem(audio_path, handlers, output_dir):
         path_map[f'{file_name}_path'] = master_copy_path
         path_map['audio_path'] = master_copy_path
         path_map['split_audio_path'] = master_copy_path
+    util.save_as_json({}, done_path)
     return path_map
 
 
