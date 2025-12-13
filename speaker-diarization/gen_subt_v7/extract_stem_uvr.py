@@ -1,6 +1,7 @@
 import util
 import os
 from audio_separator.separator import Separator
+import extract_stem
 
 model_file_dir = os.path.join(util.get_home_dir(), '.cache', 'uvr')
 
@@ -22,15 +23,16 @@ class VocalHandler:
     def get_slave_name(self):
         return "bgm.wav"
 
-    def extract(self, audio_path, output_dir, done_path):
-        vocals_path, others_path = extract_vocal(self.model_name, audio_path, output_dir, done_path)
+    def extract(self, audio_path, output_dir):
+        vocals_path, others_path = extract_vocal(self.model_name, audio_path, output_dir)
         return vocals_path, others_path
 
 
-def extract_vocal(model_name, audio_path, output_dir, done_path):
+def extract_vocal(model_name, audio_path, output_dir):
     vocals_path = os.path.join(output_dir, 'vocals.wav')
     others_path = os.path.join(output_dir, 'others.wav')
-    if util.path_exist(done_path):
+    done_path = extract_stem.done_path_ctx.get()
+    if done_path and util.path_exist(done_path):
         return vocals_path, others_path
     separator = Separator(model_file_dir=model_file_dir, output_dir=output_dir)
     separator.load_model(model_filename=model_name)
@@ -58,15 +60,16 @@ class MainVocalHandler:
     def get_slave_name(self):
         return "harmony.wav"
 
-    def extract(self, audio_path, output_dir, done_path):
-        vocals_path, instrumental_path = extract_main_vocal(self.model_name, audio_path, output_dir, done_path)
+    def extract(self, audio_path, output_dir):
+        vocals_path, instrumental_path = extract_main_vocal(self.model_name, audio_path, output_dir)
         return vocals_path, instrumental_path
 
 
-def extract_main_vocal(model_name, audio_path, output_dir, done_path):
+def extract_main_vocal(model_name, audio_path, output_dir):
     vocals_path = os.path.join(output_dir, 'vocals.wav')
     instrumental_path = os.path.join(output_dir, 'instrumental.wav')
-    if util.path_exist(done_path):
+    done_path = extract_stem.done_path_ctx.get()
+    if done_path and util.path_exist(done_path):
         return vocals_path, instrumental_path
     separator = Separator(model_file_dir=model_file_dir, output_dir=output_dir)
     separator.load_model(model_filename=model_name)
@@ -94,15 +97,16 @@ class DeReverbHandler:
     def get_slave_name(self):
         return "reverb.wav"
 
-    def extract(self, audio_path, output_dir, done_path):
-        noreverb_path, reverb_path = extract_dereverb(self.model_name, audio_path, output_dir, done_path)
+    def extract(self, audio_path, output_dir):
+        noreverb_path, reverb_path = extract_dereverb(self.model_name, audio_path, output_dir)
         return noreverb_path, reverb_path
 
 
-def extract_dereverb(model_name, audio_path, output_dir, done_path):
+def extract_dereverb(model_name, audio_path, output_dir):
     noreverb_path = os.path.join(output_dir, 'noreverb.wav')
     reverb_path = os.path.join(output_dir, 'reverb.wav')
-    if util.path_exist(done_path):
+    done_path = extract_stem.done_path_ctx.get()
+    if done_path and util.path_exist(done_path):
         return noreverb_path, reverb_path
     separator = Separator(model_file_dir=model_file_dir, output_dir=output_dir)
     separator.load_model(model_filename=model_name)

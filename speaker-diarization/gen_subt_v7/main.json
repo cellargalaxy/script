@@ -6,6 +6,7 @@
     "no_proxy": "localhost,127.0.0.1,::1,192.168.123.7,mirrors.ustc.edu.cn,hf-mirror.com"
   },
   "video": [
+    "../material/holo4.mkv"
   ],
   "exec": [
     {"name": "init","enable": true},
@@ -13,12 +14,13 @@
     {
       "name": "extract_stem","enable": true,
       "vocal_model": [
-        {"name":"vocals_mel_band_roformer.ckpt","enable": true,"remark": ""}
+        {"name":"vocals_mel_band_roformer.ckpt","enable": false,"remark": ""}
       ],
       "main_vocal_model": [
-        {"name":"bs_roformer_karaoke_frazer_becruily.ckpt","enable": false,"remark": "观察列表"},
+        {"name":"bs_roformer_karaoke_frazer_becruily.ckpt","enable": true,"remark": "观察列表"},
         {"name":"mel_band_roformer_karaoke_gabox.ckpt","enable": false,"remark": "比karaoke_becruily柔和"},
-        {"name":"mel_band_roformer_karaoke_becruily.ckpt","enable": true,"remark": "效力最强"},
+        {"name":"UVR_MDXNET_KARA_2.onnx","enable": false,"remark": "与roformer搭配叠加增强"},
+        {"name":"mel_band_roformer_karaoke_becruily.ckpt","enable": false,"remark": "效力最强"},
         {"name":"5_HP-Karaoke-UVR.pth","enable": false,"remark": "与roformer搭配叠加增强"}
       ],
       "de_reverb_model": [
@@ -26,17 +28,17 @@
         {"name":"dereverb_mel_band_roformer_mono_anvuew.ckpt","enable": true,"remark": "效力最强"}
       ]
     },
-    {"name": "extract_loudness","enable": false},
-    {"name": "extract_simple","enable": false},
-    {"name": "part_detect","enable": false},
+    {"name": "extract_loudness","enable": true},
+    {"name": "extract_simple","enable": true},
+    {"name": "part_detect","enable": true},
     {"name": "split_audio","enable": false,"path_key": "part_detect_path"},
-    {"name": "part_divide","enable": false},
+    {"name": "part_divide","enable": true},
     {"name": "split_audio","enable": false,"path_key": "part_divide_path"},
-    {"name": "segment_detect","enable": false},
+    {"name": "segment_detect","enable": true},
     {"name": "split_audio","enable": false,"path_key": "segment_detect_path"},
-    {"name": "segment_divide","enable": false},
+    {"name": "segment_divide","enable": true},
     {"name": "split_audio","enable": false,"path_key": "segment_divide_path"},
-    {"name": "speaker_detect","enable": false},
-    {"name": "split_audio","enable": false,"path_key": "speaker_detect_path"}
+    {"name": "speaker_detect","enable": true},
+    {"name": "split_audio","enable": true,"path_key": "speaker_detect_path"}
   ]
 }
