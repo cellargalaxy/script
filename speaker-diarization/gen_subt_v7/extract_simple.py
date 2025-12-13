@@ -20,6 +20,5 @@ def exec(manager):
     output_path = extract_simple(audio_path, output_dir)
     manager['extract_simple_path'] = output_path
     manager['audio_path'] = output_path
-    manager['split_audio_path'] = output_path
     logger.info("extract_simple,leave: %s", util.json_dumps(manager))
     util.exec_gc()
