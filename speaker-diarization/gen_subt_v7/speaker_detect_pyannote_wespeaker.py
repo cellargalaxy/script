@@ -13,7 +13,6 @@ def get_inference():
     global inference
     if inference:
         return inference
-    torch.serialization.add_safe_globals([torch.torch_version.TorchVersion])
     model = Model.from_pretrained("pyannote/wespeaker-voxceleb-resnet34-LM")
     inference = Inference(model, window="whole")
     inference.to(torch.device(util.get_device_type()))
