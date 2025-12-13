@@ -18,6 +18,11 @@ pip install pyannote.audio==3.4.0
 pip install speechbrain==1.0.3
 pip install whisperx==3.7.4 #whisperx依赖torch==2.8.0，没法对torch降级
 
+# requirements.txt没法直接安装torch，先手动安装torch再安装requirements.txt
+pip install torch==2.8.0+cu126 torchvision==0.23.0+cu126 torchaudio==2.8.0+cu126 --index-url https://download.pytorch.org/whl/cu126
+pip install -r requirements.txt
+pip freeze > requirements.txt
+
 
 conda env list
 conda remove -n audiosr --all
@@ -28,6 +33,7 @@ conda deactivate
 pip install torch==2.6.0+cu126 torchvision==0.21.0+cu126 torchaudio==2.6.0+cu126 --index-url https://download.pytorch.org/whl/cu126
 pip install audiosr
 
-
-pip freeze > requirements.txt
-pip install -r requirements.txt
+# requirements.txt没法直接安装torch，先手动安装torch再安装requirements.txt
+pip install torch==2.6.0+cu126 torchvision==0.21.0+cu126 torchaudio==2.6.0+cu126 --index-url https://download.pytorch.org/whl/cu126
+pip install -r requirements_audiosr.txt
+pip freeze > requirements_audiosr.txt
