@@ -1,4 +1,5 @@
 # https://pytorch.org/get-started/previous-versions/
+# conda create -n v7_debug --clone v7_251213
 
 conda env list
 conda remove -n gen_subt_v7 --all
@@ -30,7 +31,12 @@ conda create -n audiosr python=3.10
 conda activate audiosr
 conda deactivate
 
+pip install torch==2.6.0+cu126 torchvision==0.21.0+cu126 torchaudio==2.6.0+cu126 --index-url https://download.pytorch.org/whl/cu126
 pip install audiosr==0.0.7
+pip install matplotlib==3.10.8
+pip install pysubs2==1.8.0
 
+# requirements.txt没法直接安装torch，先手动安装torch再安装requirements.txt
+pip install torch==2.6.0+cu126 torchvision==0.21.0+cu126 torchaudio==2.6.0+cu126 --index-url https://download.pytorch.org/whl/cu126
 pip install -r requirements_audiosr.txt
 pip freeze > requirements_audiosr.txt
