@@ -25,6 +25,7 @@ pip install -r requirements.txt
 pip freeze > requirements.txt
 
 
+# audiosr的依赖与whisperx/audio-separator冲突
 conda env list
 conda remove -n audiosr --all
 conda create -n audiosr python=3.10
