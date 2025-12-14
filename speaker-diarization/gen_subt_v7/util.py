@@ -33,6 +33,14 @@ def get_logger(name='main', fmt='%(asctime)s %(levelname)-5s %(filename)s:%(line
 
     return logger
 
+def flush_logger():
+    for logger_name in logging.Logger.manager.loggerDict:
+        logger = logging.getLogger(logger_name)
+        for handler in logger.handlers:
+            try:
+                handler.flush()
+            except Exception:
+                pass
 
 logger = get_logger()
 
