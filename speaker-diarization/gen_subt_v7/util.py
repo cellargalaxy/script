@@ -1,7 +1,6 @@
 from pathlib import Path
 import subprocess
 import logging
-import shlex
 import os
 import platform
 import shutil
@@ -11,6 +10,7 @@ import copy
 import gc
 import math
 from collections import Counter
+import re
 
 
 def get_logger(name='main', fmt='%(asctime)s %(levelname)-5s %(filename)s:%(lineno)d - %(message)s'):
@@ -33,6 +33,7 @@ def get_logger(name='main', fmt='%(asctime)s %(levelname)-5s %(filename)s:%(line
 
     return logger
 
+
 def flush_logger():
     for logger_name in logging.Logger.manager.loggerDict:
         logger = logging.getLogger(logger_name)
@@ -41,6 +42,7 @@ def flush_logger():
                 handler.flush()
             except Exception:
                 pass
+
 
 logger = get_logger()
 
@@ -277,11 +279,17 @@ def get_script_path():
     return script_dir
 
 
+def safe_file_name(name: str) -> str:
+    # Windows 非法字符
+    return re.sub(r'[\\/:*?"<>|]', '_', name)
+
+
 def truncate_path(path, max_length=255):
     if not path:
         return path
     ancestor_dir = get_ancestor_dir(path)
     file_name = get_file_name(path)
+    file_name = safe_file_name(file_name)
     file_ext = get_file_ext(path)
     file_name = truncate_string(file_name, max_length - len(file_ext.encode('utf-8')) - 4)  # 减4留点余地
     file_basename = file_name
