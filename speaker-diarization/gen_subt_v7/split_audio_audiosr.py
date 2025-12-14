@@ -92,4 +92,9 @@ if __name__ == '__main__':
     min_duration = str(args.get('min_duration', ''))
     if min_duration.lower() in ['none', 'null', '']:
         min_duration = None
-    exec(manager, path_key, min_duration)
+    try:
+        exec(manager, path_key, min_duration)
+    except Exception as e:
+        logger.error("异常", exc_info=True)
+        util.input_timeout("异常，回车继续: ", 60)
+
