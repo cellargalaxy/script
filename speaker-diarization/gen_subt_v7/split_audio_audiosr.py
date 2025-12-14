@@ -96,5 +96,4 @@ if __name__ == '__main__':
         exec(manager, path_key, min_duration)
     except Exception as e:
         logger.error("异常", exc_info=True)
-        util.input_timeout("异常，回车继续: ", 60)
 
