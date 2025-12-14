@@ -39,6 +39,7 @@
     {"name": "segment_divide", "enable": true},
     {"name": "split_audio", "enable": false, "path_key": "segment_divide_path"},
     {"name": "speaker_detect", "enable": true},
-    {"name": "split_audio", "enable": true, "path_key": "speaker_detect_path"}
+    {"name": "split_audio", "enable": false, "path_key": "speaker_detect_path"},
+    {"name": "split_audio_audiosr", "enable": true, "path_key": "speaker_detect_path"}
   ]
 }

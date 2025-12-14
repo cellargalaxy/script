@@ -12,6 +12,7 @@ import part_divide
 import segment_detect
 import segment_divide
 import speaker_detect
+import split_audio_audiosr_shell
 
 logger = util.get_logger()
 
@@ -64,6 +65,9 @@ def exec(video_path, exec_conf):
         if name == 'split_audio':
             path_key = conf.get('path_key', None)
             split_audio.exec(manager, path_key)
+        if name == 'split_audio_audiosr':
+            path_key = conf.get('path_key', None)
+            split_audio_audiosr_shell.exec(manager, path_key)
 
 
 if __name__ == '__main__':
