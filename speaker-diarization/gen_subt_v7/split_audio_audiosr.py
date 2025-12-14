@@ -4,7 +4,7 @@ import util
 import os
 from pydub import AudioSegment
 
-logger = util.get_logger()
+logger = util.get_logger(name='split_audio_audiosr')
 
 model = None
 
