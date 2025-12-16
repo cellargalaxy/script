@@ -6,7 +6,7 @@
     "no_proxy": "localhost,127.0.0.1,::1,192.168.123.7,mirrors.ustc.edu.cn,hf-mirror.com"
   },
   "video": [
-    "../material/holo4.mkv"
+    "../material/holo3.mkv"
   ],
   "exec": [
     {"name": "init", "enable": true},
@@ -39,7 +39,7 @@
     {"name": "segment_divide", "enable": true},
     {"name": "split_audio", "enable": false, "path_key": "segment_divide_path"},
     {"name": "speaker_detect", "enable": true},
-    {"name": "split_audio", "enable": false, "path_key": "speaker_detect_path"},
-    {"name": "split_audio_audiosr", "enable": true, "path_key": "speaker_detect_path"}
+    {"name": "split_audio", "enable": true, "path_key": "speaker_detect_path"},
+    {"name": "split_audio_audiosr", "enable": false, "path_key": "speaker_detect_path"}
   ]
 }

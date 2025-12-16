@@ -199,15 +199,15 @@ def segment_divide(audio_path, part_detect_path, segment_detect_path, output_dir
             continue
         segments[i]['segment_divide_type'] = 'default'
 
-    # results = []
-    # for i, segment in enumerate(segments):
-    #     if segment.get('vad_type', None) == 'silene':
-    #         continue
-    #     segment = trim_silence(segment, silences)
-    #     if not segment:
-    #         continue
-    #     results.append(segment)
-    # segments = results
+    results = []
+    for i, segment in enumerate(segments):
+        if segment.get('vad_type', None) == 'silene':
+            continue
+        segment = trim_silence(segment, silences)
+        if not segment:
+            continue
+        results.append(segment)
+    segments = results
     # if len(segments) > 0:
     #     if segments[0]['start'] < 1000:
     #         segments[0]['start'] = 0
