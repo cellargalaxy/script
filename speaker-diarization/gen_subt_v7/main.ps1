@@ -1,34 +1,39 @@
-# Force PowerShell output to UTF-8
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+# Define variables
+$EnvName = "gen_subt_v7"
+$ScriptPath = "./main.py"
+$MaxAttempts = 10
+$Attempt = 1
+$Success = $false
 
-# Force Python to output UTF-8
-$env:PYTHONIOENCODING = "UTF-8"
-$env:PYTHONUTF8 = "1"
+Write-Host "--- Starting Process ---"
+Write-Host "Target Environment: $EnvName"
 
-Write-Host "`n[INFO] Console encoding: $([Console]::OutputEncoding.WebName)"
+while ($Attempt -le $MaxAttempts) {
+    Write-Host "Attempt $Attempt of $MaxAttempts..."
 
-# ---- Conda initialization ----
-$condaHook = "D:\softdata\miniconda3\shell\condabin\conda-hook.ps1"
+    # Execute the python script using conda run
+    conda run -n $EnvName --no-capture-output python $ScriptPath
 
-if (Test-Path $condaHook) {
-    Write-Host "[INFO] Loading conda hook..."
-    & $condaHook
-} else {
-    Write-Host "[ERROR] Cannot find conda hook file: $condaHook"
+    # Check the exit code of the last command
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "Success: Script finished successfully."
+        $Success = $true
+        break
+    } else {
+        Write-Host "Warning: Script exited with error code $LASTEXITCODE."
+        if ($Attempt -lt $MaxAttempts) {
+            Write-Host "Retrying in 2 seconds..."
+            Start-Sleep -Seconds 2
+        }
+    }
+
+    $Attempt++
 }
 
-# ---- Activate environment ----
-conda activate gen_subt_v7
+if (-not $Success) {
+    Write-Host "Error: Maximum retry attempts reached. Process failed." -ForegroundColor Red
+}
 
-# ---- Run Python script ----
-try {
-    python ".\main.py"
-}
-catch {
-    Write-Host "`n[ERROR] Exception occurred while running main.py:"
-    Write-Host $_
-}
-finally {
-    Write-Host "`n[INFO] Execution finished. Press Enter to exit..."
-    Read-Host
-}
+Write-Host "--- Process Completed ---"
+Write-Host "Press Enter to exit..."
+Read-Host
