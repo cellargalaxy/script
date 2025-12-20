@@ -18,7 +18,7 @@ logger = util.get_logger()
 
 
 def exec(video_path, exec_conf):
-    manager = {"video_path": video_path}
+    manager = {"video_path": video_path, "exec_conf": exec_conf}
     for i, conf in enumerate(exec_conf):
         if not conf.get('enable', False):
             continue
