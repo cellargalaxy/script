@@ -4,6 +4,7 @@ import tool_ten_vad
 import math
 import tool_subt
 import tool_loudness
+import tool_nemo_vad
 
 logger = util.get_logger()
 
@@ -28,30 +29,38 @@ def part_detect_by_data(audio,
                         ):
     last_end = len(audio)
 
-    vads = tool_ten_vad.vad_confidence(audio, frame_rate)
-    if len(vads) == 0:
-        logger.error(f"人声置信度为空")
-        raise ValueError(f"人声置信度为空")
     volumes = tool_loudness.get_loudness(audio, frame_rate)
     if len(volumes) == 0:
         logger.error(f"响度为空")
         raise ValueError(f"响度为空")
-    if len(vads) != len(volumes):
-        logger.error(f"人声置信度与响度长度不一致, vads: {len(vads)}, volumes: {len(volumes)}")
-        raise ValueError(f"人声置信度与响度长度不一致, vads: {len(vads)}, volumes: {len(volumes)}")
+    ten_vads = tool_ten_vad.vad_confidence(audio, frame_rate)
+    if len(ten_vads) == 0:
+        logger.error(f"人声置信度为空")
+        raise ValueError(f"人声置信度为空")
+    nemo_vads = tool_nemo_vad.vad_confidence(audio)
+    if len(nemo_vads) == 0:
+        logger.error(f"人声置信度为空")
+        raise ValueError(f"人声置信度为空")
+    if not len(volumes) == len(ten_vads) == len(nemo_vads):
+        logger.error(
+            f"人声置信度与响度长度不一致, volumes: {len(volumes)}, ten_vads: {len(ten_vads)}, nemo_vads: {len(nemo_vads)}")
+        raise ValueError(
+            f"人声置信度与响度长度不一致, volumes: {len(volumes)}, ten_vads: {len(ten_vads)}, nemo_vads: {len(nemo_vads)}")
 
-    tags = []
-    for i, vad in enumerate(vads):
-        if vad <= silence_threshold:
-            tags.append(-1)
-        elif speech_threshold <= vad:
-            tags.append(1)
-        else:
-            tags.append(0)
-
-    for i, tag in enumerate(tags):
-        if volumes[i] <= volume_threshold:
+    tags = [0] * len(ten_vads)
+    for i, volume in enumerate(volumes):
+        if tags[i] == 0 and volumes[i] <= volume_threshold:
             tags[i] = -1
+    for i, vad in enumerate(ten_vads):
+        if tags[i] == 0 and vad <= silence_threshold:
+            tags[i] = -1
+        elif tags[i] == 0 and speech_threshold <= vad:
+            tags[i] = 1
+    for i, vad in enumerate(nemo_vads):
+        if tags[i] == 0 and vad <= silence_threshold:
+            tags[i] = -1
+        elif tags[i] == 0 and speech_threshold <= vad:
+            tags[i] = 1
 
     tags = diffusion(tags, 1)
     tags = diffusion(tags, -1)
