@@ -1,57 +1,29 @@
-import torchaudio
-from speechbrain.pretrained import SpeakerDiarization, EncoderDecoderASR
 import os
-from pydub import AudioSegment
+import numpy as np
+from sklearn.cluster import AgglomerativeClustering
+import torchaudio
+from speechbrain.inference.speaker import EncoderClassifier
 
-# 设置路径
-audio_file = "audio.wav"
-tmp_dir = "tmp_speaker_diarization"
-os.makedirs(tmp_dir, exist_ok=True)
 
-# Step 1: 说话人分离
-diarizer = SpeakerDiarization.from_hparams(
-    source="speechbrain/diarization-ecapa-tdnn",
-    savedir=os.path.join(tmp_dir, "diarization_model"),
-    run_opts={"device": "cpu"}
-)
-diarizer.diarize_file(audio_file)
+# 1. 加载模型
+model =  EncoderClassifier.from_hparams(source="speechbrain/spkrec-ecapa-voxceleb")
 
-# Step 2: 加载 ASR 模型
-asr = EncoderDecoderASR.from_hparams(
-    source="speechbrain/asr-transformer-transformerlm-librispeech",
-    savedir=os.path.join(tmp_dir, "asr_model"),
-    run_opts={"device": "cpu"}
-)
+# 2. 读取并提取嵌入
+def extract_embedding(file_path):
+    signal, fs = torchaudio.load(file_path)
+    embedding = model.encode_batch(signal).squeeze().detach().cpu().numpy()
+    return embedding
 
-# Step 3: 读取 RTTM 结果
-rttm_path = os.path.join(tmp_dir, "diarization_model", os.path.basename(audio_file).replace(".wav", ".rttm"))
-segments = []
-with open(rttm_path, "r") as f:
-    for line in f:
-        parts = line.strip().split()
-        start = float(parts[3])
-        duration = float(parts[4])
-        spk = parts[7]
-        segments.append({"start": start, "end": start + duration, "speaker": spk})
+# 3. 遍历所有音频
+audio_dir = '../aaa/output/long/segment_split'
+wav_files = [os.path.join(audio_dir, f) for f in os.listdir(audio_dir) if f.endswith('speech.wav')]
+embeddings = [extract_embedding(f) for f in wav_files]
 
-# Step 4: 切割音频段并进行识别
-audio = AudioSegment.from_wav(audio_file)
-results = []
+# 4. 聚类
+X = np.vstack(embeddings)
+clustering = AgglomerativeClustering(n_clusters=None, distance_threshold=1.0).fit(X)  # 可调 threshold
+labels = clustering.labels_
 
-for i, seg in enumerate(segments):
-    start_ms = int(seg["start"] * 1000)
-    end_ms = int(seg["end"] * 1000)
-    segment_audio = audio[start_ms:end_ms]
-    segment_path = os.path.join(tmp_dir, f"segment_{i}.wav")
-    segment_audio.export(segment_path, format="wav")
-
-    # 加载并识别
-    signal, fs = torchaudio.load(segment_path)
-    text = asr.transcribe_batch(signal)
-
-    results.append(f"[{seg['speaker']}] {text}")
-
-# Step 5: 打印最终结果
-print("\n--- Speaker-labeled Transcript ---\n")
-for line in results:
-    print(line)
+# 5. 输出每个文件对应的聚类标签
+for file, label in zip(wav_files, labels):
+    print(f"{file} -> Cluster {label}")
