@@ -20,6 +20,7 @@ pip install faster-whisper==1.2.1
 pip install pyannote.audio==3.4.0
 pip install speechbrain==1.0.3
 pip install whisperx==3.7.4 #whisperx依赖torch==2.8.0，没法对torch降级
+pip install -U "nemo_toolkit[asr]"
 
 # requirements.txt没法直接安装torch，先手动安装torch再安装requirements.txt
 pip install torch==2.8.0+cu126 torchvision==0.23.0+cu126 torchaudio==2.8.0+cu126 --index-url https://download.pytorch.org/whl/cu126

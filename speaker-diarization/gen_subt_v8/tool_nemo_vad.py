@@ -37,5 +37,6 @@ def vad_confidence(data):
             input_signal_length=input_signal_length.to(device)
         ).cpu()
     probs = torch.softmax(outputs, dim=-1)
-    confidences = probs[:, :, 1]
+    probs = probs[:, :, 1]
+    confidences = probs.squeeze().tolist()
     return confidences

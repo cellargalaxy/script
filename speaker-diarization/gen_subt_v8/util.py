@@ -206,7 +206,7 @@ def get_ancestor_dir(file_path):
 
 
 def json_dumps(obj):
-    return json.dumps(obj, ensure_ascii=False)
+    return json.dumps(obj, ensure_ascii=False, sort_keys=True)
 
 
 def json_loads(content):

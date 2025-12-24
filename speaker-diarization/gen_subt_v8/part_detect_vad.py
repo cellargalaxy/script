@@ -23,9 +23,10 @@ def diffusion(tags, tag):
 
 def part_detect_by_data(audio,
                         frame_rate=50,
-                        speech_threshold=0.8,
-                        silence_threshold=0.2,
-                        volume_threshold=-80,
+                        vad_speech_threshold=0.8,
+                        vad_silence_threshold=0.2,
+                        volume_speech_threshold=-30,
+                        volume_silence_threshold=-70,
                         ):
     last_end = len(audio)
 
@@ -41,25 +42,32 @@ def part_detect_by_data(audio,
     if len(nemo_vads) == 0:
         logger.error(f"人声置信度为空")
         raise ValueError(f"人声置信度为空")
+    if len(volumes) - len(nemo_vads) == 1:
+        nemo_vads.append(0)
+    if len(nemo_vads) - len(volumes) == 1:
+        nemo_vads.pop()
     if not len(volumes) == len(ten_vads) == len(nemo_vads):
         logger.error(
             f"人声置信度与响度长度不一致, volumes: {len(volumes)}, ten_vads: {len(ten_vads)}, nemo_vads: {len(nemo_vads)}")
         raise ValueError(
             f"人声置信度与响度长度不一致, volumes: {len(volumes)}, ten_vads: {len(ten_vads)}, nemo_vads: {len(nemo_vads)}")
 
+    plot_volume(nemo_vads)
     tags = [0] * len(ten_vads)
-    for i, volume in enumerate(volumes):
-        if tags[i] == 0 and volumes[i] <= volume_threshold:
-            tags[i] = -1
-    for i, vad in enumerate(ten_vads):
-        if tags[i] == 0 and vad <= silence_threshold:
-            tags[i] = -1
-        elif tags[i] == 0 and speech_threshold <= vad:
-            tags[i] = 1
+    # for i, volume in enumerate(volumes):
+    #     if tags[i] == 0 and volume_speech_threshold <= volumes[i]:
+    #         tags[i] = 1
+    #     if tags[i] == 0 and volumes[i] <= volume_silence_threshold:
+    #         tags[i] = -1
+    # for i, vad in enumerate(ten_vads):
+    #     if tags[i] == 0 and vad <= vad_silence_threshold:
+    #         tags[i] = -1
+    #     elif tags[i] == 0 and vad_speech_threshold <= vad:
+    #         tags[i] = 1
     for i, vad in enumerate(nemo_vads):
-        if tags[i] == 0 and vad <= silence_threshold:
+        if tags[i] == 0 and vad <= vad_silence_threshold:
             tags[i] = -1
-        elif tags[i] == 0 and speech_threshold <= vad:
+        elif tags[i] == 0 and vad_speech_threshold <= vad:
             tags[i] = 1
 
     tags = diffusion(tags, 1)
@@ -96,17 +104,39 @@ def part_detect_by_data(audio,
     return segments
 
 
-def part_detect(audio_path,
-                frame_rate=50,
-                speech_threshold=0.8,
-                silence_threshold=0.2,
-                volume_threshold=-80,
-                ):
+import math
+import matplotlib.pyplot as plt
+
+
+def plot_volume(volume_array):
+    """
+    volume_array: List[float]
+        每个元素代表 20ms 内的声量，可能包含 -Infinity
+    """
+
+    # 处理 -Infinity（用 None 或一个很小的值）
+    cleaned_volume = []
+    for v in volume_array:
+        if v == -math.inf:
+            cleaned_volume.append(None)  # matplotlib 会断开曲线
+        else:
+            cleaned_volume.append(v)
+
+    # 生成时间轴（单位：秒）
+    time_axis = [i * 0.02 for i in range(len(cleaned_volume))]
+
+    # 画图
+    plt.figure(figsize=(10, 4))
+    plt.plot(time_axis, cleaned_volume)
+    plt.xlabel("Time (seconds)")
+    plt.ylabel("Volume")
+    plt.title("Audio Volume Over Time")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
+def part_detect(audio_path):
     audio = AudioSegment.from_wav(audio_path)
-    segments = part_detect_by_data(audio,
-                                   frame_rate=frame_rate,
-                                   speech_threshold=speech_threshold,
-                                   silence_threshold=silence_threshold,
-                                   volume_threshold=volume_threshold,
-                                   )
+    segments = part_detect_by_data(audio)
     return segments

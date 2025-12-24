@@ -1,3 +1,5 @@
+import math
+
 from ten_vad import TenVad
 import numpy as np
 import util
@@ -26,12 +28,14 @@ def vad_confidence(data, frame_rate=50):
     simple_rate, np_data = pydub_ten_vad(data)
     frame_simple = int(simple_rate / frame_rate)
     frame_cnt = np_data.shape[0] // frame_simple
-    confidences = []
+    confidences = [0] * len(data)
     instance = TenVad(frame_simple)
     for i in range(frame_cnt):
         start_ms = i * frame_simple
         end_ms = (i + 1) * frame_simple
         frame_data = np_data[start_ms:end_ms]
         confidence, _ = instance.process(frame_data)
+        start_i = i
+        end_i = i + math.floor(1000 / frame_rate)
         confidences.append(confidence)
     return confidences
