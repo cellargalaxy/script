@@ -2,6 +2,7 @@ import nemo.collections.asr as nemo_asr
 import torch
 import numpy as np
 import util
+from pydub import AudioSegment
 
 logger = util.get_logger()
 
@@ -19,7 +20,7 @@ def get_model():
     return model
 
 
-def pydub_nemo_vad(audio):
+def pydub_nemo_vad(audio: AudioSegment):
     samples = audio.get_array_of_samples()
     input_signal = np.array(samples).astype(np.float32) / audio.max_possible_amplitude
     input_signal = torch.tensor(input_signal).unsqueeze(0).float()
@@ -27,9 +28,9 @@ def pydub_nemo_vad(audio):
     return input_signal, input_signal_length
 
 
-def vad_confidence(data):
+def vad_confidence(audio: AudioSegment):
     device = util.get_device_type()
-    input_signal, input_signal_length = pydub_nemo_vad(data)
+    input_signal, input_signal_length = pydub_nemo_vad(audio)
     model = get_model()
     with torch.no_grad():
         outputs = model(
@@ -39,4 +40,11 @@ def vad_confidence(data):
     probs = torch.softmax(outputs, dim=-1)
     probs = probs[:, :, 1]
     confidences = probs.squeeze().tolist()
-    return confidences
+    expanded = [0.0] * len(audio)
+    window_ms = 20
+    for i, conf in enumerate(confidences):
+        start = int(i * window_ms)
+        end = min(int((i + 1) * window_ms), len(audio))
+        for ms in range(start, end):
+            expanded[ms] = conf
+    return expanded

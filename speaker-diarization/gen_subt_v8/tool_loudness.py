@@ -2,6 +2,7 @@ import numpy as np
 import soundfile as sf
 import pyloudnorm as pyln
 import util
+from pydub import AudioSegment
 
 logger = util.get_logger()
 
@@ -64,15 +65,19 @@ def loudness_normalization(input_path, output_path, target_lufs=-23.0):
     sf.write(output_path, loudness_normalized_audio, rate, subtype=info.subtype)
 
 
-def get_loudness(audio, frame_rate=50):
+def get_loudness(audio: AudioSegment, frame_rate: int = 50):
     simple_rate = 1000
     frame_simple = int(simple_rate / frame_rate)
+    window_ms = int(1000 / frame_rate)
     frame_cnt = len(audio) // frame_simple
-    volumes = []
+    volumes = [0.0] * len(audio)
     for i in range(frame_cnt):
-        start_ms = i * frame_simple
-        end_ms = (i + 1) * frame_simple
-        frame_data = audio[start_ms:end_ms]
+        sample_start = i * frame_simple
+        sample_end = (i + 1) * frame_simple
+        frame_data = audio[sample_start:sample_end]
         volume = frame_data.dBFS
-        volumes.append(volume)
+        ms_start = i * window_ms
+        ms_end = min((i + 1) * window_ms, len(audio))
+        for ms in range(ms_start, ms_end):
+            volumes[ms] = volume
     return volumes

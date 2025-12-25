@@ -1,13 +1,12 @@
-import math
-
 from ten_vad import TenVad
 import numpy as np
 import util
+from pydub import AudioSegment
 
 logger = util.get_logger()
 
 
-def pydub_ten_vad(audio):
+def pydub_ten_vad(audio: AudioSegment):
     raw_data = audio.raw_data
     simple_rate = audio.frame_rate
     sample_width = audio.sample_width
@@ -24,18 +23,20 @@ def pydub_ten_vad(audio):
     return simple_rate, np_data
 
 
-def vad_confidence(data, frame_rate=50):
-    simple_rate, np_data = pydub_ten_vad(data)
+def vad_confidence(audio: AudioSegment, frame_rate: int = 50):
+    simple_rate, np_data = pydub_ten_vad(audio)
     frame_simple = int(simple_rate / frame_rate)
+    window_ms = int(1000 / frame_rate)
     frame_cnt = np_data.shape[0] // frame_simple
-    confidences = [0] * len(data)
+    confidences = [0.0] * len(audio)
     instance = TenVad(frame_simple)
     for i in range(frame_cnt):
-        start_ms = i * frame_simple
-        end_ms = (i + 1) * frame_simple
-        frame_data = np_data[start_ms:end_ms]
+        sample_start = i * frame_simple
+        sample_end = (i + 1) * frame_simple
+        frame_data = np_data[sample_start:sample_end]
         confidence, _ = instance.process(frame_data)
-        start_i = i
-        end_i = i + math.floor(1000 / frame_rate)
-        confidences.append(confidence)
+        ms_start = i * window_ms
+        ms_end = min((i + 1) * window_ms, len(audio))
+        for ms in range(ms_start, ms_end):
+            confidences[ms] = confidence
     return confidences
