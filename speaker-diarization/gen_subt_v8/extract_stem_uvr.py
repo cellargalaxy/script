@@ -24,6 +24,7 @@ class VocalHandler:
         return "bgm.wav"
 
     def extract(self, audio_path, output_dir):
+        output_dir = os.path.join(output_dir, self.model_name)
         vocals_path, others_path = extract_vocal(self.model_name, audio_path, output_dir)
         return vocals_path, others_path
 
@@ -47,8 +48,7 @@ def extract_vocal(model_name, audio_path, output_dir):
 class MainVocalHandler:
     def __init__(self, model_name=None):
         if not model_name:
-            # 5_HP-Karaoke-UVR.pth
-            model_name = 'mel_band_roformer_karaoke_becruily.ckpt'
+            model_name = 'bs_roformer_karaoke_frazer_becruily.ckpt'
         self.model_name = model_name
 
     def get_name(self):
@@ -61,6 +61,7 @@ class MainVocalHandler:
         return "harmony.wav"
 
     def extract(self, audio_path, output_dir):
+        output_dir = os.path.join(output_dir, self.model_name)
         vocals_path, instrumental_path = extract_main_vocal(self.model_name, audio_path, output_dir)
         return vocals_path, instrumental_path
 
@@ -98,6 +99,7 @@ class DeReverbHandler:
         return "reverb.wav"
 
     def extract(self, audio_path, output_dir):
+        output_dir = os.path.join(output_dir, self.model_name)
         noreverb_path, reverb_path = extract_dereverb(self.model_name, audio_path, output_dir)
         return noreverb_path, reverb_path
 

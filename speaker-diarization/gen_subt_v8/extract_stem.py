@@ -13,8 +13,7 @@ class Extract:
         self.handler = handler
 
     def extract(self, audio_path, output_dir):
-        handler_dir = os.path.join(output_dir, self.handler.get_name())
-        master_path, slave_path = self.handler.extract(audio_path, handler_dir)
+        master_path, slave_path = self.handler.extract(audio_path, output_dir)
         self.master_path = master_path
         self.slave_path = slave_path
         self.master_copy_path = os.path.join(output_dir, self.handler.get_master_name())
