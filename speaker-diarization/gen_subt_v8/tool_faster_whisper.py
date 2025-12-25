@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import tool_subt
+from faster_whisper import WhisperModel
 
 
 def pydub_faster_whisper(audio):
@@ -9,11 +10,18 @@ def pydub_faster_whisper(audio):
     return samples
 
 
-def transcribe(model, audio, language=None):
+def transcribe(model: WhisperModel, audio, language=None):
     last_end = len(audio)
 
     samples = pydub_faster_whisper(audio)
-    results, info = model.transcribe(samples, language=language)
+    # https://grok.com/c/78cde323-415f-4236-a193-79e630fcfc6e?rid=06a420c6-3037-47cf-9e2b-3d49bd49bca4
+    results, info = model.transcribe(samples, language=language,
+                                     vad_filter=True,
+                                     vad_parameters=dict(min_silence_duration_ms=100),
+                                     condition_on_previous_text=False,
+                                     length_penalty=1.5,
+                                     max_new_tokens=150,
+                                     )
 
     segments = []
     for result in results:

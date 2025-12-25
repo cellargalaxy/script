@@ -7,7 +7,7 @@ logger = util.get_logger()
 model = None
 
 
-def get_model():
+def get_model() -> WhisperModel:
     global model
     if model:
         return model
