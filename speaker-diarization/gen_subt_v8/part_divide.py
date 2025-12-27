@@ -27,7 +27,7 @@ def sum_segments_duration(segments):
     return duration
 
 
-def group_segments(segments, min_speech_ms=1000 * 20):
+def group_segments(segments, min_speech_ms=1000 * 3):
     segments = util.deepcopy_obj(segments)
     segments = tool_subt.init_segments(segments)
 
@@ -49,13 +49,51 @@ def group_segments(segments, min_speech_ms=1000 * 20):
             left_groups = group_segments(left, min_speech_ms)
             right_groups = group_segments(right, min_speech_ms)
             groups = []
-            groups.extend(left_groups)
-            groups.append(middle)
-            groups.extend(right_groups)
+            if left_groups:
+                groups.extend(left_groups)
+            if middle:
+                groups.append(middle)
+            if right_groups:
+                groups.extend(right_groups)
+            return groups
+
+    speechs = []
+    for i, segment in enumerate(segments):
+        if segments[i]['vad_type'] != 'speech':
+            continue
+        speechs.append(segments[i])
+    speechs = sorted(speechs, key=lambda x: x['duration'], reverse=True)
+
+    for i, speech in enumerate(speechs):
+        index = speech['index']
+        if min_speech_ms <= speech['duration']:
+            left, middle, right = split_segments(segments, index)
+            left_groups = group_segments(left, min_speech_ms)
+            right_groups = group_segments(right, min_speech_ms)
+            groups = []
+            if left_groups:
+                groups.extend(left_groups)
+            if middle:
+                groups.append(middle)
+            if right_groups:
+                groups.extend(right_groups)
             return groups
 
     groups = []
-    groups.append(segments)
+    left_silence = []
+    if segments and segments[0]['vad_type'] == 'silence':
+        left_silence.append(segments[0])
+        segments.pop(0)
+    right_silence = []
+    if segments and segments[-1]['vad_type'] == 'silence':
+        right_silence.append(segments[-1])
+        segments.pop(-1)
+    if left_silence:
+        groups.append(left_silence)
+    if segments:
+        groups.append(segments)
+    if right_silence:
+        groups.append(right_silence)
     return groups
 
 
