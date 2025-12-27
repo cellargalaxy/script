@@ -220,7 +220,7 @@ def save_file(content, file_path):
 
 
 def save_as_json(obj, save_path):
-    save_file(json.dumps(obj, ensure_ascii=False, indent=2), save_path)
+    save_file(json.dumps(obj, ensure_ascii=False, sort_keys=True, indent=2), save_path)
 
 
 def path_exist(path):

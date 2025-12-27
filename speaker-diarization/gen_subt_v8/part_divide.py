@@ -27,7 +27,7 @@ def sum_segments_duration(segments):
     return duration
 
 
-def group_segments(segments, min_speech_ms=1000 * 3):
+def group_segments(segments, min_speech_ms=1000 * 3, min_silence_ms=200):
     segments = util.deepcopy_obj(segments)
     segments = tool_subt.init_segments(segments)
 
@@ -46,6 +46,21 @@ def group_segments(segments, min_speech_ms=1000 * 3):
         left_duration = sum_segments_duration(left)
         right_duration = sum_segments_duration(right)
         if min_speech_ms <= left_duration and min_speech_ms <= right_duration:
+            left_groups = group_segments(left, min_speech_ms)
+            right_groups = group_segments(right, min_speech_ms)
+            groups = []
+            if left_groups:
+                groups.extend(left_groups)
+            if middle:
+                groups.append(middle)
+            if right_groups:
+                groups.extend(right_groups)
+            return groups
+
+    for i, silence in enumerate(silences):
+        index = silence['index']
+        if min_silence_ms <= silence['duration']:
+            left, middle, right = split_segments(segments, index)
             left_groups = group_segments(left, min_speech_ms)
             right_groups = group_segments(right, min_speech_ms)
             groups = []
@@ -97,7 +112,7 @@ def group_segments(segments, min_speech_ms=1000 * 3):
     return groups
 
 
-def part_divide(part_detect_path, output_dir, min_duration=200):
+def part_divide(part_detect_path, output_dir, min_duration=50):
     json_path = os.path.join(output_dir, 'part_divide.json')
     srt_path = os.path.join(output_dir, 'part_divide.srt')
     if util.path_exist(json_path):
@@ -109,10 +124,12 @@ def part_divide(part_detect_path, output_dir, min_duration=200):
         if segments[i]['vad_type'] == 'silence' and segments[i]['duration'] < min_duration:
             segments[i]['vad_type'] = 'speech'
     segments = tool_subt.unit_segments(segments, 'vad_type')
+    segments = tool_subt.init_segments(segments)
     util.save_as_json(segments, os.path.join(output_dir, 'unit_mini.json'))
     tool_subt.save_segments_as_srt(segments, os.path.join(output_dir, 'unit_mini.srt'), skip_silence=True)
 
     groups = group_segments(segments)
+    util.save_as_json(groups, os.path.join(output_dir, 'groups.json'))
     results = []
     for i, group in enumerate(groups):
         result = {"start": sys.maxsize, "end": 0, "vad_type": "silence"}
