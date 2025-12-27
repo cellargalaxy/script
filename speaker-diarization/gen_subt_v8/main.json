@@ -6,7 +6,7 @@
     "no_proxy": "localhost,127.0.0.1,::1,192.168.123.7,mirrors.ustc.edu.cn,hf-mirror.com"
   },
   "video": [
-    "../material/BOW_AND_ARROW.flac"
+    "../material/holo04.mkv"
   ],
   "exec": [
     {"name": "init", "enable": true},
@@ -30,19 +30,15 @@
     },
     {"name": "extract_simple", "enable": true},
     {"name": "part_detect", "enable": true},
-    {"name": "split_audio", "enable": false, "path_key": "part_detect_path"},
     {"name": "part_silence", "enable": true},
+    {"name": "split_audio", "enable": true, "path_key": "part_detect_path"},
     {"name": "part_divide", "enable": true},
-    {"name": "split_audio", "enable": false, "path_key": "part_divide_path"},
+    {"name": "split_audio", "enable": true, "path_key": "part_divide_path"},
     {"name": "segment_detect","enable": true},
-    {"name": "split_audio", "enable": false, "path_key": "segment_detect_path"},
+    {"name": "split_audio", "enable": true, "path_key": "segment_detect_path"},
     {"name": "segment_divide", "enable": true},
-    {"name": "split_audio", "enable": false, "path_key": "segment_divide_path"},
+    {"name": "split_audio", "enable": true, "path_key": "segment_divide_path"},
     {"name": "speaker_detect", "enable": true},
-    {"name": "split_audio", "enable": true, "path_key": "speaker_detect_path"},
-    {"name": "split_audio_audiosr", "enable": false, "path_key": "speaker_detect_path"},
-
-
-    {"name": "extract_loudness", "enable": true}
+    {"name": "split_audio", "enable": true, "path_key": "speaker_detect_path"}
   ]
 }
