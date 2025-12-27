@@ -16,11 +16,11 @@ def transcribe(model: WhisperModel, audio, language=None):
     samples = pydub_faster_whisper(audio)
     # https://grok.com/c/78cde323-415f-4236-a193-79e630fcfc6e?rid=06a420c6-3037-47cf-9e2b-3d49bd49bca4
     results, info = model.transcribe(samples, language=language,
-                                     vad_filter=True,
-                                     vad_parameters=dict(min_silence_duration_ms=100),
-                                     condition_on_previous_text=False,
-                                     length_penalty=1.5,
-                                     max_new_tokens=150,
+                                     # vad_filter=True,
+                                     # vad_parameters=dict(min_silence_duration_ms=10),
+                                     # condition_on_previous_text=False,
+                                     # length_penalty=10,
+                                     # max_new_tokens=100,
                                      )
 
     segments = []
