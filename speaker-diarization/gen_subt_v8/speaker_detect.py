@@ -62,7 +62,7 @@ def speaker_detect(audio_path, segment_divide_path, output_dir, min_duration=200
     for i, segment in enumerate(segments):
         if segments[i].get('speaker', None):
             continue
-        if segments[i]['vad_type'] == 'silence':
+        if segments[i].get('vad_type', None) == 'silence':
             segments[i]['speaker'] = 'silence'
             continue
     for i, segment in enumerate(segments):
