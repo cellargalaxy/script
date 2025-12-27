@@ -11,6 +11,8 @@ def split_audio(audio_path, json_path, output_dir, path_key, min_duration=None):
     audio = AudioSegment.from_wav(audio_path)
     segments = util.read_file_to_obj(json_path)
     for i, segment in enumerate(segments):
+        if segment['vad_type'] == 'silence':
+            continue
         if min_duration and segment['duration'] < min_duration:
             continue
         index = i

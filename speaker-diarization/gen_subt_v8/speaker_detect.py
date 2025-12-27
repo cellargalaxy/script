@@ -60,13 +60,21 @@ def speaker_detect(audio_path, segment_divide_path, output_dir, min_duration=200
     audio = AudioSegment.from_wav(audio_path)
     segments = util.read_file_to_obj(segment_divide_path)
     for i, segment in enumerate(segments):
+        if segments[i].get('speaker', None):
+            continue
+        if segments[i]['vad_type'] == 'silence':
+            segments[i]['speaker'] = 'silence'
+            continue
+    for i, segment in enumerate(segments):
+        if segments[i].get('speaker', None):
+            continue
         if segments[i]['duration'] < min_duration:
             segments[i]['speaker'] = 'other'
             continue
 
     embedding_list = []
     for i, segment in enumerate(segments):
-        if segments[i].get('speaker', None) == 'other':
+        if segments[i].get('speaker', None):
             continue
         cut = audio[segments[i]['start']:segments[i]['end']]
         embedding = speaker_detect_pyannote_wespeaker.extract_embedding(cut)
@@ -90,7 +98,7 @@ def speaker_detect(audio_path, segment_divide_path, output_dir, min_duration=200
     speakers = rank_arr(speakers)
     speakers_iterator = iter(speakers)
     for i, segment in enumerate(segments):
-        if segments[i].get('speaker', None) == 'other':
+        if segments[i].get('speaker', None):
             continue
         speakers = next(speakers_iterator)
         segments[i]['speaker'] = f'speaker{speakers:02d}'

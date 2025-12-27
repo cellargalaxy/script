@@ -54,6 +54,7 @@ def exec(manager):
     output_dir = os.path.join(manager.get('output_dir'), "segment_detect")
     json_path = segment_detect(audio_path, part_divide_path, output_dir)
     manager['segment_detect_path'] = json_path
+    manager['segment_divide_path'] = json_path
     logger.info("segment_detect,leave: %s", util.json_dumps(manager))
     segment_detect_faster_whisper.exec_gc()
     segment_detect_align_whisperx.exec_gc()
