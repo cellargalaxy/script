@@ -11,7 +11,7 @@ def part_detect(audio_path, output_dir):
     srt_path = os.path.join(output_dir, 'part_detect.srt')
     if util.path_exist(json_path):
         return json_path
-    segments = part_detect_vad.part_detect(audio_path)
+    segments = part_detect_vad.part_detect(audio_path, output_dir)
     util.save_as_json(segments, json_path)
     tool_subt.save_segments_as_srt(segments, srt_path)
     return json_path
