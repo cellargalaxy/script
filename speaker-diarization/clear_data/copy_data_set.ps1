@@ -1,72 +1,121 @@
 $pythonScript = @"
 import os
+import sys
 import shutil
 import datetime
 
 
-def is_ascii(text: str) -> bool:
-    """Check whether a string contains ASCII characters only"""
-    try:
-        text.encode("ascii")
-        return True
-    except UnicodeEncodeError:
-        return False
+def is_ascii(s):
+    """Check if a string consists entirely of ASCII characters."""
+    return all(ord(c) < 128 for c in s)
+
+
+def get_mapped_name(name, mapping, counter_ref):
+    """
+    Returns the original name if ASCII.
+    If non-ASCII, returns a 4-digit number based on a mapping dictionary.
+    """
+    if is_ascii(name):
+        return name
+
+    # If this specific non-ascii string hasn't been seen yet, assign a new ID
+    if name not in mapping:
+        mapping[name] = f"{counter_ref[0]:04d}"
+        counter_ref[0] += 1
+
+    return mapping[name]
 
 
 def main():
-    # Read user input
-    src_dir = input("Enter source folder path: ").strip()
-    dst_root = input("Enter output folder path: ").strip()
+    print("--- WAV File Processor ---")
 
-    if not os.path.isdir(src_dir):
-        print("Source folder does not exist.")
+    # 1. Get Inputs
+    input_dir = input("1. Please enter the input folder path (e.g., d:/mp3): ").strip()
+    if not os.path.isdir(input_dir):
+        print(f"Error: Input directory '{input_dir}' does not exist.")
         input("Press any key to exit...")
-        return
+        sys.exit(1)
 
-    if not os.path.isdir(dst_root):
-        print("Output folder does not exist.")
+    output_root = input("2. Please enter the output folder path (e.g., f:/): ").strip()
+    if not os.path.exists(output_root):
+        # Try to create it if the root doesn't exist, though usually drives must exist
+        try:
+            os.makedirs(output_root, exist_ok=True)
+        except OSError:
+            print(f"Error: Output path '{output_root}' is invalid or not accessible.")
+            input("Press any key to exit...")
+            sys.exit(1)
+
+    # 2. Create Destination Folder
+    # Format: [SourceDirName]-YYYYMMDD
+    source_folder_name = os.path.basename(os.path.normpath(input_dir))
+    date_str = datetime.datetime.now().strftime('%Y%m%d')
+    dest_folder_name = f"{source_folder_name}-{date_str}"
+    dest_path = os.path.join(output_root, dest_folder_name)
+
+    try:
+        os.makedirs(dest_path, exist_ok=True)
+        print(f"Target folder created: {dest_path}")
+    except OSError as e:
+        print(f"Error creating destination folder: {e}")
         input("Press any key to exit...")
-        return
+        sys.exit(1)
 
-    # Prepare destination folder name
-    src_dir = os.path.abspath(src_dir)
-    dst_root = os.path.abspath(dst_root)
+    # 3. Process Files
+    print("Processing files...")
 
-    src_name = os.path.basename(src_dir.rstrip("\\/"))
-    today = datetime.datetime.now().strftime("%Y%m%d")
-    dst_dir = os.path.join(dst_root, f"{src_name}_{today}")
+    # Dictionary to store mapping of Non-ASCII strings to "0001", "0002", etc.
+    # We use a list for the counter to allow modification inside helper function (pass by reference)
+    name_mapping = {}
+    global_counter = [1]
 
-    os.makedirs(dst_dir, exist_ok=True)
+    file_count = 0
 
-    counter = 1
+    # Recursive traversal
+    for root, dirs, files in os.walk(input_dir):
+        for file in files:
+            # 2. Traverse only .wav files
+            if file.lower().endswith('.wav'):
 
-    # Walk through source directory
-    for root, _, files in os.walk(src_dir):
-        for file_name in files:
-            src_file = os.path.join(root, file_name)
+                # Full path of source file
+                src_file_path = os.path.join(root, file)
 
-            # Build relative path
-            rel_path = os.path.relpath(src_file, src_dir)
-            rel_no_ext, ext = os.path.splitext(rel_path)
+                # 4. Generate new filename
+                # Get relative path components (e.g., ['aaa', 'bbb', 'ccc.wav'])
+                rel_path = os.path.relpath(src_file_path, input_dir)
+                path_parts = rel_path.split(os.sep)
 
-            # Replace path separators with underscore
-            safe_name = rel_no_ext.replace("\\", "_").replace("/", "_")
+                new_parts = []
 
-            if is_ascii(file_name):
-                new_name = safe_name + ext
-            else:
-                new_name = f"{safe_name.rsplit('_', 1)[0]}_{counter:04d}{ext}"
-                counter += 1
+                for i, part in enumerate(path_parts):
+                    # Check if it is the last part (filename) to preserve extension logic
+                    if i == len(path_parts) - 1:
+                        fname, ext = os.path.splitext(part)
+                        # Process filename part
+                        new_fname = get_mapped_name(fname, name_mapping, global_counter)
+                        new_parts.append(new_fname + ext)
+                    else:
+                        # Process folder parts
+                        new_parts.append(get_mapped_name(part, name_mapping, global_counter))
 
-            dst_file = os.path.join(dst_dir, new_name)
+                # Join with hyphen as requested
+                new_filename = "-".join(new_parts)
+                dest_file_path = os.path.join(dest_path, new_filename)
 
-            # Ensure destination directory exists
-            os.makedirs(os.path.dirname(dst_file), exist_ok=True)
+                # 3. Copy file
+                try:
+                    shutil.copy2(src_file_path, dest_file_path)
+                    print(f"[OK] Copied: {src_file_path} -> {new_filename}")
+                    file_count += 1
+                except Exception as e:
+                    print(f"[Err] Failed to copy {src_file_path}: {e}")
 
-            shutil.copy2(src_file, dst_file)
+    print("-" * 30)
+    print(f"Done. Total files copied: {file_count}")
+    print(f"Output location: {dest_path}")
 
-    print("Copy completed successfully.")
-    input("Press any key to exit...")
+    # 5. Exit
+    input("Press Enter to exit...")
 
 
 if __name__ == "__main__":
