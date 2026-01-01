@@ -31,7 +31,7 @@ def split_audio(audio_path, json_path, output_dir, path_key, min_duration=None):
         cut_path = util.truncate_path(cut_path)
         util.mkdir(cut_path)
         cut = audio[segment['start']:segment['end']]
-        cut = tool_loudness.get_loudness(cut)
+        cut = tool_loudness.normalize_loudness(cut)
         cut.export(cut_path, format='wav')
     json_path = os.path.join(output_dir, f'{path_key}.json')
     util.save_as_json(segments, json_path)
