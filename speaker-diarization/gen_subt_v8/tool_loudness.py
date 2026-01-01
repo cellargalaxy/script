@@ -1,5 +1,4 @@
 import numpy as np
-import soundfile as sf
 import pyloudnorm as pyln
 import util
 from pydub import AudioSegment
@@ -7,62 +6,124 @@ from pydub import AudioSegment
 logger = util.get_logger()
 
 
-def loudness_normalization(input_path, output_path, target_lufs=-23.0):
+def normalize_loudness(
+        audio: AudioSegment,
+        target_lufs: float = -18.0,
+        peak_ceiling_db: float = -1.0,
+        silence_threshold_lufs: float = -70.0,
+) -> AudioSegment:
     """
-    对单个WAV文件进行响度归一化，并输出到新文件。
-    参数:
-    - input_path (str): 输入WAV文件的路径。
-    - output_path (str): 输出WAV文件的路径。
-    - target_lufs (float): 目标积分响度值 (LUFS)。
+    针对AI语音模型训练优化的ITU-R BS.1770-4响度归一化。
+
+    设计原则：
+        1. 高精度：全程float64处理
+        2. 无削波：峰值限制优先于响度目标
+        3. 稳健性：静音/短音频优雅降级
+        4. 位深保持：输出与输入位深一致
+
+    Args:
+        audio: pydub AudioSegment对象
+        target_lufs: 目标集成响度(LUFS)
+            - -23.0: EBU R128广播标准
+            - -20.0: 语音训练常用值（推荐）
+            - -16.0: 高响度，适合清晰语音
+        peak_ceiling_db: 峰值上限(dBFS)，默认-1.0dB
+            防止重采样/编码时intersample peak削波
+        silence_threshold_lufs: 静音判定阈值，低于此值不处理
     """
-    # 1. 读取音频文件
-    # 使用 soundfile 读取，它会自动处理不同的位深度
-    data, rate = sf.read(input_path)
 
-    # 确保音频数据是浮点数类型，这是pyloudnorm和后续计算所必需的
-    if not np.issubdtype(data.dtype, np.floating):
-        # 找出原始整数类型的最大值
-        max_val = np.iinfo(data.dtype).max
-        # 转换为 [-1.0, 1.0] 范围内的浮点数
-        data = data.astype(np.float32) / max_val
+    # ======================= 时长检查 =======================
+    # ITU-R BS.1770门控块最小400ms，pyloudnorm需要足够样本
+    MIN_DURATION_MS = 400
+    if len(audio) < MIN_DURATION_MS:
+        return audio
 
-    # 如果是单声道，确保其shape为 (n_samples, 1) 以便处理
-    if data.ndim == 1:
-        data = data[:, np.newaxis]
+    # ======================= 提取音频参数 =======================
+    sample_rate = audio.frame_rate
+    channels = audio.channels
+    original_sample_width = audio.sample_width
 
-    # 2. 测量原始响度
-    # 创建响度计
-    meter = pyln.Meter(rate)
-    # 测量积分响度
-    loudness = meter.integrated_loudness(data)
+    # ======================= 转换为float64数组 =======================
+    # 策略：统一转为32-bit int再转float64，确保各位深兼容性
+    if original_sample_width != 4:
+        work_audio = audio.set_sample_width(4)
+    else:
+        work_audio = audio
 
-    # 打印原始响度信息
+    samples = np.array(work_audio.get_array_of_samples(), dtype=np.float64)
+    samples /= 2147483648.0  # 2^31，归一化到 [-1.0, 1.0)
 
-    # 3. 计算并应用增益
-    # 根据 ITU-R BS.1770-4 标准进行响度归一化
-    loudness_normalized_audio = pyln.normalize.loudness(data, loudness, target_lufs)
+    # pyloudnorm要求多声道shape为 (n_samples, n_channels)
+    if channels > 1:
+        samples = samples.reshape((-1, channels))
 
-    # 4. 检查峰值，防止削波
-    # 获取应用增益后的峰值
-    peak = np.max(np.abs(loudness_normalized_audio))
+    # ======================= 空音频检查 =======================
+    if np.max(np.abs(samples)) < 1e-10:
+        return audio
 
-    logger.info(f"响度归一化,{input_path},原始响度:{loudness:.2f},目标响度:{target_lufs:.2f},归一化后峰值:{peak:.4f}")
+    # ======================= LUFS测量 =======================
+    meter = pyln.Meter(sample_rate)
 
-    # 如果峰值超过1.0，说明可能会发生削波。
-    # 在这种情况下，可以选择进行峰值归一化，将最大峰值压缩到1.0。
-    # 这会稍微改变整体响度，但在防止失真方面是必要的。
-    if peak > 1.0:
-        loudness_normalized_audio = loudness_normalized_audio / peak
-        # 重新检查峰值
-        new_peak = np.max(np.abs(loudness_normalized_audio))
-        logger.warn(f"响度归一化,{input_path},削波峰值:{new_peak:.4f}")
+    try:
+        current_lufs = meter.integrated_loudness(samples)
+    except Exception as e:
+        logger.error("响度归一化，异常: %s", e)
+        return audio
 
-    # 5. 写入新文件
-    # 使用sf.write写入文件。它会自动处理从float到原始整数格式的转换。
-    # 通过从原始文件中读取的 'subtype' 信息，可以保留原始位深度。
-    util.mkdir(output_path)
-    info = sf.info(input_path)
-    sf.write(output_path, loudness_normalized_audio, rate, subtype=info.subtype)
+    # 静音/极低响度检查
+    if not np.isfinite(current_lufs) or current_lufs < silence_threshold_lufs:
+        return audio
+
+    # ======================= 响度归一化 =======================
+    # 使用pyloudnorm标准归一化（浮点域精确处理）
+    normalized_samples = pyln.normalize.loudness(samples, current_lufs, target_lufs)
+
+    # ======================= 峰值限制 =======================
+    # 防止削波：对AI训练至关重要（削波引入高频谐波噪声）
+    peak_ceiling_linear = 10.0 ** (peak_ceiling_db / 20.0)
+    current_peak = np.max(np.abs(normalized_samples))
+
+    if current_peak > peak_ceiling_linear:
+        # 线性缩放限制峰值
+        scale = peak_ceiling_linear / current_peak
+        normalized_samples *= scale
+
+    # ======================= 转换回整数格式 =======================
+    # 保持原始位深度
+    out_width = original_sample_width
+
+    # 位深度配置: (最大值, numpy类型)
+    # 注意：有符号整数范围是 [-max_val, max_val-1]
+    DTYPE_MAP = {
+        1: (128.0, np.int8),  # 8-bit: -128 ~ 127
+        2: (32768.0, np.int16),  # 16-bit: -32768 ~ 32767
+        4: (2147483648.0, np.int32)  # 32-bit
+    }
+
+    if out_width not in DTYPE_MAP:
+        out_width = 2  # fallback到16-bit
+
+    max_val, dtype = DTYPE_MAP[out_width]
+
+    # 缩放、裁剪、转换类型
+    normalized_int = normalized_samples * max_val
+    # clip确保不溢出（理论上经过峰值限制后不应超，但作为安全措施）
+    normalized_int = np.clip(normalized_int, -max_val, max_val - 1)
+    normalized_int = normalized_int.astype(dtype)
+
+    # 多声道：恢复交错格式 (flatten)
+    if channels > 1:
+        normalized_int = normalized_int.flatten()
+
+    # ======================= 构建输出AudioSegment =======================
+    normalized_audio = AudioSegment(
+        data=normalized_int.tobytes(),
+        sample_width=out_width,
+        frame_rate=sample_rate,
+        channels=channels
+    )
+
+    return normalized_audio
 
 
 def get_loudness(audio: AudioSegment, frame_rate: int = 50):
