@@ -4,6 +4,10 @@ setlocal
 REM ===== 将文件放在project文件夹下 =====
 REM ===== project文件夹里有.conda文件夹 =====
 
+REM ===== 将SVCFusion/exec.py的start_with_cmd函数 =====
+REM ===== 注释掉：subprocess.Popen(["wt\\wt", *cmd.split(" ")], shell=True) =====
+REM ===== 替换为：subprocess.Popen(f"start cmd /k {cmd}", shell=True) =====
+
 REM ===== 获取当前 bat 所在目录（末尾自带反斜杠）=====
 set PROJECT_DIR=%~dp0
 
