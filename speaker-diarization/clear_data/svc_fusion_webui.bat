@@ -14,14 +14,17 @@ set PROJECT_DIR=%~dp0
 REM ===== 去掉末尾反斜杠（可选，但更干净）=====
 set PROJECT_DIR=%PROJECT_DIR:~0,-1%
 
+REM ===== 切换到项目目录 =====
+cd /d "%PROJECT_DIR%"
+
+REM ===== 再次打印当前所在路径 =====
+echo Current directory: %CD%
+
 REM ===== 将项目路径写入 workdir（不存在则创建，存在则覆盖）=====
 echo %PROJECT_DIR% > "%PROJECT_DIR%\workdir"
 
 REM ===== 激活项目内 conda 环境 =====
 call conda activate "%PROJECT_DIR%\.conda"
-
-REM ===== 切换到项目目录 =====
-cd /d "%PROJECT_DIR%"
 
 REM ===== 启动 WebUI =====
 python launcher.py
