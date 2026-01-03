@@ -32,6 +32,7 @@ foreach ($i in $InputFiles) {
 
         # 执行主脚本
         Write-Host "Running: python -m ddspsvc_6_3.main_reflow -i $i -m $m -o $OutputFile"
+        # method euler/rk4
         python -m ddspsvc_6_3.main_reflow -i $i -m $m -o $OutputFile -k 0 -id 1 -step 50 -method rk4 -ts 0.0
     }
 }
