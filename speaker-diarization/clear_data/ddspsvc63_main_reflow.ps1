@@ -1,6 +1,18 @@
 # ================= 获取当前脚本所在目录 =================
 $ProjectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
+# ================= 输出目录 =================
+$OutputDir = Join-Path $ProjectDir "tmp\main_reflow"
+
+# ================= 如果输出目录存在，删除里面的所有文件，否则创建目录 =================
+if (Test-Path $OutputDir) {
+    Write-Host "Cleaning existing output folder: $OutputDir"
+    Remove-Item "$OutputDir\*" -Recurse -Force
+} else {
+    Write-Host "Creating output folder: $OutputDir"
+    New-Item -ItemType Directory -Path $OutputDir | Out-Null
+}
+
 # ================= 激活 conda 环境 =================
 & conda activate "$ProjectDir\.conda"
 
@@ -14,12 +26,6 @@ $ModelFiles = @(
 "D:/model_50.pt"
 "D:/model_100.pt"
 )
-
-# ================= 创建输出文件夹 =================
-$OutputDir = Join-Path $ProjectDir "tmp\main_reflow"
-if (-not (Test-Path $OutputDir)) {
-    New-Item -ItemType Directory -Path $OutputDir | Out-Null
-}
 
 # ================= 循环处理 =================
 foreach ($i in $InputFiles) {
