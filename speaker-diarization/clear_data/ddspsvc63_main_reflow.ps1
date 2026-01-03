@@ -1,7 +1,3 @@
-# ================= 需要在ddspsvc_6_3.main_reflow.py里添加下面这行代码 =================
-# ================= import torch, fairseq; torch.serialization.add_safe_globals([fairseq.data.dictionary.Dictionary]) =================
-
-
 # ================= 获取当前脚本所在目录 =================
 $ProjectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
@@ -19,6 +15,12 @@ $ModelFiles = @(
 "D:/model_100.pt"
 )
 
+# ================= 创建输出文件夹 =================
+$OutputDir = Join-Path $ProjectDir "tmp\main_reflow"
+if (-not (Test-Path $OutputDir)) {
+    New-Item -ItemType Directory -Path $OutputDir | Out-Null
+}
+
 # ================= 循环处理 =================
 foreach ($i in $InputFiles) {
     foreach ($m in $ModelFiles) {
@@ -28,12 +30,12 @@ foreach ($i in $InputFiles) {
         $ModelName = [System.IO.Path]::GetFileNameWithoutExtension($m)
 
         # 拼接输出文件路径
-        $OutputFile = "D:/$InputName`_$ModelName.wav"
+        $OutputFile = Join-Path $OutputDir "$InputName`_$ModelName.wav"
 
         # 执行主脚本
         Write-Host "Running: python -m ddspsvc_6_3.main_reflow -i $i -m $m -o $OutputFile"
         # method euler/rk4
-        python -m ddspsvc_6_3.main_reflow -i $i -m $m -o $OutputFile -k 0 -id 1 -step 50 -method rk4 -ts 0.0
+        python -m ddspsvc_6_3.main_reflow -i $i -m $m -o $OutputFile -k 0 -id 1 -step 50 -method euler -ts 0.0
     }
 }
 
