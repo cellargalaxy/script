@@ -1,3 +1,7 @@
+# ================= 需要在ddspsvc_6_3.main_reflow.py里添加下面这行代码 =================
+# ================= import torch, fairseq; torch.serialization.add_safe_globals([fairseq.data.dictionary.Dictionary]) =================
+
+
 # ================= 获取当前脚本所在目录 =================
 $ProjectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
