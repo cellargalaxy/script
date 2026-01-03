@@ -122,7 +122,7 @@ def main():
 
     # 7. Sleep for 1 minute before exiting
     print("Script finished. Sleeping for 60 seconds...")
-    time.sleep(60)
+    time.sleep(5)
 
 
 if __name__ == "__main__":
