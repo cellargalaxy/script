@@ -22,13 +22,12 @@ if (Test-Path $OutputDir) {
 
 # ================= 定义输入文件数组（每行一个） =================
 $InputFiles = @(
-"D:/ripx.wav"
+"D:/东海/测试.wav"
 )
 
 # ================= 定义模型文件数组（每行一个） =================
 $ModelFiles = @(
-"D:/aaa/model_50.pt"
-"D:/bbb/model_100.pt"
+"D:/东海/model_400.pt"
 )
 
 # ================= 循环处理 =================
@@ -39,29 +38,31 @@ foreach ($i in $InputFiles) {
         $InputName = [System.IO.Path]::GetFileNameWithoutExtension($i)
         $ModelName = [System.IO.Path]::GetFileNameWithoutExtension($m)
 
-        # ===== 获取 pt 文件所在的文件夹名 =====
-        # 例如：D:/aaa/model_50.pt -> aaa
+        # ===== 模型所在文件夹名 =====
+        # D:/模型/女声模型/model_50.pt -> 女声模型
         $ModelFolderName = Split-Path (Split-Path $m -Parent) -Leaf
 
-        # ===== 构造模型对应的输出目录 =====
+        # ===== 输出目录：tmp/main_reflow/女声模型 =====
         $ModelOutputDir = Join-Path $OutputDir $ModelFolderName
 
-        # ===== 确保输出目录存在 =====
         if (-not (Test-Path $ModelOutputDir)) {
             New-Item -ItemType Directory -Path $ModelOutputDir | Out-Null
         }
 
-        # ===== 构造输出文件完整路径 =====
+        # ===== 输出文件名（支持中文）=====
         $OutputFile = Join-Path $ModelOutputDir "$InputName`_$ModelName.wav"
 
-        # ===== 执行推理 =====
-        Write-Host "Running:"
-        Write-Host "  python -m ddspsvc_6_3.main_reflow -i $i -m $m -o $OutputFile"
+        Write-Host "--------------------------------------------------"
+        Write-Host "Input : $i"
+        Write-Host "Model : $m"
+        Write-Host "Output: $OutputFile"
+        Write-Host "--------------------------------------------------"
+
         # method euler/rk4
         python -m ddspsvc_6_3.main_reflow `
-            -i $i `
-            -m $m `
-            -o $OutputFile `
+            -i "$i" `
+            -m "$m" `
+            -o "$OutputFile" `
             -k 0 `
             -id 1 `
             -step 50 `
