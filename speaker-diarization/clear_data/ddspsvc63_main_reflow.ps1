@@ -1,4 +1,4 @@
-# ================= 需要在ddspsvc_6_3.main_reflow.py里添加下面这行代码 =================
+# ================= 需要在 ddspsvc_6_3.main_reflow.py 里添加下面这行代码 =================
 # ================= import torch, fairseq; torch.serialization.add_safe_globals([fairseq.data.dictionary.Dictionary]) =================
 
 
@@ -27,25 +27,46 @@ $InputFiles = @(
 
 # ================= 定义模型文件数组（每行一个） =================
 $ModelFiles = @(
-"D:/model_50.pt"
-"D:/model_100.pt"
+"D:/aaa/model_50.pt"
+"D:/bbb/model_100.pt"
 )
 
 # ================= 循环处理 =================
 foreach ($i in $InputFiles) {
     foreach ($m in $ModelFiles) {
 
-        # 获取文件名（不带路径和扩展名）
+        # ===== 获取文件名（不带扩展名）=====
         $InputName = [System.IO.Path]::GetFileNameWithoutExtension($i)
         $ModelName = [System.IO.Path]::GetFileNameWithoutExtension($m)
 
-        # 拼接输出文件路径
-        $OutputFile = Join-Path $OutputDir "$InputName`_$ModelName.wav"
+        # ===== 获取 pt 文件所在的文件夹名 =====
+        # 例如：D:/aaa/model_50.pt -> aaa
+        $ModelFolderName = Split-Path (Split-Path $m -Parent) -Leaf
 
-        # 执行主脚本
-        Write-Host "Running: python -m ddspsvc_6_3.main_reflow -i $i -m $m -o $OutputFile"
+        # ===== 构造模型对应的输出目录 =====
+        $ModelOutputDir = Join-Path $OutputDir $ModelFolderName
+
+        # ===== 确保输出目录存在 =====
+        if (-not (Test-Path $ModelOutputDir)) {
+            New-Item -ItemType Directory -Path $ModelOutputDir | Out-Null
+        }
+
+        # ===== 构造输出文件完整路径 =====
+        $OutputFile = Join-Path $ModelOutputDir "$InputName`_$ModelName.wav"
+
+        # ===== 执行推理 =====
+        Write-Host "Running:"
+        Write-Host "  python -m ddspsvc_6_3.main_reflow -i $i -m $m -o $OutputFile"
         # method euler/rk4
-        python -m ddspsvc_6_3.main_reflow -i $i -m $m -o $OutputFile -k 0 -id 1 -step 50 -method euler -ts 0.0
+        python -m ddspsvc_6_3.main_reflow `
+            -i $i `
+            -m $m `
+            -o $OutputFile `
+            -k 0 `
+            -id 1 `
+            -step 50 `
+            -method euler `
+            -ts 0.0
     }
 }
 
