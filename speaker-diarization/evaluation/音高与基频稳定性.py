@@ -304,12 +304,11 @@ def _visualize_f0_results(results: list):
                      ha='center', va='bottom', fontsize=6,
                      color='black' if score > 30 else 'white')
 
-    # 添加说明文字（透明背景）
+    # 添加说明文字（使用完全透明背景）
     desc_text = ('指标说明：综合考虑F0平滑度、跳变率、抖动和有效率\n'
                  '• ≥70: 优秀 (绿色)  • 50-70: 一般 (黄色)  • <50: 较差 (红色)')
     ax1.text(0.02, 0.95, desc_text, transform=ax1.transAxes, fontsize=8,
-             verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white',
-                                                alpha=0.7, edgecolor='gray'))
+             verticalalignment='top', bbox=dict(boxstyle='round', alpha=0.0))
 
     # ---------- 图2: F0平滑度 ----------
     ax2 = fig.add_subplot(gs[1, 0])
@@ -323,7 +322,10 @@ def _visualize_f0_results(results: list):
 
     # 动态调整Y轴范围
     y_min, y_max = min(smoothness), max(smoothness)
-    y_padding = (y_max - y_min) * 0.15
+    y_range = y_max - y_min
+    if y_range < 0.1:  # 如果数值相差太小
+        y_min, y_max = y_min - 0.05, y_max + 0.05
+    y_padding = max(y_range * 0.15, 0.1)  # 确保至少有0.1的padding
     ax2.set_ylim(max(0, y_min - y_padding), y_max + y_padding)
 
     # 标记最佳和最差
@@ -335,7 +337,7 @@ def _visualize_f0_results(results: list):
     desc_text2 = '含义：F0曲线变化的剧烈程度\n• 越小越平滑自然\n• 过大表示AI抖动/锯齿'
     ax2.text(0.98, 0.95, desc_text2, transform=ax2.transAxes, fontsize=7,
              verticalalignment='top', horizontalalignment='right',
-             bbox=dict(boxstyle='round', facecolor='white', alpha=0.7, edgecolor='gray'))
+             bbox=dict(boxstyle='round', alpha=0.0))
 
     # ---------- 图3: 跳变率 ----------
     ax3 = fig.add_subplot(gs[1, 1])
@@ -348,10 +350,18 @@ def _visualize_f0_results(results: list):
     ax3.grid(axis='y', alpha=0.3)
     ax3.legend(loc='upper right', fontsize=8)
 
+    # 动态调整Y轴范围
+    y_min, y_max = min(jump_rate), max(jump_rate)
+    y_range = y_max - y_min
+    if y_range < 1.0:  # 如果数值相差太小
+        y_min, y_max = max(0, y_min - 0.5), y_max + 0.5
+    y_padding = max(y_range * 0.15, 0.5)  # 确保至少有0.5的padding
+    ax3.set_ylim(max(0, y_min - y_padding), y_max + y_padding)
+
     desc_text3 = '含义：F0变化超过5%的帧占比\n• 越低越稳定\n• 高跳变率=音高不稳定'
     ax3.text(0.02, 0.95, desc_text3, transform=ax3.transAxes, fontsize=7,
              verticalalignment='top',
-             bbox=dict(boxstyle='round', facecolor='white', alpha=0.7, edgecolor='gray'))
+             bbox=dict(boxstyle='round', alpha=0.0))
 
     # ---------- 图4: 抖动百分比 ----------
     ax4 = fig.add_subplot(gs[2, 0])
@@ -367,10 +377,19 @@ def _visualize_f0_results(results: list):
     ax4.grid(alpha=0.3)
     ax4.legend(loc='upper right', fontsize=8)
 
+    # 动态调整Y轴范围
+    y_min, y_max = min(jitter_percent), max(jitter_percent)
+    y_range = y_max - y_min
+    if y_range < 0.5:  # 如果数值相差太小
+        y_min, y_max = max(0, y_min - 0.25), y_max + 0.25
+    y_padding = max(y_range * 0.15, 0.25)  # 确保至少有0.25的padding
+    ax4.set_ylim(max(0, y_min - y_padding), y_max + y_padding)
+
+    # 将desc_text4移动到左上角
     desc_text4 = '含义：相邻帧F0变化的平均比例\n• 0.5-2%: 自然颤音\n• 过低: 机械感  过高: 不稳定'
-    ax4.text(0.98, 0.95, desc_text4, transform=ax4.transAxes, fontsize=7,
-             verticalalignment='top', horizontalalignment='right',
-             bbox=dict(boxstyle='round', facecolor='white', alpha=0.7, edgecolor='gray'))
+    ax4.text(0.02, 0.95, desc_text4, transform=ax4.transAxes, fontsize=7,
+             verticalalignment='top',
+             bbox=dict(boxstyle='round', alpha=0.0))
 
     # ---------- 图5: 有效F0占比 ----------
     ax5 = fig.add_subplot(gs[2, 1])
@@ -384,10 +403,16 @@ def _visualize_f0_results(results: list):
     ax5.grid(axis='y', alpha=0.3)
     ax5.legend(loc='lower right', fontsize=8)
 
+    # 动态调整Y轴范围（对于有效F0占比，保持0-105的范围，但如果有极端值需要调整）
+    y_min, y_max = min(valid_ratio), max(valid_ratio)
+    if y_max - y_min < 10:  # 如果数值相差太小
+        y_padding = 5
+        ax5.set_ylim(max(0, y_min - y_padding), min(105, y_max + y_padding))
+
     desc_text5 = '含义：成功检测到清晰基频的帧比例\n• 越高越好\n• 低比例=声音模糊/断裂'
     ax5.text(0.02, 0.25, desc_text5, transform=ax5.transAxes, fontsize=7,
              verticalalignment='top',
-             bbox=dict(boxstyle='round', facecolor='white', alpha=0.7, edgecolor='gray'))
+             bbox=dict(boxstyle='round', alpha=0.0))
 
     # ==================== 添加统计摘要 ====================
 
@@ -400,7 +425,7 @@ def _visualize_f0_results(results: list):
         f"最差: {names[np.argmin(stability_score)]} ({min(stability_score):.0f}分)"
     )
     fig.text(0.5, 0.02, summary_text, ha='center', fontsize=9,
-             bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8, edgecolor='orange'))
+             bbox=dict(boxstyle='round', facecolor=(1, 1, 0.9, 0.8), edgecolor='orange'))
 
     # ==================== 显示图表 ====================
     plt.tight_layout(rect=[0, 0.04, 1, 0.96])
