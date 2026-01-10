@@ -1,8 +1,6 @@
 import os
 import matplotlib.pyplot as plt
 
-import 集成响度
-
 # 设置中文字体
 plt.rcParams['font.sans-serif'] = ['Noto Sans CJK JP', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'DejaVu Sans']
 plt.rcParams['axes.unicode_minus'] = False
@@ -52,4 +50,5 @@ def get_sorted_wav_paths():
 
 
 wav_files = get_sorted_wav_paths()
-集成响度.analyze_integrated_loudness(wav_files)
+# import 集成响度;集成响度.analyze_integrated_loudness(wav_files)
+import 短时响度波动;短时响度波动.analyze_short_term_loudness_variance(wav_files)
