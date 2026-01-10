@@ -50,5 +50,5 @@ def get_sorted_wav_paths():
 
 
 wav_files = get_sorted_wav_paths()
-# import 集成响度;集成响度.analyze_integrated_loudness(wav_files)
-import 短时响度波动;短时响度波动.analyze_short_term_loudness_variance(wav_files)
+import 集成响度;集成响度.analyze_integrated_loudness(wav_files)
+# import 短时响度波动;短时响度波动.analyze_short_term_loudness_variance(wav_files)

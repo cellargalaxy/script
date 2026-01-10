@@ -141,12 +141,13 @@ def analyze_integrated_loudness(wav_paths: List[str],
         text_x = val + 0.3 if val < -16 else val - 0.3
         ha = 'left' if val < -16 else 'right'
 
+        # 修改：设置透明背景
         ax.text(text_x, bar.get_y() + bar.get_height() / 2,
                 f'{val:.1f} LUFS [{status}]',
                 va='center', ha=ha, fontsize=10, fontweight='bold',
                 color='black',
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
-                          edgecolor='gray', alpha=0.8))
+                          edgecolor='gray', alpha=0.5))  # 降低alpha值
 
     # ---------- 2.5 优化坐标轴 ----------
     ax.set_yticks(y_pos)
@@ -179,7 +180,7 @@ def analyze_integrated_loudness(wav_paths: List[str],
     # 图例
     ax.legend(loc='upper right', fontsize=9, framealpha=0.9)
 
-    # ---------- 2.6 添加说明文本框（使用默认字体而不是等宽字体） ----------
+    # ---------- 2.6 添加说明文本框（修改：调整位置和透明度） ----------
     description = """
 ┌─────────────────────────────────────────────────────────────────┐
 │  集成响度 (Integrated Loudness, LUFS)                           │
@@ -197,13 +198,15 @@ def analyze_integrated_loudness(wav_paths: List[str],
 └─────────────────────────────────────────────────────────────────┘
     """
 
-    # 使用常规字体而不是等宽字体
-    fig.text(0.02, 0.02, description, fontsize=9,
+    # 修改：调整文本框位置（更靠下）和设置为透明背景
+    fig.text(0.02, 0.01, description, fontsize=9,
              verticalalignment='bottom',
-             bbox=dict(boxstyle='round,pad=0.5', facecolor='#f8f9fa',
-                       edgecolor='#dee2e6', alpha=0.95))
+             bbox=dict(boxstyle='round,pad=0.5',
+                       facecolor='white',  # 改为白色或透明色
+                       edgecolor='#dee2e6',
+                       alpha=0.3))  # 显著降低透明度
 
-    # ---------- 2.7 添加统计摘要（使用默认字体） ----------
+    # ---------- 2.7 添加统计摘要（修改：调整位置和透明度） ----------
     avg_lufs = np.mean(results)
     std_lufs = np.std(results)
     best_idx = np.argmin(np.abs(np.array(results) - (-16)))  # 最接近-16的
@@ -216,14 +219,17 @@ def analyze_integrated_loudness(wav_paths: List[str],
 • 样本数: {len(results)}
     """
 
-    fig.text(0.98, 0.02, summary, fontsize=9,
+    # 修改：调整文本框位置（更靠下）和设置为透明背景
+    fig.text(0.98, 0.01, summary, fontsize=9,
              verticalalignment='bottom', horizontalalignment='right',
-             bbox=dict(boxstyle='round,pad=0.5', facecolor='#e8f5e9',
-                       edgecolor='#a5d6a7', alpha=0.95))
+             bbox=dict(boxstyle='round,pad=0.5',
+                       facecolor='white',  # 改为白色或透明色
+                       edgecolor='#a5d6a7',
+                       alpha=0.3))  # 显著降低透明度
 
-    # 调整布局
+    # 修改：调整底部边距，为文本框留出更多空间
     plt.tight_layout()
-    plt.subplots_adjust(bottom=0.22, left=0.15)
+    plt.subplots_adjust(bottom=0.28, left=0.15)  # 增加bottom值从0.22到0.28
 
     # 保存或显示
     if save_path:

@@ -316,19 +316,19 @@ def analyze_short_term_loudness_variance(
     ax1.grid(axis='y', alpha=0.3, linestyle='-', linewidth=0.5)
     ax1.set_xlim(-0.5, n_files - 0.5)
 
-    # 中文说明文字框
+    # 中文说明文字框 - 设置为透明背景
     description = (
         "【指标说明】\n"
         "短时响度波动：衡量短时间窗（3秒）内响度变化程度，反映情感表达的动态性 用于判断是否全程一个音量（情感死板）或压缩过度。\n"
-    "【阈值判断】\n"
-    f"  ✓ 适中 ({THRESHOLD_LOW}-{THRESHOLD_HIGH} dB)：自然起伏，富有情感   ✗ 过小 (< {THRESHOLD_LOW} dB)：情感死板，缺乏变化   ✗ 过大 (> {THRESHOLD_HIGH} dB)：不稳定，有破音风险\n"
-    "【颜色含义】\n"
-    "  ● 青色 = 理想范围   ● 红色 = 波动太小（情感死板）   ● 橙色 = 波动太大（不稳定）"
+        "【阈值判断】\n"
+        f"  ✓ 适中 ({THRESHOLD_LOW}-{THRESHOLD_HIGH} dB)：自然起伏，富有情感   ✗ 过小 (< {THRESHOLD_LOW} dB)：情感死板，缺乏变化   ✗ 过大 (> {THRESHOLD_HIGH} dB)：不稳定，有破音风险\n"
+        "【颜色含义】\n"
+        "  ● 青色 = 理想范围   ● 红色 = 波动太小（情感死板）   ● 橙色 = 波动太大（不稳定）"
     )
     ax1.text(0.02, 0.97, description, transform=ax1.transAxes,
              verticalalignment='top', fontsize=9,
-             bbox=dict(boxstyle='round,pad=0.5', facecolor='#F8F9FA',
-                       edgecolor='#DEE2E6', alpha=0.95),
+             bbox=dict(boxstyle='round,pad=0.5', facecolor='none',  # 透明背景
+                       edgecolor='#DEE2E6', alpha=0.8),  # 保留边框但透明度更高
              linespacing=1.4)
 
     # ---- 图2: 响度动态范围对比 ----
@@ -359,15 +359,15 @@ def analyze_short_term_loudness_variance(
     ax2.scatter([], [], color='#E74C3C', s=30, label='平均响度')
     ax2.legend(loc='upper right', fontsize=9)
 
-    # 图2说明
+    # 图2说明 - 设置为透明背景
     desc2 = (
         "【图表说明】\n"
         "蓝色线段表示响度的最小值到最大值范围 红点表示平均响度值 范围越大说明动态变化越丰富"
     )
     ax2.text(0.02, 0.97, desc2, transform=ax2.transAxes,
              verticalalignment='top', fontsize=9,
-             bbox=dict(boxstyle='round,pad=0.4', facecolor='#FFF9E6',
-                       edgecolor='#F0E68C', alpha=0.95),
+             bbox=dict(boxstyle='round,pad=0.4', facecolor='none',  # 透明背景
+                       edgecolor='#F0E68C', alpha=0.7),  # 保留边框但透明度更高
              linespacing=1.3)
 
     # ---- 图3: 响度时序热力图 ----
@@ -404,7 +404,7 @@ def analyze_short_term_loudness_variance(
         cbar = plt.colorbar(im, ax=ax3, shrink=0.8, pad=0.02)
         cbar.set_label('响度 (LUFS)', fontsize=10)
 
-    # 图3说明
+    # 图3说明 - 设置为透明背景
     desc3 = (
         "【图表说明】\n"
         "热力图展示每个文件在整个时间轴上的响度变化\n"
@@ -413,8 +413,8 @@ def analyze_short_term_loudness_variance(
     )
     ax3.text(0.02, 0.95, desc3, transform=ax3.transAxes,
              verticalalignment='top', fontsize=9,
-             bbox=dict(boxstyle='round,pad=0.4', facecolor='#E8F8F5',
-                       edgecolor='#A3E4D7', alpha=0.95),
+             bbox=dict(boxstyle='round,pad=0.4', facecolor='none',  # 透明背景
+                       edgecolor='#A3E4D7', alpha=0.7),  # 保留边框但透明度更高
              linespacing=1.3)
 
     # ========================
