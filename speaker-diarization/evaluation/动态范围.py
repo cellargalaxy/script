@@ -174,17 +174,61 @@ def analyze_rms_dynamic_range(wav_paths: List[str]) -> None:
         ax.axhline(y=val, color=color, linestyle='--',
                    alpha=0.7, linewidth=1.5, label=label)
 
-    # ==================== 动态调整Y轴范围（放大差异）====================
+    # ==================== 智能调整Y轴范围 ====================
     valid_values = [v for v in dr_values if not np.isnan(v)]
     if valid_values:
         data_min = min(valid_values)
         data_max = max(valid_values)
         data_range = data_max - data_min
 
-        # 留出适当边距，同时确保能看到关键阈值线
-        padding = max(data_range * 0.15, 3)
-        y_min = max(0, data_min - padding)
-        y_max = max(data_max + padding, 65)  # 确保能看到60dB阈值
+        # 阈值线定义
+        thresholds = [10, 20, 40, 60]
+
+        if data_range < 1:
+            # 情况1：数据差异极小，需要放大显示
+            # 使用数据均值的±2dB作为显示范围，确保能看到微小变化
+            center = np.mean(valid_values)
+            y_min = max(0, center - 2)
+            y_max = center + 2
+
+        elif data_range < 10:
+            # 情况2：数据差异较小但可分辨
+            # 使用数据范围的1.2倍作为显示范围，确保差异明显
+            padding = max(data_range * 0.1, 0.5)
+            y_min = max(0, data_min - padding)
+            y_max = data_max + padding
+
+            # 检查是否需要包含阈值线
+            # 只有当数据整体距离最近的阈值线不太远时才包含
+            relevant_thresholds = []
+            for thresh in thresholds:
+                if abs(data_min - thresh) < 15 or abs(data_max - thresh) < 15:
+                    relevant_thresholds.append(thresh)
+
+            if relevant_thresholds:
+                # 包含相关阈值线
+                threshold_min = min(relevant_thresholds)
+                threshold_max = max(relevant_thresholds)
+                y_min = min(y_min, threshold_min - 2)
+                y_max = max(y_max, threshold_max + 2)
+
+        else:
+            # 情况3：数据差异较大，正常处理
+            # 自动包含数据范围和主要阈值线
+            padding = data_range * 0.1
+            y_min = max(0, data_min - padding)
+            y_max = data_max + padding
+
+            # 确保能看到所有阈值线（如果数据整体不太偏离）
+            if data_max < 80:  # 如果数据没有过于偏离
+                y_max = max(y_max, 65)  # 确保能看到60dB阈值
+
+        # 最终边界检查
+        if y_max - y_min < 5:  # 如果范围太小
+            # 确保至少有5dB的显示范围
+            center = (y_min + y_max) / 2
+            y_min = max(0, center - 2.5)
+            y_max = center + 2.5
 
         ax.set_ylim(y_min, y_max)
 
@@ -268,6 +312,13 @@ def analyze_rms_dynamic_range(wav_paths: List[str]) -> None:
         )
         fig.text(0.5, 0.02, stats_text, ha='center', fontsize=10,
                  style='italic', color='#2C3E50')
+
+        # 添加Y轴范围信息
+        if valid_values:
+            y_min, y_max = ax.get_ylim()
+            y_range_text = f"Y轴范围: {y_min:.2f} ~ {y_max:.2f} dB"
+            fig.text(0.02, 0.02, y_range_text, ha='left', fontsize=9,
+                     style='italic', color='#7F8C8D')
 
     # ==================== 最终布局调整 ====================
     plt.tight_layout()
