@@ -124,6 +124,41 @@ def _compute_single_file_mfcc(wav_path: str) -> Dict:
         }
 
 
+def _calculate_dynamic_y_limits(data: np.ndarray, margin_factor: float = 0.15) -> Tuple[float, float]:
+    """
+    计算动态Y轴范围，确保数据差异明显可见
+
+    参数:
+        data: 数据数组
+        margin_factor: 边距因子（数据范围的百分比）
+
+    返回:
+        (y_min, y_max): 合适的Y轴范围
+    """
+    if len(data) == 0:
+        return 0.0, 1.0
+
+    y_min = np.min(data)
+    y_max = np.max(data)
+    y_range = y_max - y_min
+
+    # 如果数据范围太小，扩大显示范围以突出差异
+    if y_range < 0.01:  # 差异很小的情况
+        y_center = (y_min + y_max) / 2
+        y_min = y_center - 0.02
+        y_max = y_center + 0.02
+    else:
+        # 添加合适的边距
+        y_margin = max(y_range * margin_factor, 0.01)  # 至少0.01的边距
+        y_min = max(0, y_min - y_margin)
+        y_max = y_max + y_margin
+
+    # 确保最小值不会小于0
+    y_min = max(0, y_min)
+
+    return float(y_min), float(y_max)
+
+
 def analyze_mfcc_distance(wav_paths: List[str]) -> None:
     """
     分析多个WAV文件的MFCC距离，评估AI翻唱质量并可视化对比
@@ -261,18 +296,13 @@ def analyze_mfcc_distance(wav_paths: List[str]) -> None:
                for d in mean_distances]
     bars1 = ax1.bar(indices, mean_distances, color=colors1, alpha=0.85, width=0.8,
                     edgecolor='white', linewidth=0.5)
-    ax1.axhline(y=0.3, color='#e74c3c', linestyle='--', linewidth=2,
-                label='阈值 0.3', alpha=0.8)
 
-    # 动态Y轴范围
-    y_min1, y_max1 = mean_distances.min(), mean_distances.max()
-    y_range1 = y_max1 - y_min1
-    y_margin1 = max(0.02, y_range1 * 0.15)
-    ax1.set_ylim(max(0, y_min1 - y_margin1), y_max1 + y_margin1 * 2)
+    # 动态计算Y轴范围（不显示阈值线）
+    y_min1, y_max1 = _calculate_dynamic_y_limits(mean_distances, margin_factor=0.2)
+    ax1.set_ylim(y_min1, y_max1)
 
     ax1.set_ylabel('距离值', fontsize=11)
     ax1.set_title('① 平均MFCC距离（越低越好）', fontsize=12, fontweight='bold', pad=10)
-    ax1.legend(loc='upper right', fontsize=9)
     ax1.grid(True, axis='y', alpha=0.3, linestyle='-', linewidth=0.5)
     ax1.set_xticks(indices[::x_step])
     ax1.set_xticklabels([short_names[i] for i in range(0, n_files, x_step)],
@@ -284,14 +314,13 @@ def analyze_mfcc_distance(wav_paths: List[str]) -> None:
                for d in max_distances]
     ax2.bar(indices, max_distances, color=colors2, alpha=0.85, width=0.8,
             edgecolor='white', linewidth=0.5)
-    ax2.axhline(y=0.3, color='#e74c3c', linestyle='--', linewidth=2,
-                label='基准阈值 0.3', alpha=0.8)
-    ax2.axhline(y=0.5, color='#f39c12', linestyle=':', linewidth=1.5,
-                label='警告阈值 0.5', alpha=0.8)
+
+    # 动态计算Y轴范围（不显示阈值线）
+    y_min2, y_max2 = _calculate_dynamic_y_limits(max_distances, margin_factor=0.15)
+    ax2.set_ylim(y_min2, y_max2)
 
     ax2.set_ylabel('距离值', fontsize=11)
     ax2.set_title('② 最大MFCC距离（越低越好）', fontsize=12, fontweight='bold', pad=10)
-    ax2.legend(loc='upper right', fontsize=9)
     ax2.grid(True, axis='y', alpha=0.3, linestyle='-', linewidth=0.5)
     ax2.set_xticks(indices[::x_step])
     ax2.set_xticklabels([short_names[i] for i in range(0, n_files, x_step)],
@@ -304,14 +333,13 @@ def analyze_mfcc_distance(wav_paths: List[str]) -> None:
                for p in exceed_pct]
     ax3.bar(indices, exceed_pct, color=colors3, alpha=0.85, width=0.8,
             edgecolor='white', linewidth=0.5)
-    ax3.axhline(y=10, color='#27ae60', linestyle=':', linewidth=1.5,
-                label='优秀 (<10%)', alpha=0.8)
-    ax3.axhline(y=25, color='#f39c12', linestyle=':', linewidth=1.5,
-                label='一般 (<25%)', alpha=0.8)
+
+    # 动态计算Y轴范围（不显示阈值线）
+    y_min3, y_max3 = _calculate_dynamic_y_limits(exceed_pct, margin_factor=0.15)
+    ax3.set_ylim(y_min3, y_max3)
 
     ax3.set_ylabel('比例 (%)', fontsize=11)
     ax3.set_title('③ 超过阈值(0.3)的帧比例（越低越好）', fontsize=12, fontweight='bold', pad=10)
-    ax3.legend(loc='upper right', fontsize=9)
     ax3.grid(True, axis='y', alpha=0.3, linestyle='-', linewidth=0.5)
     ax3.set_xticks(indices[::x_step])
     ax3.set_xticklabels([short_names[i] for i in range(0, n_files, x_step)],
@@ -324,6 +352,30 @@ def analyze_mfcc_distance(wav_paths: List[str]) -> None:
     ax4.bar(indices, consecutive_exceeds, color=colors4, alpha=0.85, width=0.8,
             edgecolor='white', linewidth=0.5)
 
+    # 动态计算Y轴范围
+    if len(consecutive_exceeds) > 0:
+        y_min4 = 0
+        y_max4 = np.max(consecutive_exceeds)
+        y_range4 = y_max4 - y_min4
+
+        # 如果所有值都是0，设置合适的范围显示
+        if y_range4 == 0:
+            y_max4 = 2  # 显示0-2的范围以便观察
+        else:
+            # 添加边距，确保有足够的显示空间
+            y_max4 = y_max4 + max(1, y_range4 * 0.2)
+
+        ax4.set_ylim(y_min4, y_max4)
+
+        # 设置整数刻度
+        if y_max4 <= 10:
+            ax4.set_yticks(np.arange(0, y_max4 + 1, 1))
+        elif y_max4 <= 20:
+            ax4.set_yticks(np.arange(0, y_max4 + 1, 2))
+        else:
+            step = max(1, int(y_max4 / 10))
+            ax4.set_yticks(np.arange(0, y_max4 + 1, step))
+
     ax4.set_ylabel('段落数', fontsize=11)
     ax4.set_title('④ 连续音色突变段落数（≥3帧为一段，越少越好）',
                   fontsize=12, fontweight='bold', pad=10)
@@ -332,11 +384,6 @@ def analyze_mfcc_distance(wav_paths: List[str]) -> None:
     ax4.set_xticklabels([short_names[i] for i in range(0, n_files, x_step)],
                         rotation=rotation, ha='right', fontsize=fontsize)
 
-    # Y轴使用整数刻度
-    max_consec = int(consecutive_exceeds.max())
-    if max_consec > 0:
-        ax4.set_yticks(range(0, max_consec + 2))
-
     # ==================== 图5: 综合趋势图 ====================
     ax5 = fig.add_subplot(gs[2, :])
 
@@ -344,13 +391,9 @@ def analyze_mfcc_distance(wav_paths: List[str]) -> None:
     line1, = ax5.plot(indices, mean_distances, 'o-', color='#3498db',
                       label='平均距离', markersize=5, linewidth=1.8, alpha=0.9)
 
-    # 阈值线
-    ax5.axhline(y=0.3, color='#e74c3c', linestyle='--', linewidth=2,
-                label='阈值 0.3', alpha=0.8)
-
-    # 填充区域表示质量等级
-    ax5.fill_between(indices, 0, 0.25, alpha=0.1, color='#27ae60', label='优秀区域 (<0.25)')
-    ax5.fill_between(indices, 0.25, 0.35, alpha=0.1, color='#f39c12', label='一般区域 (0.25-0.35)')
+    # 填充区域表示质量等级（透明度降低，避免遮挡数据）
+    ax5.fill_between(indices, 0, 0.25, alpha=0.05, color='#27ae60', label='优秀区域 (<0.25)')
+    ax5.fill_between(indices, 0.25, 0.35, alpha=0.05, color='#f39c12', label='一般区域 (0.25-0.35)')
 
     # 添加趋势线
     if n_files >= 3:
@@ -368,9 +411,8 @@ def analyze_mfcc_distance(wav_paths: List[str]) -> None:
     ax5.legend(loc='upper right', fontsize=9, ncol=2)
     ax5.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
 
-    # Y轴范围
-    y_min5 = max(0, mean_distances.min() - 0.08)
-    y_max5 = mean_distances.max() + 0.08
+    # 动态Y轴范围
+    y_min5, y_max5 = _calculate_dynamic_y_limits(mean_distances, margin_factor=0.2)
     ax5.set_ylim(y_min5, y_max5)
 
     # X轴刻度
