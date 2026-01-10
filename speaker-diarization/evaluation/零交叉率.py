@@ -37,7 +37,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 import warnings
 
 
@@ -122,6 +122,93 @@ def analyze_zcr_quality(wav_paths: List[str], max_workers: int = 8) -> Optional[
         else:
             return '高噪声/AI artifact'
 
+    def _calculate_trend_y_range(data: np.ndarray) -> Tuple[float, float]:
+        """
+        专门为趋势图计算优化的Y轴范围
+        重点：放大微小差异，确保数据变化清晰可见
+        """
+        data_min = data.min()
+        data_max = data.max()
+        data_mean = data.mean()
+        data_range = data_max - data_min
+
+        # 如果数据范围非常小（小于均值的1%），需要显著放大
+        if data_range < data_mean * 0.01 and data_range > 0:
+            # 计算放大倍数，确保最小差异能被清楚看到
+            # 目标：让数据范围占据Y轴范围的至少20%
+            target_range_ratio = 0.2
+            required_scale = target_range_ratio / (data_range / data_mean) if data_mean > 0 else 10
+
+            # 限制最大放大倍数
+            scale_factor = min(required_scale, 50)
+
+            y_center = data_mean
+            expanded_range = data_range * scale_factor
+
+            y_min = max(0, y_center - expanded_range / 2)
+            y_max = y_center + expanded_range / 2
+
+            # 确保最小值不为负（ZCR不会为负）
+            y_min = max(0, y_min)
+
+            return y_min, y_max
+
+        # 如果数据范围较小（1%-5%），适度放大
+        elif data_range < data_mean * 0.05 and data_range > 0:
+            # 让数据范围占据Y轴范围的30-40%
+            target_range_ratio = 0.35
+            required_scale = target_range_ratio / (data_range / data_mean) if data_mean > 0 else 5
+
+            scale_factor = min(required_scale, 20)
+
+            y_center = data_mean
+            expanded_range = data_range * scale_factor
+
+            y_min = max(0, y_center - expanded_range / 2)
+            y_max = y_center + expanded_range / 2
+
+            return y_min, y_max
+
+        # 正常数据范围，添加适当的padding
+        else:
+            # 计算相对padding（基于数据范围的比例）
+            if data_range > 0:
+                padding = data_range * 0.15  # 15%的padding
+            else:
+                padding = data_mean * 0.1 if data_mean > 0 else 0.01
+
+            y_min = max(0, data_min - padding)
+            y_max = data_max + padding
+
+            return y_min, y_max
+
+    def _add_data_value_labels(ax, x_data, y_data):
+        """在数据点上添加数值标签"""
+        if len(y_data) <= 15:  # 文件数量较少时显示数值
+            for i, (x, y) in enumerate(zip(x_data, y_data)):
+                # 根据数值大小决定显示精度
+                if abs(y) < 0.001:
+                    label = f'{y:.6f}'
+                elif abs(y) < 0.01:
+                    label = f'{y:.5f}'
+                elif abs(y) < 0.1:
+                    label = f'{y:.4f}'
+                else:
+                    label = f'{y:.3f}'
+
+                ax.annotate(label,
+                           xy=(x, y),
+                           xytext=(0, 8),
+                           textcoords='offset points',
+                           ha='center',
+                           va='bottom',
+                           fontsize=7,
+                           alpha=0.7,
+                           bbox=dict(boxstyle='round,pad=0.2',
+                                    facecolor='white',
+                                    edgecolor='gray',
+                                    alpha=0.7))
+
     def _create_visualization(valid_results: List[Dict], n_files: int):
         """创建可视化图表"""
 
@@ -149,7 +236,7 @@ def analyze_zcr_quality(wav_paths: List[str], max_workers: int = 8) -> Optional[
                  style='italic', color='#555555',
                  bbox=dict(boxstyle='round,pad=0.3', facecolor='none', edgecolor='none'))
 
-        # ============ 图1: 趋势线图（核心图表） ============
+        # ============ 图1: 趋势线图（核心图表） - 重点优化 ============
         ax1 = plt.subplot2grid((3, 4), (0, 0), colspan=3, rowspan=1)
 
         x = np.arange(n_files)
@@ -158,22 +245,51 @@ def analyze_zcr_quality(wav_paths: List[str], max_workers: int = 8) -> Optional[
         # 绘制趋势线和误差范围
         ax1.fill_between(x, zcr_q25, zcr_q75, alpha=0.3, color='steelblue', label='四分位范围(Q25-Q75)')
         ax1.plot(x, zcr_means, 'b-', linewidth=2, label='平均ZCR', zorder=5)
-        ax1.scatter(x, zcr_means, c=colors, s=50, edgecolors='white', linewidth=1, zorder=6)
 
-        # 阈值参考线
-        ax1.axhline(y=0.1, color='#2ecc71', linestyle='--', linewidth=2, alpha=0.8, label='低噪声阈值 (0.1)')
-        ax1.axhline(y=0.5, color='#e74c3c', linestyle='--', linewidth=2, alpha=0.8, label='高噪声阈值 (0.5)')
+        # 使用更大的点，更容易看清
+        scatter = ax1.scatter(x, zcr_means, c=colors, s=100, edgecolors='white',
+                             linewidth=1.5, zorder=6, alpha=0.8)
 
-        # 质量区域填充
-        y_min_plot = max(0, zcr_means.min() * 0.8 - 0.02)
-        y_max_plot = min(1.0, max(zcr_means.max() * 1.2, 0.55))
+        # 使用专门的趋势图Y轴范围计算
+        y_min_plot, y_max_plot = _calculate_trend_y_range(zcr_means)
 
-        ax1.axhspan(y_min_plot, 0.1, alpha=0.08, color='green')
-        ax1.axhspan(0.1, 0.5, alpha=0.08, color='yellow')
-        ax1.axhspan(0.5, y_max_plot, alpha=0.08, color='red')
+        # 分析数据变化程度
+        data_range = zcr_means.max() - zcr_means.min()
+        data_range_ratio = data_range / zcr_means.mean() if zcr_means.mean() > 0 else 0
+
+        # 只在数据范围足够大时才显示阈值线（避免挤压数据区域）
+        show_low_threshold = False
+        show_high_threshold = False
+
+        if data_range_ratio > 0.15:  # 数据差异超过15%才考虑显示阈值
+            if 0.1 >= y_min_plot and 0.1 <= y_max_plot:
+                # 检查阈值线是否离数据太近
+                distance_to_data = min(abs(0.1 - zcr_means.min()), abs(0.1 - zcr_means.max()))
+                if distance_to_data > (y_max_plot - y_min_plot) * 0.1:
+                    show_low_threshold = True
+
+            if 0.5 >= y_min_plot and 0.5 <= y_max_plot:
+                distance_to_data = min(abs(0.5 - zcr_means.min()), abs(0.5 - zcr_means.max()))
+                if distance_to_data > (y_max_plot - y_min_plot) * 0.1:
+                    show_high_threshold = True
+
+        if show_low_threshold:
+            ax1.axhline(y=0.1, color='#2ecc71', linestyle=':', linewidth=1.2, alpha=0.6, label='低噪声阈值 (0.1)')
+        if show_high_threshold:
+            ax1.axhline(y=0.5, color='#e74c3c', linestyle=':', linewidth=1.2, alpha=0.6, label='高噪声阈值 (0.5)')
 
         ax1.set_xlim(-0.5, n_files - 0.5)
         ax1.set_ylim(y_min_plot, y_max_plot)
+
+        # 添加数据值标签
+        _add_data_value_labels(ax1, x, zcr_means)
+
+        # 在Y轴右侧添加数据范围信息
+        if data_range_ratio < 0.05:  # 数据差异很小
+            range_text = f"范围: {zcr_means.min():.6f} - {zcr_means.max():.6f}"
+            ax1.text(1.02, 0.98, range_text, transform=ax1.transAxes,
+                    fontsize=8, verticalalignment='top',
+                    bbox=dict(boxstyle='round,pad=0.3', facecolor='lightyellow', alpha=0.7))
 
         # X轴标签处理（智能间隔）
         if n_files <= 25:
@@ -190,7 +306,17 @@ def analyze_zcr_quality(wav_paths: List[str], max_workers: int = 8) -> Optional[
 
         ax1.set_xlabel('文件 (按模型轮数递增 →)', fontsize=10)
         ax1.set_ylabel('ZCR值', fontsize=10)
-        ax1.set_title('📈 ZCR随模型轮数变化趋势', fontsize=12, fontweight='bold', pad=10)
+
+        # 根据数据差异程度调整标题
+        if data_range_ratio < 0.01:
+            ax1.set_title('📈 ZCR随模型轮数变化趋势 (差异极小，已放大显示)',
+                         fontsize=12, fontweight='bold', pad=10, color='darkorange')
+        elif data_range_ratio < 0.05:
+            ax1.set_title('📈 ZCR随模型轮数变化趋势 (差异较小，已适度放大)',
+                         fontsize=12, fontweight='bold', pad=10, color='darkblue')
+        else:
+            ax1.set_title('📈 ZCR随模型轮数变化趋势', fontsize=12, fontweight='bold', pad=10)
+
         ax1.legend(loc='upper right', fontsize=8, framealpha=0.9)
         ax1.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
 
@@ -225,9 +351,13 @@ def analyze_zcr_quality(wav_paths: List[str], max_workers: int = 8) -> Optional[
         bars = ax3.bar(x, zcr_variances, color=colors, alpha=0.75, edgecolor='white', linewidth=0.5)
 
         # 添加趋势线
-        z = np.polyfit(x, zcr_variances, 3)
-        p = np.poly1d(z)
-        ax3.plot(x, p(x), 'b--', linewidth=2, alpha=0.7, label='趋势线')
+        if len(zcr_variances) > 3:
+            try:
+                z = np.polyfit(x, zcr_variances, min(3, len(zcr_variances)-1))
+                p = np.poly1d(z)
+                ax3.plot(x, p(x), 'b--', linewidth=2, alpha=0.7, label='趋势线')
+            except:
+                pass  # 如果拟合失败，跳过
 
         # 动态Y轴范围（放大差异）
         var_min, var_max = zcr_variances.min(), zcr_variances.max()
@@ -255,7 +385,8 @@ def analyze_zcr_quality(wav_paths: List[str], max_workers: int = 8) -> Optional[
         ax3.set_xlabel('文件 (按模型轮数递增 →)', fontsize=10)
         ax3.set_ylabel('ZCR方差', fontsize=10)
         ax3.set_title('📉 ZCR方差分析（方差过大 = 气息不稳/副歌段异常）', fontsize=12, fontweight='bold', pad=10)
-        ax3.legend(loc='upper right', fontsize=8)
+        if len(zcr_variances) > 3:
+            ax3.legend(loc='upper right', fontsize=8)
         ax3.grid(True, alpha=0.3, axis='y')
 
         # ============ 图4: 统计信息面板 ============
@@ -277,27 +408,35 @@ def analyze_zcr_quality(wav_paths: List[str], max_workers: int = 8) -> Optional[
         else:
             trend_text = "样本不足"
 
+        # 计算数据差异统计
+        data_range_val = zcr_means.max() - zcr_means.min()
+        data_cv = zcr_means.std() / zcr_means.mean() * 100 if zcr_means.mean() > 0 else 0
+
         stats_text = f"""
 ┌─────────────────────────┐
 │      📋 统计摘要        │
 ├─────────────────────────┤
 │ 文件总数: {n_files:>14} │
-│ 平均ZCR:  {zcr_means.mean():>14.4f} │
-│ 最小ZCR:  {zcr_means.min():>14.4f} │
-│ 最大ZCR:  {zcr_means.max():>14.4f} │
+│ 平均ZCR:  {zcr_means.mean():>14.6f} │
+│ 最小ZCR:  {zcr_means.min():>14.6f} │
+│ 最大ZCR:  {zcr_means.max():>14.6f} │
+│ 数据范围: {data_range_val:>14.6f} │
+│ 变异系数: {data_cv:>13.2f}% │
 │ 训练趋势: {trend_text:>14} │
 ├─────────────────────────┤
 │      🏆 最佳文件        │
 │ {filenames[best_idx][:23]:^23} │
-│ ZCR = {zcr_means[best_idx]:.4f} ({_get_quality_label(zcr_means[best_idx])})│
+│ ZCR = {zcr_means[best_idx]:.6f}      │
+│ ({_get_quality_label(zcr_means[best_idx])}) │
 ├─────────────────────────┤
 │      ⚠️  最差文件        │
 │ {filenames[worst_idx][:23]:^23} │
-│ ZCR = {zcr_means[worst_idx]:.4f} ({_get_quality_label(zcr_means[worst_idx])})│
+│ ZCR = {zcr_means[worst_idx]:.6f}      │
+│ ({_get_quality_label(zcr_means[worst_idx])})│
 ├─────────────────────────┤
 │      🎯 最稳定          │
 │ {filenames[most_stable_idx][:23]:^23} │
-│ 方差 = {zcr_variances[most_stable_idx]:.6f}     │
+│ 方差 = {zcr_variances[most_stable_idx]:.8f} │
 └─────────────────────────┘
 """
         ax4.text(0.05, 0.95, stats_text, transform=ax4.transAxes,
@@ -414,6 +553,10 @@ def analyze_zcr_quality(wav_paths: List[str], max_workers: int = 8) -> Optional[
         'results': valid_results,
         'summary': {
             'mean_zcr': float(np.mean([r['zcr_mean'] for r in valid_results])),
+            'min_zcr': float(np.min([r['zcr_mean'] for r in valid_results])),
+            'max_zcr': float(np.max([r['zcr_mean'] for r in valid_results])),
+            'range_zcr': float(np.max([r['zcr_mean'] for r in valid_results]) - np.min([r['zcr_mean'] for r in valid_results])),
+            'cv_zcr': float(np.std([r['zcr_mean'] for r in valid_results]) / np.mean([r['zcr_mean'] for r in valid_results]) * 100) if np.mean([r['zcr_mean'] for r in valid_results]) > 0 else 0,
             'best_file': valid_results[int(np.argmin([r['zcr_mean'] for r in valid_results]))]['filename'],
             'worst_file': valid_results[int(np.argmax([r['zcr_mean'] for r in valid_results]))]['filename'],
         }
