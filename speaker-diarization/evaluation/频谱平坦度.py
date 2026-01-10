@@ -188,38 +188,46 @@ def analyze_spectral_flatness(wav_paths: List[str]) -> dict:
         label='频谱平坦度均值', zorder=5
     )
 
-    # 阈值参考线
-    ax1.axhline(y=0.0, color='#27ae60', linestyle='-', linewidth=2.5,
-                alpha=0.9, label='理想值 (0): 纯谐波结构 ✓')
-    ax1.axhline(y=0.1, color='#f39c12', linestyle='--', linewidth=2,
-                alpha=0.85, label='阈值 (0.1): 开始出现气声 △')
-    ax1.axhline(y=0.3, color='#e74c3c', linestyle='--', linewidth=2,
-                alpha=0.85, label='阈值 (0.3): 噪声化明显 ✗')
-
-    # ===== Y轴范围优化：放大差异使对比更明显 =====
+    # ===== Y轴范围优化：智能自适应，放大差异 =====
     data_min, data_max = means.min(), means.max()
     data_range = data_max - data_min
 
-    if data_range < 0.005:
-        # 差异极小时，使用固定范围
-        y_center = (data_min + data_max) / 2
-        y_lower = max(0, y_center - 0.05)
-        y_upper = min(1.0, y_center + 0.05)
-    elif data_range < 0.02:
-        # 差异较小，适度放大
-        padding = max(0.025, data_range * 0.5)
-        y_lower = max(0, data_min - padding)
-        y_upper = min(1.0, data_max + padding)
+    # 计算数据的中心点
+    data_center = (data_min + data_max) / 2
+
+    # 确定Y轴范围（根据数据范围和差异大小动态调整）
+    if data_range == 0:
+        # 所有数据相同的情况
+        y_padding = 0.01  # 固定的小间距
+        y_lower = max(0, data_min - y_padding)
+        y_upper = min(1.0, data_max + y_padding)
+    elif data_range < 0.001:
+        # 差异极小的情况：扩大显示范围
+        y_padding = data_range * 20  # 放大20倍
+        y_lower = max(0, data_center - y_padding)
+        y_upper = min(1.0, data_center + y_padding)
+    elif data_range < 0.01:
+        # 差异较小的情况：适度放大
+        y_padding = data_range * 5  # 放大5倍
+        y_lower = max(0, data_center - y_padding)
+        y_upper = min(1.0, data_center + y_padding)
+    elif data_range < 0.05:
+        # 差异一般的情况：适度放大
+        y_padding = data_range * 2  # 放大2倍
+        y_lower = max(0, data_center - y_padding)
+        y_upper = min(1.0, data_center + y_padding)
     else:
-        # 正常范围
-        padding = data_range * 0.2
-        y_lower = max(0, data_min - padding)
-        y_upper = min(1.0, data_max + padding)
+        # 差异足够大的情况：使用正常范围
+        y_padding = data_range * 0.3  # 30%的边距
+        y_lower = max(0, data_min - y_padding)
+        y_upper = min(1.0, data_max + y_padding)
 
-    # 确保显示重要阈值线
-    if data_max < 0.35:
-        y_upper = max(y_upper, 0.35)
+    # 确保范围有效且不为零
+    if y_upper - y_lower < 1e-10:
+        y_lower = max(0, data_center - 0.01)
+        y_upper = min(1.0, data_center + 0.01)
 
+    # 应用Y轴范围
     ax1.set_ylim(y_lower, y_upper)
 
     ax1.set_xlabel('模型训练轮数 (按顺序递增) →', fontsize=11, fontweight='medium')
@@ -304,10 +312,15 @@ def analyze_spectral_flatness(wav_paths: List[str]) -> dict:
         capsize=cap_size, alpha=0.6, linewidth=1
     )
 
-    # 阈值参考线
-    ax2.axhline(y=0.1, color='#f39c12', linestyle='--', linewidth=1.8, alpha=0.8)
-    ax2.axhline(y=0.3, color='#e74c3c', linestyle='--', linewidth=1.8, alpha=0.8)
+    # 不强制显示阈值线，以免挤压数据区间
+    # 只有在数据范围包含阈值附近时才显示
+    if y_lower <= 0.3 <= y_upper:
+        ax2.axhline(y=0.3, color='#e74c3c', linestyle='--', linewidth=1.2, alpha=0.6)
 
+    if y_lower <= 0.1 <= y_upper:
+        ax2.axhline(y=0.1, color='#f39c12', linestyle='--', linewidth=1.2, alpha=0.6)
+
+    # 使用与子图1相同的Y轴范围，确保视图一致性
     ax2.set_ylim(y_lower, y_upper)
     ax2.set_xlabel('文件名称（按模型轮数排序）', fontsize=11, fontweight='medium')
     ax2.set_ylabel('频谱平坦度值', fontsize=11, fontweight='medium')
