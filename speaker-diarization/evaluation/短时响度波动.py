@@ -421,8 +421,8 @@ def analyze_short_term_loudness_variance(
     # 6. 保存和显示
     # ========================
     plt.tight_layout()
-    plt.savefig(output_path, dpi=150, bbox_inches='tight', facecolor='white')
-    print(f"\n图表已保存至: {output_path}")
+    # plt.savefig(output_path, dpi=150, bbox_inches='tight', facecolor='white')
+    # print(f"\n图表已保存至: {output_path}")
     plt.show()
 
     # ========================
