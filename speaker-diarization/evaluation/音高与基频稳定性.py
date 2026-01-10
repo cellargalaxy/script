@@ -21,198 +21,444 @@
     + 在长音处应有自然颤音（Vibrato），转音处平滑过渡。
 """
 
-# pip install librosa numpy matplotlib scipy
+# pip install numpy librosa matplotlib scipy
 
 
-import os
+"""
+AI翻唱音频 F0（音高/基频）稳定性分析工具
+
+依赖安装:
+pip install numpy librosa matplotlib scipy
+
+使用方法:
+from f0_analyzer import analyze_f0_stability
+analyze_f0_stability(["path1.wav", "path2.wav", ...])
+"""
+
 import numpy as np
-import librosa
 import matplotlib.pyplot as plt
-from concurrent.futures import ProcessPoolExecutor
+from matplotlib import font_manager
+from pathlib import Path
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from functools import partial
 import warnings
 
-# 忽略librosa在某些极短音频下的警告
 warnings.filterwarnings('ignore')
 
 
-def _analyze_single_file(args):
+def _extract_f0_features(wav_path: str, sr: int = 22050) -> dict:
     """
-    单个文件处理函数（用于多进程调用）。
-    计算音高不稳定性指标。
-    """
-    file_path, index = args
-    try:
-        # 1. 加载音频 (sr=16000 提升速度，足够用于F0分析)
-        y, sr = librosa.load(file_path, sr=16000)
+    提取单个文件的F0特征（内部函数）
 
-        # 2. 提取基频 (F0) 使用 PYIN
-        # frame_length=2048 保证低频分辨率
+    Args:
+        wav_path: wav文件路径
+        sr: 采样率
+
+    Returns:
+        包含F0特征的字典
+    """
+    import librosa
+
+    try:
+        # 加载音频
+        y, sr = librosa.load(wav_path, sr=sr)
+
+        # 使用PYIN算法提取F0（比YIN更鲁棒）
         f0, voiced_flag, voiced_probs = librosa.pyin(
             y,
-            fmin=librosa.note_to_hz('C2'),
-            fmax=librosa.note_to_hz('C7'),
+            fmin=librosa.note_to_hz('C2'),  # 约65Hz
+            fmax=librosa.note_to_hz('C7'),  # 约2093Hz
             sr=sr,
-            frame_length=2048
+            frame_length=2048,
+            hop_length=512
         )
 
-        if np.all(np.isnan(f0)):
-            return index, os.path.basename(file_path), None
+        # 获取有效的F0值（非NaN）
+        valid_mask = ~np.isnan(f0)
+        valid_f0 = f0[valid_mask]
 
-        # 3. 计算指标
-        voiced_f0 = f0[~np.isnan(f0)]
-        if len(voiced_f0) < 10:
-            return index, os.path.basename(file_path), None
+        if len(valid_f0) < 20:
+            return {
+                'path': wav_path,
+                'name': Path(wav_path).stem,
+                'error': '有效F0帧数不足'
+            }
 
-        # Hz -> Cents (音分) 转换，更符合人耳对音高的感知
-        f0_cents = 1200 * np.log2(voiced_f0 / librosa.note_to_hz('C2'))
+        # ==================== 计算各项指标 ====================
 
-        # 计算一阶差分（相邻帧跳变）的绝对值
-        abs_delta = np.abs(np.diff(f0_cents))
+        # 1. F0变化平滑度（一阶差分的标准差，单位：Hz）
+        #    越小表示F0曲线越平滑
+        f0_diff = np.diff(valid_f0)
+        smoothness = np.std(f0_diff)
 
-        # 计算平均值作为“不稳定性得分”
-        instability_score = np.mean(abs_delta)
+        # 2. 跳变率（F0变化超过阈值的帧占比）
+        #    使用相对阈值：变化超过当前F0的5%视为跳变
+        relative_diff = np.abs(f0_diff) / valid_f0[:-1]
+        jump_threshold = 0.05  # 5%
+        jump_count = np.sum(relative_diff > jump_threshold)
+        jump_rate = jump_count / len(f0_diff) * 100  # 百分比
 
-        return index, os.path.basename(file_path), instability_score
+        # 3. Jitter（抖动）- 相邻帧F0变化的平均值
+        #    适度的抖动表示自然的人声颤音
+        jitter = np.mean(np.abs(f0_diff))
+
+        # 4. Jitter百分比（相对抖动）
+        jitter_percent = np.mean(np.abs(f0_diff) / valid_f0[:-1]) * 100
+
+        # 5. 有效F0占比（检测到清晰基频的帧比例）
+        valid_ratio = np.sum(valid_mask) / len(f0) * 100  # 百分比
+
+        # 6. F0范围（最高与最低的差值，单位：半音）
+        f0_range_semitones = 12 * np.log2(np.max(valid_f0) / np.min(valid_f0))
+
+        # 7. 断裂次数（连续NaN区域的数量，表示AI无法生成的部分）
+        nan_mask = np.isnan(f0)
+        nan_diff = np.diff(nan_mask.astype(int))
+        break_count = np.sum(nan_diff == 1)  # 从有效变为无效的次数
+
+        # 8. 综合稳定性得分（0-100，越高越稳定）
+        #    基于多个指标的加权计算
+        stability_score = 100 - (
+                min(smoothness / 10, 30) +  # 平滑度惩罚
+                min(jump_rate * 2, 30) +  # 跳变率惩罚
+                min(jitter_percent * 5, 20) +  # 抖动惩罚
+                min((100 - valid_ratio) * 0.5, 20)  # 有效率惩罚
+        )
+        stability_score = max(0, min(100, stability_score))
+
+        return {
+            'path': wav_path,
+            'name': Path(wav_path).stem,
+            'smoothness': smoothness,  # Hz，越小越好
+            'jump_rate': jump_rate,  # %，越小越好
+            'jitter': jitter,  # Hz
+            'jitter_percent': jitter_percent,  # %
+            'valid_ratio': valid_ratio,  # %，越高越好
+            'f0_range': f0_range_semitones,  # 半音
+            'break_count': break_count,  # 次数，越少越好
+            'stability_score': stability_score,  # 综合得分
+            'f0_curve': f0,  # 原始F0曲线
+            'mean_f0': np.mean(valid_f0),  # 平均F0
+            'error': None
+        }
 
     except Exception as e:
-        print(f"Error processing {file_path}: {e}")
-        return index, os.path.basename(file_path), None
+        return {
+            'path': wav_path,
+            'name': Path(wav_path).stem,
+            'error': str(e)
+        }
 
 
-def evaluate_pitch_stability_and_show(file_paths):
+def _setup_chinese_font():
+    """设置中文字体"""
+    chinese_fonts = [
+        'SimHei', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB',
+        'WenQuanYi Micro Hei', 'Noto Sans CJK SC', 'Source Han Sans CN',
+        'Arial Unicode MS', 'STHeiti'
+    ]
+
+    available_fonts = [f.name for f in font_manager.fontManager.ttflist]
+
+    for font in chinese_fonts:
+        if font in available_fonts:
+            plt.rcParams['font.family'] = [font, 'sans-serif']
+            plt.rcParams['axes.unicode_minus'] = False
+            return font
+
+    # 如果没有中文字体，使用默认字体
+    plt.rcParams['font.family'] = 'sans-serif'
+    return None
+
+
+def analyze_f0_stability(wav_paths: list, max_workers: int = None):
     """
-    对wav文件进行音高稳定性评价，并弹出窗口显示图表。
+    分析多个wav文件的音高与基频稳定性（F0）
 
-    参数:
-        file_paths (list): 按模型轮数排序好的wav文件路径字符串数组。
+    Args:
+        wav_paths: wav文件路径的字符串数组（已按模型轮数排序）
+        max_workers: 并发处理的最大进程数，默认为CPU核心数
+
+    Returns:
+        包含所有分析结果的列表
     """
-    if not file_paths:
-        print("文件列表为空。")
-        return
 
-    print(f"开始分析 {len(file_paths)} 个音频文件，正在并行计算 F0 指标...")
+    if not wav_paths:
+        print("❌ 错误：文件路径列表为空")
+        return None
 
-    # 准备多进程参数
-    tasks = [(fp, i) for i, fp in enumerate(file_paths)]
+    print(f"📊 开始分析 {len(wav_paths)} 个音频文件的F0稳定性...")
+    print("=" * 60)
 
+    # ==================== 并发处理 ====================
     results = []
-    # 并发处理
-    with ProcessPoolExecutor() as executor:
-        for result in executor.map(_analyze_single_file, tasks):
-            results.append(result)
-            if len(results) % 10 == 0:
-                print(f"进度: {len(results)}/{len(file_paths)}...")
+    failed_files = []
 
-    # 排序与数据清洗
-    results.sort(key=lambda x: x[0])
-    valid_results = [r for r in results if r[2] is not None]
-    filenames = [r[1] for r in valid_results]
-    scores = [r[2] for r in valid_results]
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        future_to_path = {
+            executor.submit(_extract_f0_features, path): path
+            for path in wav_paths
+        }
 
-    if not scores:
-        print("未能提取到有效数据，无法绘图。")
-        return
+        for i, future in enumerate(as_completed(future_to_path)):
+            path = future_to_path[future]
+            try:
+                result = future.result()
+                if result['error']:
+                    failed_files.append((path, result['error']))
+                    print(f"  ⚠️  [{i + 1}/{len(wav_paths)}] {Path(path).name}: {result['error']}")
+                else:
+                    results.append(result)
+                    print(f"  ✅ [{i + 1}/{len(wav_paths)}] {Path(path).name}")
+            except Exception as e:
+                failed_files.append((path, str(e)))
+                print(f"  ❌ [{i + 1}/{len(wav_paths)}] {Path(path).name}: {e}")
 
-    print("分析完成，正在生成图表窗口...")
+    if not results:
+        print("\n❌ 没有成功处理的文件")
+        return None
 
-    # --- 绘图逻辑 ---
-    plt.style.use('seaborn-v0_8-whitegrid')
+    # 按原始顺序排序结果
+    path_order = {path: i for i, path in enumerate(wav_paths)}
+    results.sort(key=lambda x: path_order.get(x['path'], float('inf')))
 
-    # 字体设置
-    font_options = ['SimHei', 'Microsoft YaHei', 'PingFang SC', 'Heiti TC', 'sans-serif']
-    plt.rcParams['font.sans-serif'] = font_options
-    plt.rcParams['axes.unicode_minus'] = False
+    print(f"\n✅ 成功处理 {len(results)} 个文件，失败 {len(failed_files)} 个")
+    print("=" * 60)
 
-    # 创建画布
-    fig_width = max(12, len(filenames) * 0.2)
-    fig, ax = plt.subplots(figsize=(fig_width, 8))  # 稍微调高一点高度
+    # ==================== 可视化 ====================
+    _visualize_f0_results(results)
 
-    x_indices = range(len(filenames))
+    return results
 
-    # 1. 绘制主数据线
-    ax.plot(x_indices, scores, color='#2878B5', linewidth=2, marker='o', markersize=4,
-            label='音高不稳定性 (Cents/Frame)')
 
-    # 2. 绘制趋势线 (3次多项式拟合)
-    if len(scores) > 5:
-        z = np.polyfit(x_indices, scores, 3)
-        p = np.poly1d(z)
-        ax.plot(x_indices, p(x_indices), "r--", alpha=0.6, linewidth=1.5, label='训练总体趋势')
+def _visualize_f0_results(results: list):
+    """
+    可视化F0分析结果
+    """
+    # 设置中文字体
+    font_name = _setup_chinese_font()
 
-    # 3. 设置X轴
-    ax.set_xlim(-0.5, len(filenames) - 0.5)
-    # 动态调整X轴标签密度
-    if len(filenames) > 30:
-        step = len(filenames) // 30 + 1
-        ax.set_xticks(x_indices[::step])
-        ax.set_xticklabels(filenames[::step], rotation=45, ha='right', fontsize=9)
-    else:
-        ax.set_xticks(x_indices)
-        ax.set_xticklabels(filenames, rotation=45, ha='right', fontsize=9)
+    n_files = len(results)
 
-    ax.set_xlabel("模型训练进程 (文件列表顺序)", fontsize=12, fontweight='bold')
+    # 提取数据
+    names = [r['name'] for r in results]
+    # 简化文件名显示（如果太长）
+    short_names = []
+    for i, name in enumerate(names):
+        if len(name) > 15:
+            short_name = name[:7] + "..." + name[-5:]
+        else:
+            short_name = name
+        short_names.append(f"{i + 1}.{short_name}")
 
-    # 4. 设置Y轴 (动态缩放以突显差异)
-    y_min, y_max = min(scores), max(scores)
-    y_range = y_max - y_min
-    if y_range == 0: y_range = 1  # 防止除零
-    ax.set_ylim(y_min - y_range * 0.15, y_max + y_range * 0.35)  # 顶部留更多空间给文字
-    ax.set_ylabel("音高平均抖动量 (数值越低越好)", fontsize=12, fontweight='bold')
+    smoothness = [r['smoothness'] for r in results]
+    jump_rate = [r['jump_rate'] for r in results]
+    jitter_percent = [r['jitter_percent'] for r in results]
+    valid_ratio = [r['valid_ratio'] for r in results]
+    stability_score = [r['stability_score'] for r in results]
+    break_count = [r['break_count'] for r in results]
 
-    # 5. 标题与标注
-    ax.set_title("AI翻唱质量评估：音高稳定性 (Pitch Stability)", fontsize=16, pad=20)
+    # ==================== 创建图表 ====================
 
-    # 标记最优模型
-    min_score_idx = np.argmin(scores)
-    ax.annotate(f'最佳平滑度\n{filenames[min_score_idx]}',
-                xy=(min_score_idx, scores[min_score_idx]),
-                xytext=(min_score_idx, scores[min_score_idx] - y_range * 0.2),
-                arrowprops=dict(facecolor='green', shrink=0.05),
-                ha='center', color='green', fontweight='bold',
-                bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="green", alpha=0.8))
+    # 根据文件数量调整图表大小
+    fig_width = max(14, min(24, n_files * 0.3))
+    fig_height = 16
 
-    # 6. 添加透明背景的文字描述
-    text_desc = (
-        "【指标解读】\n"
-        "Y轴表示相邻两帧音高变化的平均幅度（音分）。\n"
-        "• 曲线波动剧烈/数值高：代表声音有明显的锯齿感、机械电流音或基频断裂。\n"
-        "• 曲线平缓/数值低：代表声音过渡自然，特别是长音和转音处理得当。\n"
-        "• 观察趋势：寻找处于低位的 '山谷' 区域，通常对应最佳模型检查点。"
+    fig = plt.figure(figsize=(fig_width, fig_height))
+    fig.suptitle('AI翻唱音频 F0（音高/基频）稳定性分析报告',
+                 fontsize=16, fontweight='bold', y=0.98)
+
+    # 创建网格布局
+    gs = fig.add_gridspec(3, 2, hspace=0.35, wspace=0.25,
+                          left=0.08, right=0.95, top=0.92, bottom=0.08)
+
+    x = np.arange(n_files)
+
+    # 颜色映射（根据稳定性得分）
+    colors = plt.cm.RdYlGn(np.array(stability_score) / 100)
+
+    # ---------- 图1: 综合稳定性得分 ----------
+    ax1 = fig.add_subplot(gs[0, :])
+    bars1 = ax1.bar(x, stability_score, color=colors, edgecolor='gray', linewidth=0.5)
+    ax1.axhline(y=70, color='orange', linestyle='--', linewidth=1.5, alpha=0.8, label='良好阈值 (70)')
+    ax1.axhline(y=50, color='red', linestyle='--', linewidth=1.5, alpha=0.8, label='警告阈值 (50)')
+    ax1.set_ylabel('得分', fontsize=11)
+    ax1.set_title('📈 综合稳定性得分 (0-100，越高越好)', fontsize=12, fontweight='bold')
+    ax1.set_ylim(0, 105)
+    ax1.legend(loc='lower right', fontsize=9)
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(short_names, rotation=45, ha='right', fontsize=7)
+    ax1.grid(axis='y', alpha=0.3)
+
+    # 添加趋势线
+    z = np.polyfit(x, stability_score, 1)
+    p = np.poly1d(z)
+    ax1.plot(x, p(x), "b--", alpha=0.5, linewidth=2, label='趋势线')
+
+    # 在柱状图上显示数值
+    for i, (bar, score) in enumerate(zip(bars1, stability_score)):
+        height = bar.get_height()
+        ax1.annotate(f'{score:.0f}',
+                     xy=(bar.get_x() + bar.get_width() / 2, height),
+                     xytext=(0, 3), textcoords="offset points",
+                     ha='center', va='bottom', fontsize=6,
+                     color='black' if score > 30 else 'white')
+
+    # 添加说明文字（透明背景）
+    desc_text = ('指标说明：综合考虑F0平滑度、跳变率、抖动和有效率\n'
+                 '• ≥70: 优秀 (绿色)  • 50-70: 一般 (黄色)  • <50: 较差 (红色)')
+    ax1.text(0.02, 0.95, desc_text, transform=ax1.transAxes, fontsize=8,
+             verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white',
+                                                alpha=0.7, edgecolor='gray'))
+
+    # ---------- 图2: F0平滑度 ----------
+    ax2 = fig.add_subplot(gs[1, 0])
+    ax2.plot(x, smoothness, 'o-', color='steelblue', linewidth=1.5, markersize=4)
+    ax2.fill_between(x, smoothness, alpha=0.3, color='steelblue')
+    ax2.set_ylabel('标准差 (Hz)', fontsize=10)
+    ax2.set_title('🎵 F0变化平滑度（一阶差分标准差）', fontsize=11, fontweight='bold')
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(short_names, rotation=45, ha='right', fontsize=6)
+    ax2.grid(alpha=0.3)
+
+    # 动态调整Y轴范围
+    y_min, y_max = min(smoothness), max(smoothness)
+    y_padding = (y_max - y_min) * 0.15
+    ax2.set_ylim(max(0, y_min - y_padding), y_max + y_padding)
+
+    # 标记最佳和最差
+    best_idx = np.argmin(smoothness)
+    worst_idx = np.argmax(smoothness)
+    ax2.scatter([best_idx], [smoothness[best_idx]], color='green', s=100, zorder=5, marker='*')
+    ax2.scatter([worst_idx], [smoothness[worst_idx]], color='red', s=100, zorder=5, marker='*')
+
+    desc_text2 = '含义：F0曲线变化的剧烈程度\n• 越小越平滑自然\n• 过大表示AI抖动/锯齿'
+    ax2.text(0.98, 0.95, desc_text2, transform=ax2.transAxes, fontsize=7,
+             verticalalignment='top', horizontalalignment='right',
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.7, edgecolor='gray'))
+
+    # ---------- 图3: 跳变率 ----------
+    ax3 = fig.add_subplot(gs[1, 1])
+    bars3 = ax3.bar(x, jump_rate, color='coral', edgecolor='gray', linewidth=0.5, alpha=0.8)
+    ax3.axhline(y=5, color='orange', linestyle='--', linewidth=1.5, alpha=0.8, label='警告阈值 (5%)')
+    ax3.set_ylabel('百分比 (%)', fontsize=10)
+    ax3.set_title('⚡ F0跳变率（突变帧占比）', fontsize=11, fontweight='bold')
+    ax3.set_xticks(x)
+    ax3.set_xticklabels(short_names, rotation=45, ha='right', fontsize=6)
+    ax3.grid(axis='y', alpha=0.3)
+    ax3.legend(loc='upper right', fontsize=8)
+
+    desc_text3 = '含义：F0变化超过5%的帧占比\n• 越低越稳定\n• 高跳变率=音高不稳定'
+    ax3.text(0.02, 0.95, desc_text3, transform=ax3.transAxes, fontsize=7,
+             verticalalignment='top',
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.7, edgecolor='gray'))
+
+    # ---------- 图4: 抖动百分比 ----------
+    ax4 = fig.add_subplot(gs[2, 0])
+    ax4.plot(x, jitter_percent, 's-', color='purple', linewidth=1.5, markersize=4)
+    ax4.fill_between(x, jitter_percent, alpha=0.2, color='purple')
+
+    # 标记理想范围
+    ax4.axhspan(0.5, 2.0, alpha=0.15, color='green', label='理想范围 (0.5-2%)')
+    ax4.set_ylabel('百分比 (%)', fontsize=10)
+    ax4.set_title('🎤 Jitter抖动率（相对频率波动）', fontsize=11, fontweight='bold')
+    ax4.set_xticks(x)
+    ax4.set_xticklabels(short_names, rotation=45, ha='right', fontsize=6)
+    ax4.grid(alpha=0.3)
+    ax4.legend(loc='upper right', fontsize=8)
+
+    desc_text4 = '含义：相邻帧F0变化的平均比例\n• 0.5-2%: 自然颤音\n• 过低: 机械感  过高: 不稳定'
+    ax4.text(0.98, 0.95, desc_text4, transform=ax4.transAxes, fontsize=7,
+             verticalalignment='top', horizontalalignment='right',
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.7, edgecolor='gray'))
+
+    # ---------- 图5: 有效F0占比 ----------
+    ax5 = fig.add_subplot(gs[2, 1])
+    bars5 = ax5.bar(x, valid_ratio, color='seagreen', edgecolor='gray', linewidth=0.5, alpha=0.8)
+    ax5.axhline(y=80, color='orange', linestyle='--', linewidth=1.5, alpha=0.8, label='良好阈值 (80%)')
+    ax5.set_ylabel('百分比 (%)', fontsize=10)
+    ax5.set_title('✅ 有效F0检测率', fontsize=11, fontweight='bold')
+    ax5.set_xticks(x)
+    ax5.set_xticklabels(short_names, rotation=45, ha='right', fontsize=6)
+    ax5.set_ylim(0, 105)
+    ax5.grid(axis='y', alpha=0.3)
+    ax5.legend(loc='lower right', fontsize=8)
+
+    desc_text5 = '含义：成功检测到清晰基频的帧比例\n• 越高越好\n• 低比例=声音模糊/断裂'
+    ax5.text(0.02, 0.25, desc_text5, transform=ax5.transAxes, fontsize=7,
+             verticalalignment='top',
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.7, edgecolor='gray'))
+
+    # ==================== 添加统计摘要 ====================
+
+    # 在图表底部添加汇总信息
+    summary_text = (
+        f"📊 统计摘要  |  "
+        f"文件总数: {n_files}  |  "
+        f"平均稳定性得分: {np.mean(stability_score):.1f}  |  "
+        f"最佳: {names[np.argmax(stability_score)]} ({max(stability_score):.0f}分)  |  "
+        f"最差: {names[np.argmin(stability_score)]} ({min(stability_score):.0f}分)"
     )
-    # 放置在图表左上角，透明背景
-    ax.text(0.02, 0.98, text_desc, transform=ax.transAxes, fontsize=10,
-            verticalalignment='top',
-            bbox=dict(facecolor='white', edgecolor='gray', alpha=0.0, boxstyle='round,pad=0.5'))
+    fig.text(0.5, 0.02, summary_text, ha='center', fontsize=9,
+             bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8, edgecolor='orange'))
 
-    ax.legend(loc='upper right')
-    plt.tight_layout()
+    # ==================== 显示图表 ====================
+    plt.tight_layout(rect=[0, 0.04, 1, 0.96])
 
-    # --- 弹出窗口设置 ---
-
-    # 设置窗口标题 (Window Title)
+    # 使用TkAgg后端确保弹出窗口
+    manager = plt.get_current_fig_manager()
     try:
-        fig.canvas.manager.set_window_title(f"分析结果 - 共{len(filenames)}个样本")
+        manager.window.state('zoomed')  # Windows最大化
     except:
-        pass
+        try:
+            manager.resize(*manager.window.maxsize())  # Linux
+        except:
+            pass
 
-    # 尝试将窗口最大化 (仅限部分后端有效，如TkAgg)
-    try:
-        manager = plt.get_current_fig_manager()
-        if hasattr(manager, 'window') and hasattr(manager.window, 'state'):
-            manager.window.state('zoomed')  # Windows
-        elif hasattr(manager, 'resize'):
-            manager.resize(*manager.window.maxsize())  # Linux/Other
-    except:
-        pass  # 如果无法最大化，保持默认大小
+    plt.show()
 
-    print(">>> 图表窗口已弹出，请在任务栏查看。关闭窗口后程序结束。")
-    plt.show()  # 阻塞运行，直到手动关闭窗口
+    # ==================== 打印详细报告 ====================
+    print("\n" + "=" * 80)
+    print("📋 详细分析报告")
+    print("=" * 80)
+    print(f"{'序号':<4} {'文件名':<25} {'稳定性':<8} {'平滑度':<10} {'跳变率':<8} {'抖动%':<8} {'有效率':<8}")
+    print("-" * 80)
+
+    for i, r in enumerate(results):
+        name = r['name'][:22] + "..." if len(r['name']) > 25 else r['name']
+        print(f"{i + 1:<4} {name:<25} {r['stability_score']:<8.1f} "
+              f"{r['smoothness']:<10.2f} {r['jump_rate']:<8.2f} "
+              f"{r['jitter_percent']:<8.2f} {r['valid_ratio']:<8.1f}")
+
+    print("=" * 80)
+    print("\n🏆 排名 (按稳定性得分):")
+    sorted_results = sorted(results, key=lambda x: x['stability_score'], reverse=True)
+    for i, r in enumerate(sorted_results[:5]):
+        print(f"  {i + 1}. {r['name']} - {r['stability_score']:.1f}分")
+
+    print("\n⚠️  需关注 (得分最低的5个):")
+    for i, r in enumerate(sorted_results[-5:]):
+        print(f"  {i + 1}. {r['name']} - {r['stability_score']:.1f}分")
 
 
-# --- 调用示例 ---
+# ==================== 使用示例 ====================
 if __name__ == "__main__":
-    # 请在此处填入你的wav文件路径列表
-    # 示例：
-    # my_files = ["/path/to/epoch_100.wav", "/path/to/epoch_200.wav", ...]
-    # evaluate_pitch_stability_and_show(my_files)
-    pass
+    import sys
+
+    # 示例用法
+    example_paths = [
+        "model_epoch_100.wav",
+        "model_epoch_200.wav",
+        "model_epoch_300.wav",
+        # ... 更多文件
+    ]
+
+    if len(sys.argv) > 1:
+        # 从命令行参数获取路径
+        analyze_f0_stability(sys.argv[1:])
+    else:
+        print("使用方法:")
+        print("  python f0_analyzer.py file1.wav file2.wav ...")
+        print("\n或在Python中调用:")
+        print("  from f0_analyzer import analyze_f0_stability")
+        print("  analyze_f0_stability(['file1.wav', 'file2.wav', ...])")
