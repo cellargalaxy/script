@@ -172,14 +172,44 @@ def analyze_spectral_flux(wav_paths: List[str], max_workers: int = 8) -> dict:
              label='平均频谱通量',
              zorder=5)
 
-    # 添加阈值参考线
+    # 动态Y轴范围（主要修改点：优化数据区间展示）
+    valid_data = mean_fluxes[valid_mask]
+    if len(valid_data) > 0:
+        # 获取数据的实际范围
+        data_min = np.min(p5_fluxes[valid_mask])
+        data_max = np.max(p95_fluxes[valid_mask])
+        data_range = data_max - data_min
+
+        # 如果数据范围太小（小于最大值的5%），则扩展范围以显示差异
+        if data_range < data_max * 0.05:
+            data_min = data_min - data_max * 0.1  # 向下扩展10%
+            data_max = data_max + data_max * 0.1  # 向上扩展10%
+            data_range = data_max - data_min
+
+        # 计算合适的Y轴边界，确保数据占主要空间
+        y_padding = data_range * 0.15  # 15%的边距
+        y_bottom = max(0, data_min - y_padding)
+        y_top = data_max + y_padding
+
+        # 确保Y轴范围有意义
+        if y_top - y_bottom < data_max * 0.05:
+            y_top = data_max + data_max * 0.1
+            y_bottom = max(0, data_min - data_min * 0.1)
+
+        # 设置Y轴范围
+        ax1.set_ylim(y_bottom, y_top)
+
+    # 检查阈值线是否在数据范围内，决定是否显示
     for thresh_val, thresh_label, color, style in THRESHOLDS:
-        ax1.axhline(y=thresh_val, color=color, linestyle=style,
-                    linewidth=1.8, alpha=0.7)
-        ax1.text(n_files + 0.5, thresh_val,
-                 f'{thresh_label}\n({thresh_val})',
-                 va='center', ha='left', color=color,
-                 fontsize=8, fontweight='bold')
+        if len(valid_data) > 0:
+            # 只在阈值线接近数据范围时才显示
+            y_bottom, y_top = ax1.get_ylim()
+            if y_bottom <= thresh_val <= y_top:
+                ax1.axhline(y=thresh_val, color=color, linestyle=style,
+                           linewidth=1.5, alpha=0.6)
+                # 将阈值标签放在图例中，避免占用空间
+                ax1.plot([], [], color=color, linestyle=style, linewidth=1.5,
+                        label=f'{thresh_label} ({thresh_val})', alpha=0.7)
 
     ax1.set_xlabel('文件序号（按模型训练轮数递增 →）', fontsize=11, fontweight='bold')
     ax1.set_ylabel('频谱通量', fontsize=11, fontweight='bold')
@@ -187,17 +217,6 @@ def analyze_spectral_flux(wav_paths: List[str], max_workers: int = 8) -> dict:
     ax1.legend(loc='upper left', fontsize=9, framealpha=0.9)
     ax1.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
     ax1.set_xlim(-1, n_files + 5)
-
-    # 动态Y轴范围（突出数据差异）
-    valid_data = mean_fluxes[valid_mask]
-    if len(valid_data) > 0:
-        data_min = np.min(p5_fluxes[valid_mask])
-        data_max = np.max(p95_fluxes[valid_mask])
-        data_range = data_max - data_min
-
-        y_bottom = max(0, data_min - data_range * 0.15)
-        y_top = max(data_max + data_range * 0.2, 0.12)  # 至少显示到0.1阈值
-        ax1.set_ylim(y_bottom, y_top)
 
     # ---------- 子图2: 柱状图 ----------
     ax2 = fig.add_subplot(2, 1, 2)
@@ -239,19 +258,28 @@ def analyze_spectral_flux(wav_paths: List[str], max_workers: int = 8) -> dict:
         ax2.set_xticklabels([filenames[i][:18] for i in tick_idx],
                             rotation=50, ha='right', fontsize=6)
 
-    # 添加阈值线到柱状图
-    for thresh_val, _, color, style in THRESHOLDS:
-        ax2.axhline(y=thresh_val, color=color, linestyle=style,
-                    linewidth=1.5, alpha=0.6)
+    # 柱状图的Y轴范围动态适配
+    if len(valid_data) > 0:
+        bar_data_min = np.nanmin(mean_fluxes)
+        bar_data_max = np.nanmax(mean_fluxes)
+        bar_data_range = bar_data_max - bar_data_min
+
+        # 如果数据范围太小，扩展范围以显示差异
+        if bar_data_range < bar_data_max * 0.05:
+            bar_data_min = bar_data_min - bar_data_max * 0.1
+            bar_data_max = bar_data_max + bar_data_max * 0.1
+
+        bar_y_padding = bar_data_range * 0.1
+        bar_y_bottom = max(0, bar_data_min - bar_y_padding)
+        bar_y_top = bar_data_max + bar_y_padding
+
+        ax2.set_ylim(bar_y_bottom, bar_y_top)
 
     ax2.set_xlabel('文件名', fontsize=11, fontweight='bold')
     ax2.set_ylabel('平均频谱通量', fontsize=11, fontweight='bold')
     ax2.set_title('📊 各文件频谱通量柱状对比图', fontsize=14, fontweight='bold', pad=10)
     ax2.grid(True, alpha=0.3, axis='y', linestyle='-', linewidth=0.5)
     ax2.set_xlim(-0.8, n_files - 0.2)
-
-    if len(valid_data) > 0:
-        ax2.set_ylim(0, np.nanmax(mean_fluxes) * 1.18)
 
     # ==================== 说明文字（透明背景）====================
     description_text = (
