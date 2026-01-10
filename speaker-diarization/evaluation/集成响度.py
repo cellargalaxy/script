@@ -6,7 +6,7 @@
 5. 该python函数实现以下指标的计算，并且将计算结果画为图表进行可视化对比
 6. 图表的类型，需要根据指标的特殊进行选择，目的是能更加直观的看出各个wav文件的优劣
 7. 图表的数轴标度，为了避免不同文件之间的指标差异过小，在图中看不出区别，需要更加明显的处理
-8. 在图表中增加该指标的文字描述，阈值的辅助信息
+8. 在图表中增加该指标的文字描述，阈值的辅助信息，图表使用常规字体而不是等宽字体
 9. 尽量将代码都收敛到函数内部，方便调用
 10. 最后提供一个完整可用的python函数，以及其需要安装的依赖
 
@@ -28,10 +28,6 @@ import pyloudnorm as pyln
 from pathlib import Path
 from typing import List, Dict, Tuple
 import warnings
-
-# 设置中文字体
-plt.rcParams['font.sans-serif'] = ['Noto Sans CJK JP', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'DejaVu Sans']
-plt.rcParams['axes.unicode_minus'] = False
 
 
 def analyze_integrated_loudness(wav_paths: List[str],

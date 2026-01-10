@@ -1,5 +1,12 @@
 import os
+import matplotlib.pyplot as plt
+
 import 集成响度
+
+# 设置中文字体
+plt.rcParams['font.sans-serif'] = ['Noto Sans CJK JP', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'DejaVu Sans']
+plt.rcParams['axes.unicode_minus'] = False
+
 
 def get_sorted_wav_paths():
     """
