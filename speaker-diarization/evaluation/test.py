@@ -49,28 +49,95 @@ def get_sorted_wav_paths():
     return sorted_files
 
 
-wav_files = get_sorted_wav_paths()
-import 集成响度;集成响度.analyze_integrated_loudness(wav_files)
-import 短时响度波动;短时响度波动.analyze_short_term_loudness_variance(wav_files)
-import 音高与基频稳定性;音高与基频稳定性.analyze_f0_stability(wav_files)
-import 音高漂移;音高漂移.analyze_pitch_drift(wav_files)
-import 峰均比;峰均比.analyze_crest_factor(wav_files)
-import 动态范围;动态范围.analyze_rms_dynamic_range(wav_files)
-import 削波检测;削波检测.analyze_clipping_detection(wav_files)
-import 频谱质心;频谱质心.analyze_spectral_centroid(wav_files)
-import 频谱平坦度;频谱平坦度.analyze_spectral_flatness(wav_files)
-import 谐噪比;谐噪比.analyze_hnr_quality(wav_files)
-import 频谱通量;频谱通量.analyze_spectral_flux(wav_files)
-import 频谱熵;频谱熵.analyze_spectral_entropy(wav_files)
-import 频谱带宽;频谱带宽.evaluate_spectral_bandwidth(wav_files)
-import 频谱滚降点;频谱滚降点.analyze_spectral_rolloff(wav_files)
-import 共振峰分析;共振峰分析.analyze_formant_quality(wav_files)
-import 振幅微扰;振幅微扰.analyze_shimmer_quality(wav_files)
-import 零交叉率;零交叉率.analyze_zcr_quality(wav_files)
-import 高频能量异常;高频能量异常.analyze_hf_energy_ratio(wav_files)
-import 信噪比估算;信噪比估算.analyze_audio_snr(wav_files)
-import 总谐波失真;总谐波失真.analyze_thdn(wav_files)
-import 频谱空洞与高频缺失;频谱空洞与高频缺失.analyze_high_frequency_quality(wav_files)
-import MFCC距离分析;MFCC距离分析.analyze_mfcc_distance(wav_files)
-import 调制频谱分析;调制频谱分析.analyze_modulation_spectrum(wav_files)
-import 连续性指标;连续性指标.analyze_frame_continuity(wav_files)
+import multiprocessing as mp
+from functools import partial
+
+
+def import_and_run(module_name, func_name, wav_files):
+    """在子进程中导入模块并执行函数"""
+    try:
+        module = __import__(module_name)
+        func = getattr(module, func_name)
+        return module_name, func(wav_files), None
+    except Exception as e:
+        return module_name, None, str(e)
+
+
+def main():
+    wav_files = get_sorted_wav_paths()
+
+    # 定义所有要执行的分析任务
+    tasks = [
+        ("集成响度", "analyze_integrated_loudness"),
+        ("短时响度波动", "analyze_short_term_loudness_variance"),
+        ("音高与基频稳定性", "analyze_f0_stability"),
+        ("音高漂移", "analyze_pitch_drift"),
+        ("峰均比", "analyze_crest_factor"),
+        ("动态范围", "analyze_rms_dynamic_range"),
+        ("削波检测", "analyze_clipping_detection"),
+        ("频谱质心", "analyze_spectral_centroid"),
+        ("频谱平坦度", "analyze_spectral_flatness"),
+        ("谐噪比", "analyze_hnr_quality"),
+        ("频谱通量", "analyze_spectral_flux"),
+        ("频谱熵", "analyze_spectral_entropy"),
+        ("频谱带宽", "evaluate_spectral_bandwidth"),
+        ("频谱滚降点", "analyze_spectral_rolloff"),
+        ("共振峰分析", "analyze_formant_quality"),
+        ("振幅微扰", "analyze_shimmer_quality"),
+        ("零交叉率", "analyze_zcr_quality"),
+        ("高频能量异常", "analyze_hf_energy_ratio"),
+        ("信噪比估算", "analyze_audio_snr"),
+        ("总谐波失真", "analyze_thdn"),
+        ("频谱空洞与高频缺失", "analyze_high_frequency_quality"),
+        ("MFCC距离分析", "analyze_mfcc_distance"),
+        ("调制频谱分析", "analyze_modulation_spectrum"),
+        ("连续性指标", "analyze_frame_continuity"),
+    ]
+
+    # 创建进程池
+    cpu_count = mp.cpu_count()
+    pool_size = min(len(tasks), cpu_count * 2)  # 合理的进程数
+
+    print(f"开始并行分析，使用 {pool_size} 个进程...")
+
+    with mp.Pool(processes=pool_size) as pool:
+        # 使用partial固定wav_files参数
+        run_task = partial(import_and_run, wav_files=wav_files)
+
+        # 异步执行所有任务
+        results = []
+        for module_name, func_name in tasks:
+            result = pool.apply_async(run_task, (module_name, func_name))
+            results.append((module_name, result))
+
+        # 收集结果
+        completed_results = {}
+        errors = {}
+
+        for module_name, result in results:
+            try:
+                name, data, error = result.get(timeout=300)  # 5分钟超时
+                if error:
+                    errors[name] = error
+                    print(f"❌ {name}: 失败 - {error}")
+                else:
+                    completed_results[name] = data
+                    print(f"✅ {name}: 完成")
+            except mp.TimeoutError:
+                errors[module_name] = "超时"
+                print(f"❌ {module_name}: 超时")
+            except Exception as e:
+                errors[module_name] = str(e)
+                print(f"❌ {module_name}: 异常 - {e}")
+
+    print(f"\n分析完成!")
+    print(f"成功: {len(completed_results)} 个")
+    print(f"失败: {len(errors)} 个")
+
+    return completed_results, errors
+
+
+if __name__ == "__main__":
+    # 在Windows上使用多进程必须要有这个判断
+    mp.freeze_support()
+    results, errors = main()
