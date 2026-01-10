@@ -149,7 +149,7 @@ def analyze_spectral_rolloff(
     n_files = len(wav_paths)
 
     # 根据文件数量调整图表大小
-    fig_width = max(16, min(24, n_files * 0.25))
+    fig_width = max(16, min(24, n_files * 0.3))
     fig_height = 14
 
     fig = plt.figure(figsize=(fig_width, fig_height))
@@ -205,8 +205,8 @@ def analyze_spectral_rolloff(
     ax1.text(n_files + 0.5, THRESHOLD_NOISE, f'{THRESHOLD_NOISE} Hz\n(噪声阈值)',
              va='center', ha='left', fontsize=9, color='#E67E22')
 
-    # 设置坐标轴
-    ax1.set_xlabel('文件序号（按模型训练轮数递增）', fontsize=11)
+    # 设置坐标轴 - 修改X轴标签为文件名
+    ax1.set_xlabel('文件名称', fontsize=11)
     ax1.set_ylabel('频谱滚降点 (Hz)', fontsize=11)
     ax1.set_title('平均频谱滚降点趋势对比', fontsize=13, fontweight='bold', pad=10)
 
@@ -228,14 +228,14 @@ def analyze_spectral_rolloff(
 
         ax1.set_ylim(max(0, y_min), y_max)
 
-    # X轴刻度
+    # X轴刻度 - 修改为使用文件名
     if n_files <= 20:
         ax1.set_xticks(x)
-        ax1.set_xticklabels([f'{i + 1}' for i in x], fontsize=9)
+        ax1.set_xticklabels(file_names, fontsize=9, rotation=45, ha='right')
     else:
         step = max(1, n_files // 20)
         ax1.set_xticks(x[::step])
-        ax1.set_xticklabels([f'{i + 1}' for i in x[::step]], fontsize=9)
+        ax1.set_xticklabels([file_names[i] for i in x[::step]], fontsize=9, rotation=45, ha='right')
 
     ax1.set_xlim(-0.5, n_files + 3)
     ax1.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
@@ -269,7 +269,7 @@ def analyze_spectral_rolloff(
     cbar.ax.axhline(y=THRESHOLD_NOISE, color='white', linewidth=2, linestyle='--')
 
     ax2.set_xlabel('时间进度 (%)', fontsize=11)
-    ax2.set_ylabel('文件序号', fontsize=11)
+    ax2.set_ylabel('文件名称', fontsize=11)  # 修改Y轴标签
     ax2.set_title('频谱滚降点时序热力图（查看稳定性）', fontsize=13, fontweight='bold', pad=10)
 
     # 设置X轴为百分比
@@ -277,14 +277,14 @@ def analyze_spectral_rolloff(
     ax2.set_xticks(x_ticks)
     ax2.set_xticklabels([f'{int(p)}%' for p in np.linspace(0, 100, 11)], fontsize=9)
 
-    # Y轴刻度
+    # Y轴刻度 - 修改为使用文件名
     if n_files <= 30:
         ax2.set_yticks(range(n_files))
-        ax2.set_yticklabels([f'{i + 1}' for i in range(n_files)], fontsize=8)
+        ax2.set_yticklabels(file_names, fontsize=8)
     else:
         step = max(1, n_files // 20)
         ax2.set_yticks(range(0, n_files, step))
-        ax2.set_yticklabels([f'{i + 1}' for i in range(0, n_files, step)], fontsize=8)
+        ax2.set_yticklabels([file_names[i] for i in range(0, n_files, step)], fontsize=8)
 
     # ==================== 图3: 统计分布 ====================
     ax3 = fig.add_subplot(gs[2, 0])
