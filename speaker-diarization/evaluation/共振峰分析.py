@@ -206,29 +206,55 @@ def analyze_formant_quality(wav_paths):
             """绘制带正常范围的均值图"""
             valid = ~np.isnan(data)
             v = data[valid]
+
+            if len(v) == 0:
+                ax.text(0.5, 0.5, '无有效数据', transform=ax.transAxes,
+                       ha='center', va='center', fontsize=12)
+                ax.set_title(title, fontsize=12, fontweight='bold')
+                return
+
             lo, hi = FORMANT_RANGES[formant_key]
 
-            # 正常范围带
-            ax.axhspan(lo, hi, alpha=0.15, color='green', label='正常范围')
-            ax.axhline(lo, color='green', ls='--', alpha=0.5, lw=1)
-            ax.axhline(hi, color='green', ls='--', alpha=0.5, lw=1)
+            # 计算数据范围和正常范围的关系
+            data_min, data_max = v.min(), v.max()
+            data_range = data_max - data_min
+
+            # 计算显示范围：主要根据数据范围来设定，同时考虑正常范围作为参考
+            display_min = min(data_min, lo) - data_range * 0.15
+            display_max = max(data_max, hi) + data_range * 0.15
+
+            # 确保显示范围有最小宽度，避免数据过于接近时看不出来
+            min_display_range = max(data_range * 1.5, 50)  # 至少50Hz的显示范围
+            current_display_range = display_max - display_min
+            if current_display_range < min_display_range:
+                # 扩展显示范围到最小要求
+                center = (display_max + display_min) / 2
+                display_min = center - min_display_range / 2
+                display_max = center + min_display_range / 2
+
+            # 绘制正常范围带（仅在数据范围与正常范围有重叠时才显示）
+            if hi > display_min and lo < display_max:
+                visible_lo = max(lo, display_min)
+                visible_hi = min(hi, display_max)
+                if visible_hi > visible_lo:
+                    ax.axhspan(visible_lo, visible_hi, alpha=0.15, color='green', label='正常范围')
+                    # 仅在正常范围在可见区域内时才绘制边界线
+                    if lo > display_min:
+                        ax.axhline(lo, color='green', ls='--', alpha=0.3, lw=1)
+                    if hi < display_max:
+                        ax.axhline(hi, color='green', ls='--', alpha=0.3, lw=1)
 
             # 数据线
-            ax.plot(x[valid], data[valid], 'b-', lw=1.3, marker='o', ms=3, alpha=0.85, label='实测值')
+            ax.plot(x[valid], data[valid], 'b-', lw=1.5, marker='o', ms=4, alpha=0.85, label='实测值')
 
             # 趋势线
             if np.sum(valid) >= 5:
                 z = np.polyfit(x[valid], data[valid], 1)
                 p = np.poly1d(z)
-                ax.plot(x, p(x), 'r--', lw=2, alpha=0.7, label='趋势线')
+                trend_line = ax.plot(x, p(x), 'r--', lw=2, alpha=0.7, label='趋势线')
 
-            # Y轴范围调整（突出差异）
-            if len(v) > 0:
-                data_range = v.max() - v.min()
-                margin = max(data_range * 0.2, 80)
-                y_min = min(v.min(), lo) - margin
-                y_max = max(v.max(), hi) + margin
-                ax.set_ylim(y_min, y_max)
+            # 设置Y轴范围
+            ax.set_ylim(display_min, display_max)
 
             ax.set_title(title, fontsize=12, fontweight='bold')
             ax.set_xlabel('模型轮数 (按训练进度排序)', fontsize=9)
@@ -243,7 +269,13 @@ def analyze_formant_quality(wav_paths):
             valid = ~np.isnan(data)
             v = data[valid]
 
-            ax.plot(x[valid], data[valid], 'b-', lw=1.3, marker='o', ms=3, alpha=0.85)
+            if len(v) == 0:
+                ax.text(0.5, 0.5, '无有效数据', transform=ax.transAxes,
+                       ha='center', va='center', fontsize=12)
+                ax.set_title(title, fontsize=12, fontweight='bold')
+                return
+
+            ax.plot(x[valid], data[valid], 'b-', lw=1.5, marker='o', ms=4, alpha=0.85)
 
             # 趋势线
             if np.sum(valid) >= 5:
@@ -254,11 +286,20 @@ def analyze_formant_quality(wav_paths):
                 label = '趋势↓改善' if improving else '趋势↑恶化'
                 ax.plot(x, p(x), '--', color=color, lw=2, alpha=0.7, label=label)
 
-            # Y轴范围
+            # Y轴范围（动态适配数据）
             if len(v) > 0:
                 rng = v.max() - v.min()
-                margin = max(rng * 0.25, v.mean() * 0.15)
-                ax.set_ylim(max(0, v.min() - margin), v.max() + margin)
+                # 如果数据范围太小，扩大显示范围以突出差异
+                if rng < v.mean() * 0.1:
+                    center = (v.max() + v.min()) / 2
+                    display_range = max(rng * 3, center * 0.2)
+                    display_min = max(0, center - display_range/2)
+                    display_max = center + display_range/2
+                else:
+                    margin = rng * 0.25
+                    display_min = max(0, v.min() - margin)
+                    display_max = v.max() + margin
+                ax.set_ylim(display_min, display_max)
 
             ax.set_title(title, fontsize=12, fontweight='bold')
             ax.set_xlabel('模型轮数 (按训练进度排序)', fontsize=9)
@@ -274,7 +315,13 @@ def analyze_formant_quality(wav_paths):
             valid = ~np.isnan(data)
             v = data[valid]
 
-            ax.plot(x[valid], data[valid], 'b-', lw=1.3, marker='o', ms=3, alpha=0.85)
+            if len(v) == 0:
+                ax.text(0.5, 0.5, '无有效数据', transform=ax.transAxes,
+                       ha='center', va='center', fontsize=12)
+                ax.set_title(title, fontsize=12, fontweight='bold')
+                return
+
+            ax.plot(x[valid], data[valid], 'b-', lw=1.5, marker='o', ms=4, alpha=0.85)
 
             # 趋势线
             if np.sum(valid) >= 5:
@@ -285,15 +332,27 @@ def analyze_formant_quality(wav_paths):
                 label = '趋势改善 ✓' if improving else '趋势恶化 ✗'
                 ax.plot(x, p(x), '--', color=color, lw=2, alpha=0.7, label=label)
 
-            # Y轴范围（放大差异）
+            # Y轴范围（动态适配数据）
             if len(v) > 0:
                 v_range = v.max() - v.min()
-                if v_range < 0.08:
+                # 如果数据差异太小，扩大显示范围以突出差异
+                if v_range < 0.05:
                     center = (v.max() + v.min()) / 2
-                    ax.set_ylim(max(0, center - 0.12), min(1, center + 0.12))
+                    display_range = max(v_range * 3, 0.1)
+                    display_min = max(0, center - display_range/2)
+                    display_max = min(1, center + display_range/2)
                 else:
                     margin = v_range * 0.2
-                    ax.set_ylim(max(0, v.min() - margin), min(1, v.max() + margin))
+                    display_min = max(0, v.min() - margin)
+                    display_max = min(1, v.max() + margin)
+
+                # 确保显示范围合理
+                if display_max - display_min < 0.1:
+                    center = (display_min + display_max) / 2
+                    display_min = max(0, center - 0.15)
+                    display_max = min(1, center + 0.15)
+
+                ax.set_ylim(display_min, display_max)
             else:
                 ax.set_ylim(0, 1)
 
@@ -307,7 +366,7 @@ def analyze_formant_quality(wav_paths):
             add_desc_box(ax, desc[desc_key])
             set_xlabels(ax)
 
-        # ===== 绑制图表 =====
+        # ===== 绘制图表 =====
         # 第1行: 共振峰均值
         plot_mean_with_range(axes[0, 0], get_metric('F1_mean'), 'F1 均值 - 开口度', 'F1', 'F1_mean')
         plot_mean_with_range(axes[0, 1], get_metric('F2_mean'), 'F2 均值 - 舌位', 'F2', 'F2_mean')
