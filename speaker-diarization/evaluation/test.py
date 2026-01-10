@@ -1,29 +1,47 @@
 import os
-import glob
 import 集成响度
 
-
-def get_sorted_wav_paths(folder_path=None):
+def get_sorted_wav_paths():
     """
-    获取文件夹中所有wav文件的路径，并按升序排序
-
-    参数:
-    folder_path: 文件夹路径，默认为当前文件所在文件夹
+    获取当前py文件所在文件夹里的全部wav文件路径，并按规则排序
 
     返回:
-    list: 排序后的wav文件路径列表
+        list: 排序后的wav文件完整路径列表
     """
-    # 如果未指定文件夹路径，使用当前文件所在文件夹
-    if folder_path is None:
-        folder_path = os.path.dirname(os.path.abspath(__file__))
+    # 获取当前py文件所在的目录
+    current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # 使用glob查找所有wav文件
-    wav_files = glob.glob(os.path.join(folder_path, "*.wav"))
+    # 获取目录中所有的.wav文件
+    wav_files = []
+    for file in os.listdir(current_dir):
+        if file.lower().endswith('.wav'):
+            full_path = os.path.join(current_dir, file)
+            wav_files.append(full_path)
 
-    # 按文件名升序排序
-    wav_files.sort()
+    # 定义排序函数
+    def sort_key(file_path):
+        # 获取文件名（不含路径）
+        filename = os.path.basename(file_path)
+        # 移除扩展名
+        name_without_ext = os.path.splitext(filename)[0]
 
-    return wav_files
+        # 检查文件名是否包含"_"
+        if "_" in name_without_ext:
+            # 使用"_"分割字符串
+            parts = name_without_ext.split("_")
+            # 检查最后一个部分是否是数字
+            last_part = parts[-1]
+            if last_part.isdigit():
+                # 转换为整数用于排序
+                return int(last_part)
+
+        # 如果不满足条件，直接使用文件名进行排序
+        return filename
+
+    # 对文件进行排序
+    sorted_files = sorted(wav_files, key=sort_key)
+
+    return sorted_files
 
 
 wav_files = get_sorted_wav_paths()
