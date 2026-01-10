@@ -67,5 +67,6 @@ wav_files = get_sorted_wav_paths()
 # import 共振峰分析;共振峰分析.analyze_formant_quality(wav_files)
 # import 振幅微扰;振幅微扰.analyze_shimmer_quality(wav_files)
 # import 零交叉率;零交叉率.analyze_zcr_quality(wav_files)
-import 高频能量异常;高频能量异常.analyze_hf_energy_ratio(wav_files)
-
+# import 高频能量异常;高频能量异常.analyze_hf_energy_ratio(wav_files)
+# import 信噪比估算;信噪比估算.analyze_audio_snr(wav_files)
+import 总谐波失真;总谐波失真.analyze_thdn(wav_files)

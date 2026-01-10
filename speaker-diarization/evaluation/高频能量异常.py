@@ -211,37 +211,84 @@ def analyze_hf_energy_ratio(wav_paths: list) -> dict:
         ax.plot(ma_x, moving_avg, '-', color='#9B59B6', linewidth=2.5,
                 label=f'{window}点移动平均', alpha=0.9)
 
-    # ========== 阈值线和区域 ==========
-    # 合理范围填充
-    ax.axhspan(5, 15, alpha=0.12, color='#27AE60', zorder=0)
-
-    # 阈值线
-    ax.axhline(y=15, color='#E74C3C', linestyle='--', linewidth=2,
-               label='过高阈值 (15%): 齿音爆炸/刺耳')
-    ax.axhline(y=5, color='#F39C12', linestyle='--', linewidth=2,
-               label='过低阈值 (5%): 模糊/老录音感')
-    ax.axhline(y=10, color='#27AE60', linestyle=':', linewidth=1.5,
-               alpha=0.7, label='理想中值 (10%)')
-
-    # ========== Y轴范围优化（放大差异） ==========
+    # ========== Y轴范围动态适配 ==========
     data_min, data_max = np.min(ratios), np.max(ratios)
     data_range = data_max - data_min
 
-    # 差异过小时放大显示
-    if data_range < 3:
-        center = (data_max + data_min) / 2
-        y_min = max(0, center - 4)
-        y_max = center + 4
-    else:
-        margin = max(data_range * 0.12, 1)
-        y_min = max(0, data_min - margin)
-        y_max = data_max + margin
+    # 计算数据的主要分布区间（使用四分位距IQR）
+    q1, q3 = np.percentile(ratios, [25, 75])
+    iqr = q3 - q1
 
-    # 确保关键阈值可见
-    y_min = min(y_min, 3.5)
-    y_max = max(y_max, 17)
+    if data_range < 1e-6:  # 所有值几乎相同的情况
+        y_min = max(0, data_min - 0.5)
+        y_max = data_max + 0.5
+    elif data_range < 0.5:  # 差异极小的情况
+        y_min = max(0, data_min - 0.3)
+        y_max = data_max + 0.3
+    elif data_range < 1.0:  # 差异较小的情况
+        y_min = max(0, data_min - 0.5)
+        y_max = data_max + 0.5
+    elif data_range < 2.0:  # 差异一般的情况
+        y_min = max(0, data_min - 0.8)
+        y_max = data_max + 0.8
+    elif data_range < 5.0:  # 差异较大的情况
+        y_min = max(0, q1 - iqr * 1.0)  # 下边界扩展到Q1下方1个IQR
+        y_max = q3 + iqr * 1.0  # 上边界扩展到Q3上方1个IQR
+    else:  # 差异很大的情况
+        # 使用数据的中心范围，去掉极端值的影响
+        y_min = max(0, q1 - iqr * 1.5)
+        y_max = q3 + iqr * 1.5
+
+    # 确保y轴范围有最小宽度
+    if (y_max - y_min) < 0.5:
+        center = (y_max + y_min) / 2
+        y_min = center - 0.25
+        y_max = center + 0.25
+
+    # 确保范围不会太小
+    if y_max <= y_min:
+        y_min = max(0, data_min - 1)
+        y_max = data_max + 1
 
     ax.set_ylim(y_min, y_max)
+
+    # ========== 添加阈值区域背景 ==========
+    # 只在阈值区域在可见范围内时才显示
+    if y_min <= 15 <= y_max or y_min <= 5 <= y_max:
+        ax.axhspan(max(y_min, 5), min(y_max, 15), alpha=0.12, color='#27AE60', zorder=0, label='合理范围 (5-15%)')
+
+    # ========== 阈值线（可选显示） ==========
+    # 只在阈值线不会过度挤压数据区间时才显示
+    threshold_lines = []
+
+    # 检查15%阈值线是否会过度影响显示
+    if 15 > data_max and (15 - data_max) > (y_max - y_min) * 0.3:
+        # 15%阈值线太高，会挤压数据区间，不显示
+        pass
+    elif 15 < data_min and (data_min - 15) > (y_max - y_min) * 0.3:
+        # 15%阈值线太低，会挤压数据区间，不显示
+        pass
+    else:
+        threshold_lines.append(15)
+        ax.axhline(y=15, color='#E74C3C', linestyle='--', linewidth=1.5,
+                   alpha=0.7, label='过高阈值 (15%)')
+
+    # 检查5%阈值线是否会过度影响显示
+    if 5 > data_max and (5 - data_max) > (y_max - y_min) * 0.3:
+        # 5%阈值线太高，会挤压数据区间，不显示
+        pass
+    elif 5 < data_min and (data_min - 5) > (y_max - y_min) * 0.3:
+        # 5%阈值线太低，会挤压数据区间，不显示
+        pass
+    else:
+        threshold_lines.append(5)
+        ax.axhline(y=5, color='#F39C12', linestyle='--', linewidth=1.5,
+                   alpha=0.7, label='过低阈值 (5%)')
+
+    # 如果数据主要在10%附近，显示理想中值
+    if abs(np.mean(ratios) - 10) < 5 and 10 >= y_min and 10 <= y_max:
+        ax.axhline(y=10, color='#27AE60', linestyle=':', linewidth=1.2,
+                   alpha=0.5, label='理想中值 (10%)')
 
     # ========== X轴标签处理 ==========
     ax.set_xlim(-0.5, n_files - 0.5)
@@ -268,9 +315,16 @@ def analyze_hf_energy_ratio(wav_paths: list) -> dict:
     # ========== 标题和轴标签 ==========
     ax.set_xlabel('文件 (按模型训练轮数递增 →)', fontsize=12, fontweight='medium')
     ax.set_ylabel('高频能量比例 (%)', fontsize=12, fontweight='medium')
-    ax.set_title('高频能量异常分析 (HF Energy Ratio)\n'
-                 '8kHz以上能量占比 · 检测NSF/GAN声码器问题',
-                 fontsize=14, fontweight='bold', pad=15)
+
+    # 动态调整标题
+    if len(threshold_lines) == 0:
+        ax.set_title('高频能量比例分析 (HF Energy Ratio)\n'
+                     '8kHz以上能量占比 · 自适应显示范围',
+                     fontsize=14, fontweight='bold', pad=15)
+    else:
+        ax.set_title('高频能量异常分析 (HF Energy Ratio)\n'
+                     '8kHz以上能量占比 · 检测NSF/GAN声码器问题',
+                     fontsize=14, fontweight='bold', pad=15)
 
     # ========== 图例 ==========
     legend = ax.legend(loc='upper left', fontsize=9, framealpha=0.95,
@@ -310,8 +364,9 @@ def analyze_hf_energy_ratio(wav_paths: list) -> dict:
         '● 绿色 (5%-15%): 正常，音质自然\n'
         '● 红色 (>15%): 过高，刺耳/齿音爆炸\n'
         '● 橙色 (<5%): 过低，模糊/老录音感\n\n'
-        '【建议】\n'
-        '选择指标稳定在合理范围内的模型轮次'
+        '【显示说明】\n'
+        'Y轴范围已动态适配数据区间\n'
+        '阈值线仅在不会过度挤压数据时显示'
     )
 
     # 说明文字 - 透明背景
