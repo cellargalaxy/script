@@ -301,26 +301,55 @@ def _visualize_results(valid_results: List[Dict[str, Any]]) -> None:
     # 绘制散点（带颜色编码）
     ax1.scatter(x, thdn_db_values, c=colors, s=60, zorder=2, edgecolors='white', linewidth=0.5)
 
-    # 添加参考线和区域
-    ax1.axhline(y=-60, color='#2ecc71', linestyle='--', linewidth=1.5, alpha=0.8)
-    ax1.axhline(y=-45, color='#3498db', linestyle='--', linewidth=1.5, alpha=0.8)
-    ax1.axhline(y=-30, color='#f39c12', linestyle='--', linewidth=1.5, alpha=0.8)
-
-    # 填充质量区域
-    y_min, y_max = ax1.get_ylim()
-    ax1.fill_between(x, -80, -60, alpha=0.1, color='#2ecc71')
-    ax1.fill_between(x, -60, -45, alpha=0.1, color='#3498db')
-    ax1.fill_between(x, -45, -30, alpha=0.1, color='#f39c12')
-    ax1.fill_between(x, -30, 0, alpha=0.1, color='#e74c3c')
-
-    # 动态调整Y轴范围（放大差异）
+    # ****************** 强化的动态Y轴调整 ******************
     data_min, data_max = thdn_db_values.min(), thdn_db_values.max()
     data_range = data_max - data_min
-    padding = max(data_range * 0.15, 3)  # 至少3dB的padding
-    ax1.set_ylim(data_min - padding, data_max + padding)
+
+    if data_range < 0.5:  # 如果差异非常小（小于0.5dB）
+        # 方法1：以数据均值为中心，显示相对较窄的范围
+        data_mean = np.mean(thdn_db_values)
+        # 确保至少显示1dB的范围
+        display_range = max(1.0, abs(data_range) * 10)  # 放大10倍
+        ax1.set_ylim(data_mean - display_range/2, data_mean + display_range/2)
+
+        # 在标题中添加特别说明
+        ax1.set_title(f'总谐波失真+噪声 (THD+N) - 值越低越好（差异小，已放大显示 {display_range:.1f}dB 范围）',
+                     fontsize=13, fontweight='bold', color='#e74c3c')
+
+        # 添加虚线网格以突出微小差异
+        ax1.yaxis.set_major_locator(plt.MultipleLocator(0.2))  # 每0.2dB一个刻度
+        ax1.grid(True, alpha=0.5, linestyle='-', linewidth=0.5)
+
+        # 高亮显示差异区域
+        if n_files > 1:
+            # 计算每个点相对于均值的偏移
+            offsets = thdn_db_values - data_mean
+            max_offset_idx = np.argmax(np.abs(offsets))
+            offset_value = offsets[max_offset_idx]
+
+            if abs(offset_value) > 0:
+                # 添加一个填充区域显示整个数据的范围
+                ax1.fill_between(x, data_min, data_max, alpha=0.2, color='#3498db',
+                                label=f'数据范围: {data_range:.3f}dB')
+                ax1.legend(loc='upper left', fontsize=8)
+
+    elif data_range < 5:  # 如果差异较小（小于5dB）
+        # 方法2：显著放大显示差异
+        data_mean = np.mean(thdn_db_values)
+        # 放大显示范围
+        display_range = max(data_range * 3, 5)  # 至少显示5dB范围
+        ax1.set_ylim(data_mean - display_range/2, data_mean + display_range/2)
+        ax1.set_title('总谐波失真+噪声 (THD+N) - 值越低越好（已放大显示差异）',
+                     fontsize=13, fontweight='bold')
+
+    else:
+        # 方法3：差异足够大，正常显示但添加适当padding
+        padding = data_range * 0.15  # 15%的padding
+        ax1.set_ylim(data_min - padding, data_max + padding)
+        ax1.set_title('总谐波失真+噪声 (THD+N) - 值越低越好（越干净）',
+                     fontsize=13, fontweight='bold')
 
     ax1.set_ylabel('THD+N (dB)', fontsize=11)
-    ax1.set_title('总谐波失真+噪声 (THD+N) - 值越低越好（越干净）', fontsize=13, fontweight='bold')
     ax1.set_xticks(x)
     ax1.set_xticklabels(short_names, rotation=rotation, ha='right', fontsize=font_size)
     ax1.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
@@ -336,44 +365,119 @@ def _visualize_results(valid_results: List[Dict[str, Any]]) -> None:
     ]
     ax1.legend(handles=legend_elements, loc='upper right', fontsize=9)
 
-    # 标注最佳和最差点
+    # 标注最佳和最差点（使用相对值显示差异）
     best_idx = np.argmin(thdn_db_values)
     worst_idx = np.argmax(thdn_db_values)
-    ax1.annotate(f'最佳\n{thdn_db_values[best_idx]:.1f}dB',
+
+    # 计算相对差值
+    if best_idx != worst_idx:
+        diff_value = thdn_db_values[worst_idx] - thdn_db_values[best_idx]
+        diff_text = f"差值: {diff_value:.2f}dB"
+    else:
+        diff_text = ""
+
+    # 改进的标注，显示相对位置
+    if n_files > 1:
+        # 找到最大值和最小值的索引
+        all_diffs = []
+        for i in range(n_files-1):
+            diff = abs(thdn_db_values[i+1] - thdn_db_values[i])
+            all_diffs.append(diff)
+
+        if all_diffs:
+            max_diff_idx = np.argmax(all_diffs)
+            max_diff = all_diffs[max_diff_idx]
+
+            # 标注最大变化点
+            if max_diff > 0.1:  # 只有变化明显时才标注
+                ax1.annotate(f'最大变化\n{max_diff:.2f}dB',
+                           xy=(max_diff_idx+1, thdn_db_values[max_diff_idx+1]),
+                           xytext=(5, 15), textcoords='offset points',
+                           fontsize=8, color='#9b59b6',
+                           bbox=dict(boxstyle="round,pad=0.3", facecolor='white', alpha=0.8),
+                           arrowprops=dict(arrowstyle='->', color='#9b59b6', lw=1))
+
+    # 标注最佳点
+    ax1.annotate(f'最佳\n{thdn_db_values[best_idx]:.3f}dB',
                  xy=(best_idx, thdn_db_values[best_idx]),
                  xytext=(10, -20), textcoords='offset points',
                  fontsize=8, color='#2ecc71',
+                 bbox=dict(boxstyle="round,pad=0.3", facecolor='white', alpha=0.8),
                  arrowprops=dict(arrowstyle='->', color='#2ecc71', lw=1))
-    if worst_idx != best_idx:
-        ax1.annotate(f'最差\n{thdn_db_values[worst_idx]:.1f}dB',
+
+    # 标注最差点
+    if worst_idx != best_idx and thdn_db_values[worst_idx] > thdn_db_values[best_idx] + 0.01:
+        ax1.annotate(f'最差\n{thdn_db_values[worst_idx]:.3f}dB\n{diff_text}',
                      xy=(worst_idx, thdn_db_values[worst_idx]),
                      xytext=(10, 20), textcoords='offset points',
                      fontsize=8, color='#e74c3c',
+                     bbox=dict(boxstyle="round,pad=0.3", facecolor='white', alpha=0.8),
                      arrowprops=dict(arrowstyle='->', color='#e74c3c', lw=1))
 
     # ====== 子图2: 削波率（柱状图） ======
     ax2 = fig.add_subplot(gs[1, 0])
 
-    bar_colors = ['#e74c3c' if v > 0.5 else '#f39c12' if v > 0.1 else '#2ecc71' for v in clip_ratios]
+    # *************** 强化削波率显示 ***************
+    clip_max = clip_ratios.max()
+    clip_min = clip_ratios.min()
+    clip_range = clip_max - clip_min
+
+    if clip_max == 0:
+        # 无削波情况
+        bar_colors = ['#2ecc71'] * n_files
+        ax2.set_ylim(0, 0.01)  # 非常小的范围
+        # 添加特别说明
+        ax2.text(0.5, 0.5, '无削波检测', transform=ax2.transAxes,
+                ha='center', va='center', fontsize=12, color='#2ecc71',
+                bbox=dict(boxstyle="round,pad=0.5", facecolor='white', edgecolor='#2ecc71'))
+
+    elif clip_range < 0.01:  # 削波率差异非常小
+        # 放大显示微小差异
+        clip_mean = np.mean(clip_ratios)
+        display_range = max(clip_range * 10, 0.05)  # 放大10倍，至少0.05%
+        y_min = max(0, clip_mean - display_range/2)
+        y_max = clip_mean + display_range/2
+
+        # 使用更鲜艳的颜色突出差异
+        normalized_clip = (clip_ratios - clip_min) / clip_range if clip_range > 0 else np.zeros_like(clip_ratios)
+        bar_colors = plt.cm.RdYlGn_r(normalized_clip)  # 从绿到红的渐变
+
+        ax2.set_ylim(y_min, y_max)
+        ax2.yaxis.set_major_locator(plt.MultipleLocator(0.01))  # 每0.01%一个刻度
+        ax2.set_title(f'削波失真检测（差异小，已放大{display_range*100:.1f}倍显示）',
+                     fontsize=12, fontweight='bold', color='#e74c3c')
+
+    elif clip_range < 0.1:  # 削波率差异较小
+        # 适当放大
+        y_max = clip_max * 2 if clip_max < 0.5 else clip_max * 1.5
+        bar_colors = ['#e74c3c' if v > 0.5 else '#f39c12' if v > 0.1 else '#2ecc71' for v in clip_ratios]
+        ax2.set_ylim(0, y_max)
+        ax2.set_title('削波失真检测 - 高值表示破音/过载', fontsize=12, fontweight='bold')
+
+    else:
+        # 正常范围
+        y_max = clip_max * 1.15
+        bar_colors = ['#e74c3c' if v > 0.5 else '#f39c12' if v > 0.1 else '#2ecc71' for v in clip_ratios]
+        ax2.set_ylim(0, y_max)
+        ax2.set_title('削波失真检测 - 高值表示破音/过载', fontsize=12, fontweight='bold')
+
     bars = ax2.bar(x, clip_ratios, color=bar_colors, alpha=0.8, edgecolor='white', linewidth=0.5)
 
-    # 参考线
-    ax2.axhline(y=0.1, color='#f39c12', linestyle='--', linewidth=1.5, label='警戒线 (0.1%)')
-    ax2.axhline(y=0.5, color='#e74c3c', linestyle='--', linewidth=1.5, label='严重 (0.5%)')
-
     ax2.set_ylabel('削波率 (%)', fontsize=11)
-    ax2.set_title('削波失真检测 - 高值表示破音/过载', fontsize=12, fontweight='bold')
     ax2.set_xticks(x)
     ax2.set_xticklabels(short_names, rotation=rotation, ha='right', fontsize=font_size)
-    ax2.legend(loc='upper right', fontsize=9)
     ax2.grid(True, alpha=0.3, axis='y')
     ax2.set_xlim(-0.5, n_files - 0.5)
 
-    # 动态调整Y轴
-    if clip_ratios.max() > 0:
-        ax2.set_ylim(0, clip_ratios.max() * 1.2 + 0.05)
-    else:
-        ax2.set_ylim(0, 0.2)
+    # 标注最大削波率
+    if clip_max > 0:
+        max_clip_idx = np.argmax(clip_ratios)
+        ax2.annotate(f'最高\n{clip_ratios[max_clip_idx]:.3f}%',
+                    xy=(max_clip_idx, clip_ratios[max_clip_idx]),
+                    xytext=(0, 10), textcoords='offset points',
+                    fontsize=8, color='#e74c3c',
+                    ha='center',
+                    bbox=dict(boxstyle="round,pad=0.3", facecolor='white', alpha=0.8))
 
     # ====== 子图3: 信噪比和高频失真（双Y轴） ======
     ax3 = fig.add_subplot(gs[1, 1])
@@ -386,12 +490,40 @@ def _visualize_results(valid_results: List[Dict[str, Any]]) -> None:
     # 高频失真比例（折线图）
     ax3_twin.plot(x, hf_ratios, 'o-', color='#9b59b6', linewidth=2, markersize=4, label='高频失真比 (%)')
 
-    ax3.axhline(y=40, color='#2ecc71', linestyle=':', linewidth=1, alpha=0.7)
-    ax3.axhline(y=25, color='#f39c12', linestyle=':', linewidth=1, alpha=0.7)
+    # *************** 强化信噪比显示 ***************
+    snr_min, snr_max = snr_values.min(), snr_values.max()
+    snr_range = snr_max - snr_min
+
+    if snr_range < 5:  # 信噪比差异小
+        snr_mean = np.mean(snr_values)
+        display_range = max(snr_range * 3, 10)  # 放大3倍，至少10dB范围
+        ax3.set_ylim(snr_mean - display_range/2, snr_mean + display_range/2)
+        ax3.set_title(f'信噪比分析（差异小，已放大显示）', fontsize=12, fontweight='bold')
+        ax3.yaxis.set_major_locator(plt.MultipleLocator(1))  # 每1dB一个刻度
+    else:
+        padding = snr_range * 0.1
+        ax3.set_ylim(snr_min - padding, snr_max + padding)
+        ax3.set_title('信噪比 & 高频失真分析', fontsize=12, fontweight='bold')
+
+    # *************** 强化高频失真显示 ***************
+    hf_min, hf_max = hf_ratios.min(), hf_ratios.max()
+    hf_range = hf_max - hf_min
+
+    if hf_max == 0:
+        ax3_twin.set_ylim(0, 0.1)
+    elif hf_range < 0.05:  # 高频失真差异非常小
+        hf_mean = np.mean(hf_ratios)
+        display_range = max(hf_range * 10, 0.1)  # 放大10倍，至少0.1%
+        ax3_twin.set_ylim(hf_mean - display_range/2, hf_mean + display_range/2)
+        ax3_twin.yaxis.set_major_locator(plt.MultipleLocator(0.02))  # 每0.02%一个刻度
+    elif hf_range < 0.5:  # 高频失真差异较小
+        display_range = max(hf_range * 2, 0.5)  # 放大2倍
+        ax3_twin.set_ylim(max(0, hf_min - display_range*0.1), hf_max + display_range*0.5)
+    else:
+        ax3_twin.set_ylim(0, hf_max * 1.2)
 
     ax3.set_ylabel('信噪比 SNR (dB)', fontsize=11, color='#3498db')
     ax3_twin.set_ylabel('高频失真比 (%)', fontsize=11, color='#9b59b6')
-    ax3.set_title('信噪比 & 高频失真分析', fontsize=12, fontweight='bold')
     ax3.set_xticks(x)
     ax3.set_xticklabels(short_names, rotation=rotation, ha='right', fontsize=font_size)
     ax3.grid(True, alpha=0.3, axis='y')
@@ -401,6 +533,15 @@ def _visualize_results(valid_results: List[Dict[str, Any]]) -> None:
     lines1, labels1 = ax3.get_legend_handles_labels()
     lines2, labels2 = ax3_twin.get_legend_handles_labels()
     ax3.legend(lines1 + lines2, labels1 + labels2, loc='upper right', fontsize=9)
+
+    # 标注最佳信噪比
+    best_snr_idx = np.argmax(snr_values)
+    ax3.annotate(f'最佳SNR\n{snr_values[best_snr_idx]:.1f}dB',
+                xy=(best_snr_idx, snr_values[best_snr_idx]),
+                xytext=(0, 10), textcoords='offset points',
+                fontsize=7, color='#2ecc71',
+                ha='center',
+                bbox=dict(boxstyle="round,pad=0.3", facecolor='white', alpha=0.8))
 
     # ====== 说明文字区域 ======
     ax_text = fig.add_subplot(gs[2, :])
@@ -414,6 +555,20 @@ def _visualize_results(valid_results: List[Dict[str, Any]]) -> None:
     fair_count = np.sum((thdn_db_values >= -45) & (thdn_db_values < -30))
     poor_count = np.sum(thdn_db_values >= -30)
 
+    # 计算动态范围信息
+    thdn_range = thdn_db_values.max() - thdn_db_values.min()
+    clip_range = clip_ratios.max() - clip_ratios.min()
+    snr_range_val = snr_values.max() - snr_values.min()
+
+    # 添加动态范围说明
+    range_info = ""
+    if thdn_range < 1:
+        range_info += f"• THD+N差异极小 ({thdn_range:.3f}dB)，图表已放大显示\n"
+    if clip_range < 0.01 and clip_ratios.max() > 0:
+        range_info += f"• 削波率差异极小 ({clip_range:.4f}%)，图表已放大显示\n"
+    if snr_range_val < 2:
+        range_info += f"• 信噪比差异极小 ({snr_range_val:.2f}dB)，图表已放大显示\n"
+
     description = f"""
 【THD+N 总谐波失真+噪声 评估说明】
 
@@ -423,11 +578,13 @@ def _visualize_results(valid_results: List[Dict[str, Any]]) -> None:
 ▶ 信噪比：> 40dB 优秀 | 25~40dB 良好 | < 25dB 较差。高频失真比过高可能表示存在数字处理产生的伪影。
 
 【本次分析统计】
-• 文件总数: {len(valid_results)} | 平均THD+N: {avg_thdn:.2f}dB (±{std_thdn:.2f})
+• 文件总数: {len(valid_results)} | 平均THD+N: {avg_thdn:.3f}dB (±{std_thdn:.3f})
 • 质量分布: 优秀({excellent_count}) | 良好({good_count}) | 一般({fair_count}) | 较差({poor_count})
-• 最佳: {valid_results[best_idx]['file_name']} ({thdn_db_values[best_idx]:.2f}dB)
-• 最差: {valid_results[worst_idx]['file_name']} ({thdn_db_values[worst_idx]:.2f}dB)
-• 趋势: {'↗ 随轮数增加质量下降' if thdn_db_values[-1] > thdn_db_values[0] + 3 else '↘ 随轮数增加质量提升' if thdn_db_values[-1] < thdn_db_values[0] - 3 else '→ 质量相对稳定'}
+• 最佳: {valid_results[best_idx]['file_name']} ({thdn_db_values[best_idx]:.3f}dB)
+• 最差: {valid_results[worst_idx]['file_name']} ({thdn_db_values[worst_idx]:.3f}dB)
+• THD+N数据范围: {thdn_range:.3f}dB (最小{thdn_db_values.min():.3f}dB, 最大{thdn_db_values.max():.3f}dB)
+{range_info}
+• 趋势: {'↗ 随轮数增加质量下降' if thdn_db_values[-1] > thdn_db_values[0] + 0.5 else '↘ 随轮数增加质量提升' if thdn_db_values[-1] < thdn_db_values[0] - 0.5 else '→ 质量相对稳定'}
     """
 
     ax_text.text(0.02, 0.95, description, transform=ax_text.transAxes,
@@ -436,7 +593,7 @@ def _visualize_results(valid_results: List[Dict[str, Any]]) -> None:
                  bbox=dict(boxstyle='round,pad=0.5', facecolor='none', edgecolor='#cccccc', alpha=0.8))
 
     # 总标题
-    fig.suptitle('AI翻唱音频质量分析 - THD+N 综合评估报告',
+    fig.suptitle('AI翻唱音频质量分析 - THD+N 综合评估报告（已优化显示差异）',
                  fontsize=16, fontweight='bold', y=0.98)
 
     plt.tight_layout(rect=[0, 0, 1, 0.96])
@@ -459,4 +616,4 @@ if __name__ == "__main__":
     # 打印详细结果
     # for r in results:
     #     if r['success']:
-    #         print(f"{r['file_name']}: THD+N={r['thdn_db']:.2f}dB ({r['quality_rating']})")
+    #         print(f"{r['file_name']}: THD+N={r['thdn_db']:.3f}dB ({r['quality_rating']})")
