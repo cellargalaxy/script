@@ -19,336 +19,460 @@
     + 波动太大：不稳定，破音风险
 """
 
-# pip install numpy librosa matplotlib scipy
+# pip install numpy scipy matplotlib pyloudnorm
+
 
 """
-AI翻唱音频质量分析 - 短时响度波动 (Short-term Loudness Variance)
+短时响度波动分析工具 (Short-term Loudness Variance Analyzer)
+
+依赖安装:
+pip install numpy scipy matplotlib pyloudnorm
+
+使用示例:
+    wav_files = ["epoch_100.wav", "epoch_200.wav", "epoch_300.wav", ...]
+    results = analyze_short_term_loudness_variance(wav_files)
 """
 
-import numpy as np
-import librosa
-import matplotlib.pyplot as plt
-from typing import List, Dict, Optional
 import os
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.io import wavfile
+
+"""
+短时响度波动分析工具 (Short-term Loudness Variance Analyzer)
+
+依赖安装:
+pip install numpy scipy matplotlib pyloudnorm
+
+使用示例:
+    wav_files = ["epoch_100.wav", "epoch_200.wav", "epoch_300.wav", ...]
+    results = analyze_short_term_loudness_variance(wav_files)
+"""
+
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.io import wavfile
+
+"""
+短时响度波动分析工具 (Short-term Loudness Variance Analyzer)
+
+依赖安装:
+pip install numpy scipy matplotlib pyloudnorm
+
+使用示例:
+    wav_files = ["epoch_100.wav", "epoch_200.wav", "epoch_300.wav", ...]
+    results = analyze_short_term_loudness_variance(wav_files)
+"""
+
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.io import wavfile
 
 
 def analyze_short_term_loudness_variance(
-        wav_paths: List[str],
+        wav_paths: list[str],
         window_sec: float = 3.0,
-        save_path: Optional[str] = None,
-        show_plot: bool = True
-) -> Dict:
+        hop_sec: float = 0.5,
+        output_path: str = "loudness_variance_analysis.png"
+) -> list[dict]:
     """
-    分析AI翻唱wav文件的短时响度波动（Short-term Loudness Variance）
+    分析多个WAV文件的短时响度波动，并生成可视化对比图表。
 
     参数:
-        wav_paths: wav文件路径列表
+        wav_paths: WAV文件路径的字符串数组（已按模型轮数排序）
         window_sec: 短时窗口长度（秒），默认3秒
-        save_path: 图表保存路径，默认None不保存
-        show_plot: 是否显示图表，默认True
+        hop_sec: 窗口滑动步长（秒），默认0.5秒
+        output_path: 图表保存路径
 
     返回:
-        results: 包含各文件分析结果的字典
+        包含每个文件分析结果的字典列表
     """
 
-    # ==================== 配置字体 ====================
-    plt.rcParams['font.family'] = ['Microsoft YaHei', 'SimHei', 'PingFang SC',
-                                   'Hiragino Sans GB', 'Arial', 'sans-serif']
-    plt.rcParams['axes.unicode_minus'] = False
-    plt.rcParams['font.size'] = 10
+    # ========================
+    # 1. 导入并检查依赖
+    # ========================
+    try:
+        import pyloudnorm as pyln
+    except ImportError:
+        raise ImportError(
+            "缺少依赖库，请运行: pip install pyloudnorm"
+        )
 
-    # ==================== 数据处理 ====================
-    results = {}
+    # ========================
+    # 2. 设置中文字体
+    # ========================
+    def setup_chinese_font():
+        """设置支持中文的字体"""
+        import matplotlib.font_manager as fm
 
-    for path in wav_paths:
-        if not os.path.exists(path):
-            print(f"⚠️ 警告: 文件不存在 - {path}")
-            continue
+        # 候选中文字体列表（按优先级排序）
+        chinese_fonts = [
+            'SimHei',  # Windows 黑体
+            'Microsoft YaHei',  # Windows 微软雅黑
+            'PingFang SC',  # macOS 苹方
+            'Heiti SC',  # macOS 黑体
+            'WenQuanYi Micro Hei',  # Linux 文泉驿微米黑
+            'Noto Sans CJK SC',  # Google Noto 中文
+            'Source Han Sans SC',  # 思源黑体
+            'DejaVu Sans',  # 备用
+        ]
 
-        try:
-            # 加载音频
-            y, sr = librosa.load(path, sr=None, mono=True)
+        # 获取系统可用字体
+        available_fonts = set(f.name for f in fm.fontManager.ttflist)
 
-            # 计算帧级RMS（100ms帧，50ms跳跃）
-            frame_length = int(0.1 * sr)
-            hop_length = int(0.05 * sr)
+        # 查找第一个可用的中文字体
+        selected_font = 'DejaVu Sans'  # 默认备选
+        for font in chinese_fonts:
+            if font in available_fonts:
+                selected_font = font
+                break
 
-            rms = librosa.feature.rms(y=y, frame_length=frame_length, hop_length=hop_length)[0]
-            rms_db = librosa.amplitude_to_db(rms + 1e-10, ref=np.max(rms) if np.max(rms) > 0 else 1.0)
+        plt.rcParams['font.sans-serif'] = [selected_font] + chinese_fonts
+        plt.rcParams['axes.unicode_minus'] = False
 
-            # 计算短时响度（窗口内平均）
-            window_frames = max(1, int(window_sec / (hop_length / sr)))
-            hop_frames = max(1, window_frames // 2)
+        return selected_font
 
-            short_term_loudness = []
-            time_points = []
+    # ========================
+    # 3. 内部辅助函数
+    # ========================
+    def load_audio(path: str) -> tuple[np.ndarray, int]:
+        """加载WAV文件并归一化为 [-1, 1] 的单声道音频"""
+        sr, audio = wavfile.read(path)
 
-            for i in range(0, len(rms_db) - window_frames + 1, hop_frames):
-                window = rms_db[i:i + window_frames]
-                short_term_loudness.append(np.mean(window))
-                time_points.append((i + window_frames / 2) * hop_length / sr)
+        # 转换为 float64 并归一化
+        if audio.dtype == np.int16:
+            audio = audio.astype(np.float64) / 32768.0
+        elif audio.dtype == np.int32:
+            audio = audio.astype(np.float64) / 2147483648.0
+        elif audio.dtype == np.float32:
+            audio = audio.astype(np.float64)
+        elif audio.dtype == np.uint8:
+            audio = (audio.astype(np.float64) - 128) / 128.0
 
-            if len(short_term_loudness) < 2:
-                print(f"⚠️ 警告: 音频过短，跳过 - {path}")
+        # 立体声转单声道
+        if len(audio.shape) > 1:
+            audio = np.mean(audio, axis=1)
+
+        return audio, sr
+
+    def compute_short_term_loudness(
+            audio: np.ndarray,
+            sr: int,
+            window_sec: float,
+            hop_sec: float
+    ) -> np.ndarray:
+        """计算短时响度序列 (LUFS)"""
+        meter = pyln.Meter(sr)
+        window_samples = int(window_sec * sr)
+        hop_samples = int(hop_sec * sr)
+
+        loudness_values = []
+        for start in range(0, len(audio) - window_samples + 1, hop_samples):
+            segment = audio[start:start + window_samples]
+            try:
+                loudness = meter.integrated_loudness(segment)
+                if np.isfinite(loudness):
+                    loudness_values.append(loudness)
+            except Exception:
                 continue
 
-            short_term_loudness = np.array(short_term_loudness)
-            time_points = np.array(time_points)
+        return np.array(loudness_values) if loudness_values else np.array([-70.0])
 
-            # 计算统计量
-            variance = float(np.var(short_term_loudness))
-            std = float(np.std(short_term_loudness))
-            mean_loudness = float(np.mean(short_term_loudness))
-            dynamic_range = float(np.ptp(short_term_loudness))
+    def truncate_name(name: str, max_len: int = 20) -> str:
+        """截断过长的文件名"""
+        name = os.path.splitext(name)[0]  # 移除扩展名
+        if len(name) > max_len:
+            return name[:max_len - 2] + ".."
+        return name
 
-            filename = os.path.basename(path)
-            results[filename] = {
+    # ========================
+    # 4. 分析所有文件
+    # ========================
+    results = []
+    print(f"正在分析 {len(wav_paths)} 个文件...")
+
+    for i, path in enumerate(wav_paths):
+        try:
+            audio, sr = load_audio(path)
+            loudness_seq = compute_short_term_loudness(audio, sr, window_sec, hop_sec)
+
+            result = {
+                'index': i + 1,
                 'path': path,
-                'short_term_loudness': short_term_loudness,
-                'time_points': time_points,
-                'variance': variance,
-                'std': std,
-                'mean': mean_loudness,
-                'dynamic_range': dynamic_range,
-                'duration': len(y) / sr
+                'name': os.path.basename(path),
+                'variance': float(np.var(loudness_seq)),
+                'std': float(np.std(loudness_seq)),
+                'mean_loudness': float(np.mean(loudness_seq)),
+                'min_loudness': float(np.min(loudness_seq)),
+                'max_loudness': float(np.max(loudness_seq)),
+                'loudness_seq': loudness_seq,
+                'duration_sec': len(audio) / sr
             }
+            results.append(result)
+            print(f"  [{i + 1}/{len(wav_paths)}] {result['name']}: 标准差={result['std']:.2f} dB")
 
         except Exception as e:
-            print(f"❌ 处理失败 {path}: {e}")
-            continue
+            print(f"  [{i + 1}/{len(wav_paths)}] 错误处理 {path}: {e}")
+            results.append({
+                'index': i + 1,
+                'path': path,
+                'name': os.path.basename(path),
+                'variance': np.nan,
+                'std': np.nan,
+                'mean_loudness': np.nan,
+                'min_loudness': np.nan,
+                'max_loudness': np.nan,
+                'loudness_seq': np.array([]),
+                'duration_sec': 0,
+                'error': str(e)
+            })
 
-    if not results:
-        print("❌ 没有成功处理任何文件")
-        return {}
+    # ========================
+    # 5. 可视化
+    # ========================
 
-    # ==================== 可视化 ====================
-    _create_loudness_charts(results, window_sec, save_path, show_plot)
+    # 设置中文字体
+    used_font = setup_chinese_font()
+    print(f"使用字体: {used_font}")
+
+    n_files = len(results)
+    valid_results = [r for r in results if np.isfinite(r['std'])]
+
+    if not valid_results:
+        print("没有有效的分析结果！")
+        return results
+
+    # 计算图表尺寸
+    fig_width = max(14, n_files * 0.4)
+    fig_height = 16
+
+    fig = plt.figure(figsize=(fig_width, fig_height))
+
+    # 定义阈值
+    THRESHOLD_LOW = 2.0  # 低于此值：情感死板
+    THRESHOLD_HIGH = 6.0  # 高于此值：不稳定
+
+    # ---- 图1: 短时响度标准差趋势图 (主图) ----
+    ax1 = fig.add_subplot(3, 1, 1)
+
+    x = np.arange(n_files)
+    stds = np.array([r['std'] for r in results])
+
+    # 根据阈值着色
+    colors = []
+    for s in stds:
+        if np.isnan(s):
+            colors.append('gray')
+        elif s < THRESHOLD_LOW:
+            colors.append('#FF6B6B')  # 红色：太小
+        elif s > THRESHOLD_HIGH:
+            colors.append('#FFA500')  # 橙色：太大
+        else:
+            colors.append('#4ECDC4')  # 青色：适中
+
+    # 柱状图
+    bars = ax1.bar(x, stds, color=colors, alpha=0.8, edgecolor='white', linewidth=0.5)
+
+    # 趋势线
+    valid_mask = np.isfinite(stds)
+    if np.sum(valid_mask) > 1:
+        z = np.polyfit(x[valid_mask], stds[valid_mask], 1)
+        p = np.poly1d(z)
+        ax1.plot(x, p(x), '--', color='#2C3E50', linewidth=2, label='趋势线', alpha=0.7)
+
+    # 理想范围阴影
+    ax1.axhspan(THRESHOLD_LOW, THRESHOLD_HIGH, alpha=0.15, color='green',
+                label=f'理想范围 ({THRESHOLD_LOW}-{THRESHOLD_HIGH} dB)')
+    ax1.axhline(y=THRESHOLD_LOW, color='green', linestyle='--', linewidth=1.5, alpha=0.8)
+    ax1.axhline(y=THRESHOLD_HIGH, color='green', linestyle='--', linewidth=1.5, alpha=0.8)
+
+    # 动态调整Y轴范围以放大差异
+    valid_stds = stds[valid_mask]
+    if len(valid_stds) > 0:
+        y_min = max(0, np.min(valid_stds) - 1.5)
+        y_max = np.max(valid_stds) + 1.5
+        # 确保理想范围可见
+        y_min = min(y_min, THRESHOLD_LOW - 0.5)
+        y_max = max(y_max, THRESHOLD_HIGH + 0.5)
+        ax1.set_ylim(y_min, y_max)
+
+    # X轴标签
+    labels = [truncate_name(r['name'], 15) for r in results]
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(labels, rotation=60, ha='right', fontsize=8)
+
+    # 在柱顶显示数值
+    for i, (bar, std_val) in enumerate(zip(bars, stds)):
+        if np.isfinite(std_val):
+            ax1.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.1,
+                     f'{std_val:.1f}', ha='center', va='bottom', fontsize=7, rotation=0)
+
+    ax1.set_xlabel('文件（按训练轮数排序 →）', fontsize=11)
+    ax1.set_ylabel('短时响度标准差 (dB)', fontsize=11)
+    ax1.set_title('短时响度波动分析 (Short-term Loudness Variance)', fontsize=14, fontweight='bold', pad=15)
+    ax1.legend(loc='upper right', fontsize=9)
+    ax1.grid(axis='y', alpha=0.3, linestyle='-', linewidth=0.5)
+    ax1.set_xlim(-0.5, n_files - 0.5)
+
+    # 中文说明文字框
+    description = (
+        "【指标说明】\n"
+        "短时响度波动：衡量短时间窗（3秒）内响度变化程度，反映情感表达的动态性 用于判断是否全程一个音量（情感死板）或压缩过度。\n"
+    "【阈值判断】\n"
+    f"  ✓ 适中 ({THRESHOLD_LOW}-{THRESHOLD_HIGH} dB)：自然起伏，富有情感   ✗ 过小 (< {THRESHOLD_LOW} dB)：情感死板，缺乏变化   ✗ 过大 (> {THRESHOLD_HIGH} dB)：不稳定，有破音风险\n"
+    "【颜色含义】\n"
+    "  ● 青色 = 理想范围   ● 红色 = 波动太小（情感死板）   ● 橙色 = 波动太大（不稳定）"
+    )
+    ax1.text(0.02, 0.97, description, transform=ax1.transAxes,
+             verticalalignment='top', fontsize=9,
+             bbox=dict(boxstyle='round,pad=0.5', facecolor='#F8F9FA',
+                       edgecolor='#DEE2E6', alpha=0.95),
+             linespacing=1.4)
+
+    # ---- 图2: 响度动态范围对比 ----
+    ax2 = fig.add_subplot(3, 1, 2)
+
+    means = np.array([r['mean_loudness'] for r in results])
+    mins = np.array([r['min_loudness'] for r in results])
+    maxs = np.array([r['max_loudness'] for r in results])
+
+    # 绘制范围（误差棒样式）
+    for i, r in enumerate(results):
+        if np.isfinite(r['mean_loudness']):
+            ax2.plot([i, i], [r['min_loudness'], r['max_loudness']],
+                     color='#3498DB', linewidth=2, alpha=0.6)
+            ax2.scatter([i], [r['mean_loudness']], color='#E74C3C',
+                        s=30, zorder=5, edgecolor='white', linewidth=0.5)
+
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(labels, rotation=60, ha='right', fontsize=8)
+    ax2.set_xlabel('文件（按训练轮数排序 →）', fontsize=11)
+    ax2.set_ylabel('响度 (LUFS)', fontsize=11)
+    ax2.set_title('响度动态范围对比（最小值 - 平均值 - 最大值）', fontsize=12, fontweight='bold')
+    ax2.grid(axis='y', alpha=0.3)
+    ax2.set_xlim(-0.5, n_files - 0.5)
+
+    # 图例
+    ax2.plot([], [], color='#3498DB', linewidth=2, label='动态范围（最小-最大）')
+    ax2.scatter([], [], color='#E74C3C', s=30, label='平均响度')
+    ax2.legend(loc='upper right', fontsize=9)
+
+    # 图2说明
+    desc2 = (
+        "【图表说明】\n"
+        "蓝色线段表示响度的最小值到最大值范围 红点表示平均响度值 范围越大说明动态变化越丰富"
+    )
+    ax2.text(0.02, 0.97, desc2, transform=ax2.transAxes,
+             verticalalignment='top', fontsize=9,
+             bbox=dict(boxstyle='round,pad=0.4', facecolor='#FFF9E6',
+                       edgecolor='#F0E68C', alpha=0.95),
+             linespacing=1.3)
+
+    # ---- 图3: 响度时序热力图 ----
+    ax3 = fig.add_subplot(3, 1, 3)
+
+    # 将所有响度序列对齐到相同长度
+    max_len = max(len(r['loudness_seq']) for r in results if len(r['loudness_seq']) > 0)
+    if max_len > 0:
+        heatmap_data = np.full((n_files, max_len), np.nan)
+        for i, r in enumerate(results):
+            seq = r['loudness_seq']
+            if len(seq) > 0:
+                # 重采样到统一长度
+                if len(seq) < max_len:
+                    indices = np.linspace(0, len(seq) - 1, max_len).astype(int)
+                    heatmap_data[i, :] = seq[indices]
+                else:
+                    heatmap_data[i, :] = seq[:max_len]
+
+        # 绘制热力图
+        im = ax3.imshow(heatmap_data, aspect='auto', cmap='RdYlBu_r',
+                        vmin=np.nanpercentile(heatmap_data, 5),
+                        vmax=np.nanpercentile(heatmap_data, 95))
+
+        # 设置标签
+        ax3.set_yticks(np.arange(n_files))
+        ax3.set_yticklabels(labels, fontsize=8)
+        ax3.set_xlabel('时间（归一化）', fontsize=11)
+        ax3.set_ylabel('文件', fontsize=11)
+        ax3.set_title('响度时序热力图（红色=响亮，蓝色=安静）',
+                      fontsize=12, fontweight='bold')
+
+        # 颜色条
+        cbar = plt.colorbar(im, ax=ax3, shrink=0.8, pad=0.02)
+        cbar.set_label('响度 (LUFS)', fontsize=10)
+
+    # 图3说明
+    desc3 = (
+        "【图表说明】\n"
+        "热力图展示每个文件在整个时间轴上的响度变化\n"
+        "颜色越红表示越响亮，越蓝表示越安静\n"
+        "颜色变化丰富说明情感表达更有层次"
+    )
+    ax3.text(0.02, 0.95, desc3, transform=ax3.transAxes,
+             verticalalignment='top', fontsize=9,
+             bbox=dict(boxstyle='round,pad=0.4', facecolor='#E8F8F5',
+                       edgecolor='#A3E4D7', alpha=0.95),
+             linespacing=1.3)
+
+    # ========================
+    # 6. 保存和显示
+    # ========================
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150, bbox_inches='tight', facecolor='white')
+    print(f"\n图表已保存至: {output_path}")
+    plt.show()
+
+    # ========================
+    # 7. 打印统计摘要
+    # ========================
+    print("\n" + "=" * 60)
+    print("分析摘要")
+    print("=" * 60)
+
+    valid_stds = [r['std'] for r in results if np.isfinite(r['std'])]
+    if valid_stds:
+        ideal_count = sum(1 for s in valid_stds if THRESHOLD_LOW <= s <= THRESHOLD_HIGH)
+        low_count = sum(1 for s in valid_stds if s < THRESHOLD_LOW)
+        high_count = sum(1 for s in valid_stds if s > THRESHOLD_HIGH)
+
+        print(f"文件总数: {n_files}")
+        print(f"有效文件: {len(valid_stds)}")
+        print(f"标准差范围: {min(valid_stds):.2f} - {max(valid_stds):.2f} dB")
+        print(f"\n【质量分布】")
+        print(f"  ✓ 理想范围 ({THRESHOLD_LOW}-{THRESHOLD_HIGH} dB): {ideal_count} 个文件")
+        print(f"  ✗ 情感死板 (< {THRESHOLD_LOW} dB): {low_count} 个文件")
+        print(f"  ✗ 不稳定 (> {THRESHOLD_HIGH} dB): {high_count} 个文件")
+
+        # 找出最接近理想值的文件
+        ideal_center = (THRESHOLD_LOW + THRESHOLD_HIGH) / 2
+        best_file = min(valid_results, key=lambda r: abs(r['std'] - ideal_center))
+        print(f"\n【推荐】最佳文件: {best_file['name']}")
+        print(f"         标准差: {best_file['std']:.2f} dB (最接近理想中值 {ideal_center} dB)")
+
+    print("=" * 60)
 
     return results
 
 
-def _get_rating(variance: float) -> tuple:
-    """根据方差值返回评级和颜色"""
-    if variance < 5:
-        return "情感死板", "#3498db", "波动过小"
-    elif variance <= 25:
-        return "自然起伏 ✓", "#27ae60", "良好"
-    elif variance <= 50:
-        return "波动较大", "#f39c12", "需注意"
-    else:
-        return "不稳定", "#e74c3c", "风险高"
-
-
-def _create_loudness_charts(results: Dict, window_sec: float,
-                            save_path: Optional[str], show_plot: bool):
-    """创建可视化图表"""
-
-    filenames = list(results.keys())
-    n_files = len(filenames)
-
-    # 提取数据
-    variances = [results[f]['variance'] for f in filenames]
-    stds = [results[f]['std'] for f in filenames]
-
-    # 颜色方案
-    colors = plt.cm.Set2(np.linspace(0, 1, max(n_files, 8)))[:n_files]
-
-    # 创建图表布局
-    fig = plt.figure(figsize=(16, 14))
-    gs = fig.add_gridspec(3, 2, height_ratios=[1, 1, 0.7], hspace=0.32, wspace=0.22)
-
-    # 简化文件名显示
-    def short_name(name, max_len=16):
-        return name[:max_len - 2] + '..' if len(name) > max_len else name
-
-    short_names = [short_name(f) for f in filenames]
-
-    # ============ 图1: 方差对比（核心指标）============
-    ax1 = fig.add_subplot(gs[0, 0])
-
-    x_pos = np.arange(n_files)
-    bar_colors = [_get_rating(v)[1] for v in variances]
-    bars1 = ax1.bar(x_pos, variances, color=bar_colors, edgecolor='black', linewidth=1.2, alpha=0.85)
-
-    # 阈值区域（背景色块）
-    y_max = max(max(variances) * 1.35, 55)
-    ax1.axhspan(0, 5, alpha=0.12, color='#3498db')
-    ax1.axhspan(5, 25, alpha=0.12, color='#27ae60')
-    ax1.axhspan(25, 50, alpha=0.12, color='#f39c12')
-    ax1.axhspan(50, y_max, alpha=0.12, color='#e74c3c')
-
-    # 阈值线
-    ax1.axhline(y=5, color='#3498db', linestyle='--', linewidth=2, label='下限 (5 dB²)')
-    ax1.axhline(y=25, color='#27ae60', linestyle='--', linewidth=2, label='良好上限 (25 dB²)')
-    ax1.axhline(y=50, color='#e74c3c', linestyle='--', linewidth=2, label='风险线 (50 dB²)')
-
-    # 动态调整Y轴范围（放大差异）
-    if len(set(variances)) > 1:
-        var_range = max(variances) - min(variances)
-        y_min = max(0, min(variances) - var_range * 0.2)
-        y_max = max(variances) + var_range * 0.3
-        # 确保阈值线可见
-        y_max = max(y_max, 30)
-    else:
-        y_min, y_max = 0, max(variances) * 1.5
-    ax1.set_ylim(y_min, y_max)
-
-    # 数值标签
-    for bar, var in zip(bars1, variances):
-        ax1.annotate(f'{var:.2f}', xy=(bar.get_x() + bar.get_width() / 2, bar.get_height()),
-                     xytext=(0, 5), textcoords="offset points", ha='center',
-                     fontsize=11, fontweight='bold')
-
-    ax1.set_xticks(x_pos)
-    ax1.set_xticklabels(short_names, rotation=40, ha='right', fontsize=9)
-    ax1.set_ylabel('方差 (dB²)', fontsize=11, fontweight='bold')
-    ax1.set_title('📊 短时响度方差对比（核心指标）', fontsize=13, fontweight='bold', pad=10)
-    ax1.legend(loc='upper right', fontsize=8, framealpha=0.95)
-    ax1.grid(axis='y', alpha=0.3, linestyle=':')
-
-    # ============ 图2: 动态范围对比 ============
-    ax2 = fig.add_subplot(gs[0, 1])
-
-    dynamic_ranges = [results[f]['dynamic_range'] for f in filenames]
-    bars2 = ax2.bar(x_pos, dynamic_ranges, color=colors, edgecolor='black', linewidth=1.2, alpha=0.85)
-
-    # 动态调整Y轴
-    if len(set(dynamic_ranges)) > 1:
-        dr_range = max(dynamic_ranges) - min(dynamic_ranges)
-        y_min_dr = max(0, min(dynamic_ranges) - dr_range * 0.15)
-        y_max_dr = max(dynamic_ranges) + dr_range * 0.25
-    else:
-        y_min_dr, y_max_dr = 0, max(dynamic_ranges) * 1.3
-    ax2.set_ylim(y_min_dr, y_max_dr)
-
-    for bar, dr in zip(bars2, dynamic_ranges):
-        ax2.annotate(f'{dr:.1f}', xy=(bar.get_x() + bar.get_width() / 2, bar.get_height()),
-                     xytext=(0, 5), textcoords="offset points", ha='center',
-                     fontsize=11, fontweight='bold')
-
-    ax2.set_xticks(x_pos)
-    ax2.set_xticklabels(short_names, rotation=40, ha='right', fontsize=9)
-    ax2.set_ylabel('动态范围 (dB)', fontsize=11, fontweight='bold')
-    ax2.set_title('📈 响度动态范围对比', fontsize=13, fontweight='bold', pad=10)
-    ax2.grid(axis='y', alpha=0.3, linestyle=':')
-
-    # ============ 图3: 箱线图分布 ============
-    ax3 = fig.add_subplot(gs[1, 0])
-
-    box_data = [results[f]['short_term_loudness'] for f in filenames]
-    bp = ax3.boxplot(box_data, patch_artist=True, widths=0.6)
-
-    for patch, color in zip(bp['boxes'], colors):
-        patch.set_facecolor(color)
-        patch.set_alpha(0.7)
-        patch.set_edgecolor('black')
-        patch.set_linewidth(1.2)
-
-    for whisker in bp['whiskers']:
-        whisker.set(color='gray', linewidth=1.2)
-    for cap in bp['caps']:
-        cap.set(color='gray', linewidth=1.2)
-    for median in bp['medians']:
-        median.set(color='darkred', linewidth=2)
-
-    ax3.set_xticklabels(short_names, rotation=40, ha='right', fontsize=9)
-    ax3.set_ylabel('响度 (dB)', fontsize=11, fontweight='bold')
-    ax3.set_title('📦 短时响度分布（箱线图）', fontsize=13, fontweight='bold', pad=10)
-    ax3.grid(axis='y', alpha=0.3, linestyle=':')
-
-    # ============ 图4: 时间序列曲线 ============
-    ax4 = fig.add_subplot(gs[1, 1])
-
-    for idx, filename in enumerate(filenames):
-        data = results[filename]
-        label = short_name(filename, 18)
-        ax4.plot(data['time_points'], data['short_term_loudness'],
-                 color=colors[idx], linewidth=1.8, alpha=0.85, label=label)
-
-    ax4.set_xlabel('时间 (秒)', fontsize=11, fontweight='bold')
-    ax4.set_ylabel('响度 (dB)', fontsize=11, fontweight='bold')
-    ax4.set_title(f'📉 短时响度时间曲线 (窗口={window_sec}s)', fontsize=13, fontweight='bold', pad=10)
-    ax4.legend(loc='upper right', fontsize=8, framealpha=0.95)
-    ax4.grid(True, alpha=0.3, linestyle=':')
-
-    # ============ 图5: 说明与结果面板 ============
-    ax5 = fig.add_subplot(gs[2, :])
-    ax5.axis('off')
-
-    # 指标说明区域
-    desc_text = """【指标说明】短时响度波动 (Short-term Loudness Variance)
-
-定义：在短时间窗（{}秒）内，响度变化的程度，反映情感表达的动态性。
-用途：判断翻唱是否「全程一个音量」（情感死板）或动态失控（破音风险）。
-
-评判标准：
-  • 方差 < 5 dB²     → 波动过小，情感死板，缺乏表现力
-  • 方差 5~25 dB²   → 适中良好，自然起伏，富有情感 ✓
-  • 方差 25~50 dB²  → 波动较大，情感夸张或录音问题
-  • 方差 > 50 dB²    → 波动过大，不稳定，存在破音风险""".format(window_sec)
-
-    ax5.text(0.02, 0.98, desc_text, transform=ax5.transAxes, fontsize=10,
-             verticalalignment='top', fontfamily='sans-serif',
-             bbox=dict(boxstyle='round,pad=0.6', facecolor='#f0f8ff',
-                       edgecolor='#4a90d9', alpha=0.95, linewidth=1.5))
-
-    # 结果汇总
-    result_lines = ["【分析结果汇总】\n"]
-    for filename in filenames:
-        data = results[filename]
-        rating, color, level = _get_rating(data['variance'])
-        result_lines.append(
-            f"  {filename[:28]:28s}  │  方差: {data['variance']:6.2f} dB²  │  "
-            f"标准差: {data['std']:5.2f} dB  │  动态范围: {data['dynamic_range']:5.1f} dB  │  "
-            f"评级: {rating}"
-        )
-
-    result_text = '\n'.join(result_lines)
-    ax5.text(0.52, 0.98, result_text, transform=ax5.transAxes, fontsize=9,
-             verticalalignment='top', fontfamily='sans-serif',
-             bbox=dict(boxstyle='round,pad=0.6', facecolor='#fffef0',
-                       edgecolor='#d4a017', alpha=0.95, linewidth=1.5))
-
-    # 总标题
-    fig.suptitle('🎵 AI翻唱音频质量分析 — 短时响度波动',
-                 fontsize=16, fontweight='bold', y=0.995)
-
-    plt.tight_layout(rect=[0, 0, 1, 0.97])
-
-    if save_path:
-        plt.savefig(save_path, dpi=150, bbox_inches='tight', facecolor='white')
-        print(f"✅ 图表已保存: {save_path}")
-
-    if show_plot:
-        plt.show()
-    else:
-        plt.close()
-
-
-# ==================== 使用示例 ====================
+# ========================
+# 使用示例
+# ========================
 if __name__ == "__main__":
-    # 替换为你的wav文件路径
+    import glob
+
+    # 示例：获取所有wav文件（按文件名排序）
+    # wav_files = sorted(glob.glob("/path/to/your/wav/files/*.wav"))
+
+    # 或者手动指定文件列表（按训练轮数排序）
     wav_files = [
-        r"path/to/song1.wav",
-        r"path/to/song2.wav",
-        r"path/to/song3.wav",
+        "epoch_100.wav",
+        "epoch_200.wav",
+        "epoch_300.wav",
+        # ... 更多文件
     ]
 
-    results = analyze_short_term_loudness_variance(
-        wav_paths=wav_files,
-        window_sec=3.0,
-        save_path="loudness_variance_analysis.png",
-        show_plot=True
-    )
-
-    # 打印数值结果
-    print("\n" + "=" * 60)
-    print("数值结果:")
-    print("=" * 60)
-    for filename, data in results.items():
-        rating, _, _ = _get_rating(data['variance'])
-        print(f"\n📁 {filename}")
-        print(f"   方差: {data['variance']:.2f} dB²")
-        print(f"   标准差: {data['std']:.2f} dB")
-        print(f"   动态范围: {data['dynamic_range']:.2f} dB")
-        print(f"   评级: {rating}")
+    # 运行分析
+    # results = analyze_short_term_loudness_variance(wav_files)
