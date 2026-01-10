@@ -361,25 +361,6 @@ def analyze_mfcc_distance(wav_paths: List[str]) -> None:
         ax5.plot(indices, trend_line, '--', color='#9b59b6', linewidth=2.5, alpha=0.8,
                  label=f'趋势线 (斜率: {z[0]:.5f}) {trend_direction}')
 
-    # 标注最佳和最差点
-    ax5.annotate(f'最佳\n{short_names[best_idx]}\n({mean_distances[best_idx]:.4f})',
-                 xy=(best_idx, mean_distances[best_idx]),
-                 xytext=(best_idx, mean_distances[best_idx] - 0.06),
-                 ha='center', va='top', fontsize=9, fontweight='bold',
-                 color='#27ae60',
-                 arrowprops=dict(arrowstyle='->', color='#27ae60', lw=1.5),
-                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
-                           edgecolor='#27ae60', alpha=0.9))
-
-    ax5.annotate(f'最差\n{short_names[worst_idx]}\n({mean_distances[worst_idx]:.4f})',
-                 xy=(worst_idx, mean_distances[worst_idx]),
-                 xytext=(worst_idx, mean_distances[worst_idx] + 0.06),
-                 ha='center', va='bottom', fontsize=9, fontweight='bold',
-                 color='#e74c3c',
-                 arrowprops=dict(arrowstyle='->', color='#e74c3c', lw=1.5),
-                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
-                           edgecolor='#e74c3c', alpha=0.9))
-
     ax5.set_xlabel('文件序号（按模型训练轮数递增 →）', fontsize=12)
     ax5.set_ylabel('平均MFCC距离', fontsize=12)
     ax5.set_title('⑤ 训练进度趋势图（观察模型质量随训练轮数的变化）',
