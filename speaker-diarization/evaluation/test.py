@@ -64,5 +64,7 @@ wav_files = get_sorted_wav_paths()
 # import 频谱熵;频谱熵.analyze_spectral_entropy(wav_files)
 # import 频谱带宽;频谱带宽.evaluate_spectral_bandwidth(wav_files)
 # import 频谱滚降点;频谱滚降点.analyze_spectral_rolloff(wav_files)
-import 共振峰分析;共振峰分析.analyze_formant_quality(wav_files)
+# import 共振峰分析;共振峰分析.analyze_formant_quality(wav_files)
+# import 振幅微扰;振幅微扰.analyze_shimmer_quality(wav_files)
+import 零交叉率;零交叉率.analyze_zcr_quality(wav_files)
 
